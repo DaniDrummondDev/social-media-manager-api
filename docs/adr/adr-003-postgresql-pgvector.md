@@ -118,3 +118,7 @@ CREATE TABLE content_metrics_2026_01
 ### Riscos
 - Volume de embeddings pode crescer além da capacidade do pgvector — monitorar e planejar migração para banco vetorial se necessário
 - Particionamento de métricas pode se tornar complexo — automatizar criação de partições
+
+## Complementos
+
+- [ADR-019](adr-019-multi-tenancy-strategy.md) — Multi-Tenancy Strategy: formaliza a decisão de shared database com isolamento por `organization_id` e escalabilidade progressiva (RLS, Citus)

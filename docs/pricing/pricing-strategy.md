@@ -31,8 +31,8 @@ Posicionado entre os concorrentes brasileiros low-cost (mLabs, Etus) e as ferram
 
 - **Free**: Teste a plataforma sem custo. Publique em 3 redes com IA básica.
 - **Creator**: Crie conteúdo profissional com IA avançada **que aprende com seu conteúdo**.
-- **Professional**: Gerencie múltiplos clientes com IA preditiva **que evolui com seu estilo**.
-- **Agency**: Escale sua operação com IA completa **que se auto-otimiza com A/B testing**.
+- **Professional**: Gerencie múltiplos clientes com IA preditiva **que evolui com seu estilo** e **CRM nativos integrados**.
+- **Agency**: Escale sua operação com IA completa **que se auto-otimiza e aprende com suas conversões CRM**, **5 CRMs incluindo Salesforce** e membros ilimitados.
 
 ---
 
@@ -146,8 +146,13 @@ Posicionado entre os concorrentes brasileiros low-cost (mLabs, Etus) e as ferram
 | **Prompt A/B Testing** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Style Learning** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | **Prediction Accuracy** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **CRM Nativos (HubSpot, RD Station, Pipedrive)** | ❌ | ❌ | ❌ | ❌ | ❌ | Salesforce¹ |
+| **CRM Bidirecional (CRM→SMM)** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **CRM Intelligence (conversão→IA)** | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
-**Conclusão:** Nenhum concorrente brasileiro oferece as features de IA que estamos implementando. No mercado global, apenas Hootsuite tem Best Time e OwlyWriter AI, mas **nenhum concorrente — brasileiro ou global — oferece IA que aprende com o comportamento do usuário** (RAG, prompt optimization, style learning, prediction accuracy). Isso é um moat competitivo real.
+> ¹ Hootsuite oferece integração com Salesforce apenas no plano Enterprise (customizado, mín. $15.000/ano). Nenhum concorrente oferece integração com RD Station ou Pipedrive.
+
+**Conclusão:** Nenhum concorrente brasileiro oferece as features de IA ou conectores nativos com CRM que estamos implementando. No mercado global, apenas Hootsuite tem Best Time, OwlyWriter AI e integração Salesforce (enterprise only), mas **nenhum concorrente — brasileiro ou global — oferece IA que aprende com o comportamento do usuário** (RAG, prompt optimization, style learning, prediction accuracy), **conectores nativos com CRMs brasileiros** (RD Station), **nem a ponte CRM→IA** (CRM Intelligence) que conecta dados de conversão à geração de conteúdo. Isso é um moat competitivo real.
 
 ---
 
@@ -298,6 +303,7 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **IA que Aprende** | Auto-otimização de prompts | ❌ |
 | **IA que Aprende** | Style Learning | ❌ |
 | **IA que Aprende** | Prediction Accuracy | ❌ |
+| **IA que Aprende** | CRM Intelligence (conversão→IA) | ❌ |
 | **Analytics** | Overview básico | ✅ |
 | **Analytics** | Exportação CSV | ✅ |
 | **Analytics** | Exportação PDF | ❌ |
@@ -357,6 +363,7 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **IA que Aprende** | Auto-otimização de prompts | ❌ |
 | **IA que Aprende** | Style Learning | ❌ |
 | **IA que Aprende** | Prediction Accuracy | ❌ |
+| **IA que Aprende** | CRM Intelligence (conversão→IA) | ❌ |
 | **Analytics** | Overview + por rede | ✅ |
 | **Analytics** | Exportação CSV | ✅ |
 | **Analytics** | Exportação PDF | ❌ |
@@ -419,10 +426,15 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **IA que Aprende** | Auto-otimização de prompts | ✅ |
 | **IA que Aprende** | Style Learning | ✅ |
 | **IA que Aprende** | Prediction Accuracy | ❌ |
+| **IA que Aprende** | CRM Intelligence (conversão→IA) | ❌ |
 | **Analytics** | Completo + por conteúdo | ✅ |
 | **Analytics** | Exportação CSV + PDF | ✅ |
 | **Engagement** | Automações (15) + Suggest Reply | ✅ |
 | **Engagement** | Webhooks (5) | ✅ |
+| **CRM** | Conectores nativos (HubSpot, RD Station, Pipedrive) | ✅ |
+| **CRM** | Mapeamento de campos customizável | ✅ |
+| **CRM** | Sincronização bidirecional | ✅ |
+| **CRM** | Máximo de conexões CRM | 2 |
 | **Financeiro** | Gestão de clientes *(Fase 2)* | ✅ |
 | **Financeiro** | Contratos e faturas de clientes | ✅ |
 | **Financeiro** | Relatórios financeiros | ✅ |
@@ -431,9 +443,10 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 **Justificativa do preço R$149:**
 
 - **vs Hootsuite Standard ($99/user = ~R$525):** 72% mais barato. Marina economiza R$376/mês.
-- **vs mLabs Avançado (R$70):** +R$79 mas com Content DNA, Prediction, Calendar, Feedback Loop, Brand Safety custom e gestão financeira — features inexistentes no mLabs.
-- **vs Reportei Pro (~R$129):** Preço similar mas nosso inclui agendamento + IA avançada além de analytics.
+- **vs mLabs Avançado (R$70):** +R$79 mas com Content DNA, Prediction, Calendar, Feedback Loop, Brand Safety custom, gestão financeira e **CRM nativos** — features inexistentes no mLabs.
+- **vs Reportei Pro (~R$129):** Preço similar mas nosso inclui agendamento + IA avançada + CRM nativos além de analytics.
 - **Killer features para esta persona:**
+  - **Conectores CRM nativos** — Marina conecta HubSpot/RD Station em 2 minutos e leads de comentários viram oportunidades automaticamente.
   - **Gestão financeira de clientes** — Marina gerencia 8 clientes e precisa faturar. Nenhum concorrente oferece.
   - **Content DNA + Calendar Planning** — IA sugere o que postar e quando, baseado em dados reais.
   - **15 contas sociais** — 8 clientes × 2 redes ou 5 clientes × 3 redes.
@@ -477,10 +490,15 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **IA que Aprende** | Auto-otimização de prompts | ✅ |
 | **IA que Aprende** | Style Learning | ✅ |
 | **IA que Aprende** | Prediction Accuracy tracking | ✅ |
+| **IA que Aprende** | CRM Intelligence (conversão→IA) | ✅ |
 | **Analytics** | Completo + retenção de 2 anos | ✅ |
 | **Analytics** | Exportação CSV + PDF | ✅ |
 | **Engagement** | Automações (100) + Suggest Reply | ✅ |
 | **Engagement** | Webhooks (20) | ✅ |
+| **CRM** | Todos os conectores nativos (Fase 1 + Fase 2) | ✅ |
+| **CRM** | HubSpot, RD Station, Pipedrive, Salesforce, ActiveCampaign | ✅ |
+| **CRM** | Mapeamento + sincronização bidirecional | ✅ |
+| **CRM** | Máximo de conexões CRM | 5 |
 | **Financeiro** | Gestão completa de clientes | ✅ |
 | **Listening** | Social Listening completo *(Fase 2)* | ✅ |
 | **Listening** | Alertas e relatórios de listening | ✅ |
@@ -495,6 +513,7 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 - **vs Sprout Social ($199/user × 5 = $995 = ~R$5.274):** 92% mais barato.
 - **vs mLabs (40 marcas × R$70):** mLabs cobraria R$2.800/mês para 40 marcas. Nosso R$399 é 86% mais barato.
 - **Diferencial exclusivo:**
+  - **5 CRMs nativos incluindo Salesforce** — Hootsuite cobra $15k+/ano pela integração Salesforce. Nosso R$399 inclui tudo.
   - **Membros ilimitados** — concorrentes per-seat cobram por pessoa, inviabilizando equipes grandes.
   - **Social Listening + Gap Analysis** — inteligência competitiva que no Sprout Social custa $999/mês adicional.
   - **Prediction Layer 2 (LLM)** — insights qualitativos profundos para otimizar estratégia.
@@ -520,6 +539,8 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | Relatórios/mês | 5 | 15 | 50 | ∞ |
 | Retenção analytics | 30d | 90d | 180d | 730d |
 | Brand Safety rules | 0 | 0 (padrão) | 10 custom | ∞ |
+| CRM connections | 0 | 0 | 2 | 5 |
+| CRM sync log retention | — | — | 90d | 180d |
 | Listening queries | 0 | 0 | 0 | 10 |
 
 ### 5.2 Features por Plano
@@ -555,6 +576,7 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **Auto-otimização de prompts** | ❌ | ❌ | ✅ | ✅ |
 | **Style Learning** | ❌ | ❌ | ✅ | ✅ |
 | **Prediction Accuracy** | ❌ | ❌ | ❌ | ✅ |
+| **CRM Intelligence (conversão→IA)** | ❌ | ❌ | ❌ | ✅ |
 | — | — | — | — | — |
 | **Analytics overview** | ✅ | ✅ | ✅ | ✅ |
 | **Analytics por rede** | ❌ | ✅ | ✅ | ✅ |
@@ -565,6 +587,11 @@ Considerando distribuição típica de uso (40% título, 25% descrição, 15% ha
 | **Visualizar comentários** | ✅ | ✅ | ✅ | ✅ |
 | **Automações** | ❌ | ✅ | ✅ | ✅ |
 | **Webhooks** | ❌ | ❌ | ✅ | ✅ |
+| — | — | — | — | — |
+| **CRM nativos (HubSpot, RD Station, Pipedrive)** | ❌ | ❌ | ✅ | ✅ |
+| **CRM nativos (Salesforce, ActiveCampaign)** | ❌ | ❌ | ❌ | ✅ |
+| **CRM mapeamento custom** | ❌ | ❌ | ✅ | ✅ |
+| **CRM sincronização bidirecional** | ❌ | ❌ | ✅ | ✅ |
 | — | — | — | — | — |
 | **Gestão de clientes** | ❌ | ❌ | ✅ | ✅ |
 | **Social Listening** | ❌ | ❌ | ❌ | ✅ |
@@ -639,14 +666,17 @@ Creator (ativação)
   ├─ Teaser: "Descubra o DNA do seu conteúdo" ao ver analytics
   ├─ Teaser: "Planeje seu calendário com IA" com Calendar bloqueado
   ├─ Teaser: "A IA aprende seu estilo automaticamente" com Style Learning bloqueado
+  ├─ Teaser: "Conecte seu CRM e converta comentários em leads" com CRM bloqueado
   ├─ Teaser: "Gerencie finanças dos seus clientes" ao adicionar 3+ contas
   │
   ▼
 Professional (retenção + expansão)
   │
+  ├─ Teaser: "Conecte Salesforce e ActiveCampaign" com CRM Fase 2 bloqueado
   ├─ Teaser: "Analise seus concorrentes" com Gap Analysis bloqueado
   ├─ Teaser: "Teste prompts com A/B testing" com Experiments bloqueado
   ├─ Teaser: "Valide se as predições da IA estão acertando" com Accuracy bloqueado
+  ├─ Teaser: "Descubra qual conteúdo gera vendas com CRM Intelligence" com CRM Intelligence bloqueado
   ├─ Teaser: "Adicione mais membros à equipe" ao atingir limite de 5
   ├─ Teaser: "Monitore menções da sua marca" com Listening bloqueado
   │
@@ -720,17 +750,18 @@ Agency (enterprise)
 | vs Concorrente | Nosso Plano | Vantagem |
 |---------------|-------------|----------|
 | mLabs (R$30) | Creator (R$49) | IA avançada (full content, adaptation, Best Time, Brand Safety) |
-| mLabs (R$70) | Professional (R$149) | Content DNA, Prediction, Calendar, gestão financeira |
+| mLabs (R$70) | Professional (R$149) | Content DNA, Prediction, Calendar, gestão financeira, **CRM nativos** |
 | Etus (R$95 para 5 perfis) | Creator (R$49) | Mais barato + IA completa |
-| Hootsuite ($99/user) | Professional (R$149 flat) | 72% mais barato, membros incluídos |
-| Hootsuite ($249/user × 3) | Agency (R$399 flat) | 90% mais barato, membros ilimitados |
-| Sprout Social ($199/user) | Professional (R$149 flat) | 95% mais barato por pessoa |
+| Hootsuite ($99/user) | Professional (R$149 flat) | 72% mais barato, membros incluídos, **CRM nativos sem custo extra** |
+| Hootsuite ($249/user × 3) | Agency (R$399 flat) | 90% mais barato, membros ilimitados, **5 CRMs incluindo Salesforce** |
+| Hootsuite Enterprise ($15k+/ano) | Agency (R$399 = R$4.788/ano) | 68% mais barato, **Salesforce incluído** (Hootsuite cobra Enterprise para Salesforce) |
+| Sprout Social ($199/user) | Professional (R$149 flat) | 95% mais barato por pessoa, **CRM nativos BR (RD Station)** |
 | Later ($80/mo) | Creator (R$49) | IA que Later não tem + preço menor |
-| Reportei (R$129) | Professional (R$149) | Agendamento + IA avançada além de analytics |
+| Reportei (R$129) | Professional (R$149) | Agendamento + IA avançada + **CRM nativos** além de analytics |
 
 ### 8.3 IA que Aprende — Diferencial Competitivo Exclusivo
 
-O maior diferencial competitivo do sistema é uma **IA que melhora com o uso**. Enquanto concorrentes oferecem IA estática (mesmas respostas independente do histórico), nosso sistema implementa 5 níveis de aprendizado:
+O maior diferencial competitivo do sistema é uma **IA que melhora com o uso**. Enquanto concorrentes oferecem IA estática (mesmas respostas independente do histórico), nosso sistema implementa 6 níveis de aprendizado:
 
 | Nível | O que faz | Custo extra |
 |-------|----------|-------------|
@@ -739,6 +770,7 @@ O maior diferencial competitivo do sistema é uma **IA que melhora com o uso**. 
 | **3. Prompt Optimization** | Versiona prompts, A/B testa, auto-seleciona melhor | $0 (contadores SQL) |
 | **4. Prediction Accuracy** | Valida predições contra métricas reais 7 dias depois | $0 (comparação SQL) |
 | **5. Style Learning** | Aprende estilo de escrita da org pelas edições | ~$0,0003/semana |
+| **6. CRM Intelligence** | Conecta dados de conversão CRM à geração de conteúdo — prioriza conteúdo que vende | $0 (database operations) |
 
 #### Análise Competitiva: Nenhum Concorrente Oferece
 
@@ -750,6 +782,7 @@ O maior diferencial competitivo do sistema é uma **IA que melhora com o uso**. 
 | Auto-otimização de prompts | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Style Learning (estilo da org) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | Prediction Accuracy tracking | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| CRM Intelligence (conversão→IA) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 #### Por que é um Moat
 
@@ -765,9 +798,46 @@ O Learning Loop reforça a **proposta de valor progressiva** entre planos:
 - **Free**: Coleta feedback silenciosamente (melhora o sistema).
 - **Creator** (R$49): RAG básico — "suas gerações já vêm com exemplos do seu melhor conteúdo".
 - **Professional** (R$149): RAG completo + Style Learning + Prompt Optimization — "a IA evolui com seu estilo de escrita".
-- **Agency** (R$399): Tudo + A/B testing + Prediction Accuracy — "otimize cientificamente sua estratégia de conteúdo".
+- **Agency** (R$399): Tudo + A/B testing + Prediction Accuracy + CRM Intelligence — "otimize cientificamente sua estratégia de conteúdo e descubra qual conteúdo gera vendas".
 
 > Referência técnica: ADR-017 (AI Learning & Feedback Loop)
+
+### 8.4 CRM Nativos — Diferencial Competitivo para o Mercado Brasileiro
+
+O segundo maior diferencial competitivo é a **integração nativa com CRMs populares no Brasil**. Enquanto concorrentes globais oferecem integração CRM apenas no tier enterprise (Hootsuite + Salesforce = $15k+/ano), e concorrentes brasileiros não oferecem nenhuma integração CRM, nosso sistema conecta nativamente com os CRMs mais usados no mercado-alvo.
+
+#### Análise Competitiva: CRM Connectors
+
+| Feature | mLabs | Etus | Reportei | Later | Buffer | Hootsuite | Sprout |
+|---------|-------|------|----------|-------|--------|-----------|--------|
+| Webhooks genéricos | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| HubSpot nativo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅¹ |
+| RD Station nativo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Pipedrive nativo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Salesforce nativo | ❌ | ❌ | ❌ | ❌ | ❌ | ✅² | ✅¹ |
+| ActiveCampaign nativo | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Sincronização bidirecional | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Mapeamento de campos custom | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | Parcial |
+
+> ¹ Sprout Social: Integrações CRM disponíveis apenas nos planos Advanced ($399/user/mês) e Enterprise.
+> ² Hootsuite: Salesforce apenas no Enterprise (mín. $15.000/ano).
+
+#### Por que é um Diferencial
+
+1. **Mercado brasileiro ignorado**: Nenhum concorrente — brasileiro ou global — oferece integração nativa com **RD Station**, o CRM/automação dominante no Brasil.
+2. **Preço disruptivo**: Integração Salesforce por R$399/mês vs. Hootsuite $15k+/ano. 68% mais barato.
+3. **Bidirecionalidade única**: Nenhum concorrente oferece fluxo CRM→SMM (deal fechado → trigger campanha).
+4. **Complementa IA (CRM Intelligence — N6)**: Dados de conversão CRM retroalimentam a IA: conteúdo que gerou vendas ganha prioridade no RAG, predições passam a considerar receita, não só engajamento. O ciclo completo social→vendas→aprendizado é inédito no mercado.
+5. **Lock-in de dados**: Mapeamentos customizados, histórico de sincronização, atribuições de conversão e fluxos bidirecionais criam dependência de valor.
+
+#### Impacto no Pricing
+
+Os CRM connectors reforçam a **justificativa de preço** do Professional e Agency:
+
+- **Professional** (R$149): HubSpot + RD Station + Pipedrive incluídos — Marina conecta o CRM do cliente em 2 minutos e leads fluem automaticamente.
+- **Agency** (R$399): Tudo + Salesforce + ActiveCampaign — Rafael conecta o CRM enterprise dos clientes corporativos sem custo extra.
+
+> Referência técnica: ADR-018 (Native CRM Connectors Strategy)
 
 ---
 
@@ -827,7 +897,7 @@ O split permite:
 |-------|---------|----------|
 | Custos de IA maiores que estimado | Margem negativa no Agency | Rate limiting agressivo + monitoramento real-time de custos |
 | Baixa conversão Free → Pago | CAC não recuperado | Melhorar teasers, A/B test de features bloqueadas |
-| Concorrentes BR adicionarem IA | Perda de diferencial | Manter vantagem com features exclusivas (DNA, Prediction, **Learning Loop**) — concorrentes teriam que replicar 5 níveis de aprendizado |
+| Concorrentes BR adicionarem IA | Perda de diferencial | Manter vantagem com features exclusivas (DNA, Prediction, **Learning Loop**) — concorrentes teriam que replicar 6 níveis de aprendizado + integração CRM→IA |
 | Churn alto no Creator | ARPU cai | Melhorar onboarding, entregar valor rápido (Best Time) |
 | Agency com margem negativa | Insustentável | Monitorar uso real vs limite, ajustar preço se necessário |
 

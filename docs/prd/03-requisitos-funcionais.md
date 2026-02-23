@@ -545,3 +545,77 @@
 - TTL 14 dias, recalculado semanalmente
 - Feature gate: Professional+
 - **Job:** `GenerateOrgStyleProfileJob`, `UpdateLearningContextJob`
+
+---
+
+## 3.12 Módulo: CRM Connectors (Conectores Nativos)
+
+> **Referência:** ADR-018 (Native CRM Connectors Strategy)
+
+### RF-096: Conexão com CRM via OAuth
+- **Endpoint:** `POST /api/v1/crm/connect/{provider}`
+- **Endpoint:** `GET /api/v1/crm/callback/{provider}`
+- Providers suportados: `hubspot`, `rdstation`, `pipedrive` (Fase 1); `salesforce`, `activecampaign` (Fase 2)
+- Fluxo OAuth 2.0 com PKCE quando disponível
+- Tokens armazenados com AES-256-GCM (mesma estratégia de redes sociais — ADR-012)
+- Máximo 1 conexão por CRM por organização
+- Refresh automático antes da expiração via `RefreshCrmTokenJob`
+- Feature gate: Professional+ (exceto webhooks genéricos, disponíveis a partir do Professional)
+
+### RF-097: Gerenciamento de conexões CRM
+- **Endpoint:** `GET /api/v1/crm/providers` — Lista CRMs disponíveis
+- **Endpoint:** `GET /api/v1/crm/connections` — Lista conexões da org
+- **Endpoint:** `GET /api/v1/crm/connections/{id}/status` — Status da conexão
+- **Endpoint:** `DELETE /api/v1/crm/connections/{id}` — Desconecta CRM
+- **Endpoint:** `POST /api/v1/crm/connections/{id}/test` — Testa conexão
+- Status: `connected`, `expired`, `revoked`, `error`
+- Dashboard com status de todas as conexões CRM da organização
+
+### RF-098: Mapeamento de campos CRM
+- **Endpoint:** `GET /api/v1/crm/connections/{id}/mappings` — Lista mapeamento
+- **Endpoint:** `PUT /api/v1/crm/connections/{id}/mappings` — Atualiza mapeamento
+- Cada conector possui default mapping pré-configurado
+- Usuário pode customizar mapeamento por tipo de entidade (contact, deal, activity)
+- Campos suportados: nome, external_id, rede social, sentimento, campanha, engagement metrics
+- Transformações opcionais: uppercase, lowercase, prefix, template string
+
+### RF-099: Sincronização outbound (SMM → CRM)
+- Comentário positivo capturado → cria/atualiza contato no CRM
+- Lead identificado por automação → cria oportunidade/deal no CRM
+- Post publicado com sucesso → registra atividade no contato
+- Automação executada → atualiza custom field no CRM
+- Métricas de engagement → enriquece dados do contato
+- Processamento assíncrono via jobs: `SyncContactToCrmJob`, `CreateCrmDealJob`, `LogCrmActivityJob`
+- Retry: 3 tentativas com backoff exponencial (60s, 300s, 900s)
+
+### RF-100: Sincronização inbound (CRM → SMM)
+- Recebe webhooks do CRM via `POST /api/v1/crm/connections/{id}/webhook`
+- Novo contato/deal criado → tag para segmentação de conteúdo
+- Deal fechado → trigger de campanha de conteúdo
+- Contato atualizado → sincroniza dados de audiência
+- Validação de assinatura por provider (HMAC para HubSpot, token para RD Station, etc.)
+- **Job:** `ProcessCrmWebhookJob`
+
+### RF-101: Logs de sincronização CRM
+- **Endpoint:** `GET /api/v1/crm/connections/{id}/logs`
+- Log detalhado de cada sincronização (outbound e inbound)
+- Campos: direction, entity_type, action, status, payload, error_message, duration_ms
+- Filtros: por direção, tipo, status, período
+- Paginação cursor-based
+- Retenção: 90 dias (Professional), 180 dias (Agency)
+
+### RF-102: Backfill e sincronização manual
+- **Endpoint:** `POST /api/v1/crm/connections/{id}/sync`
+- Sincronização manual on-demand de todos os contatos pendentes
+- Backfill automático de contatos existentes após primeira conexão
+- **Job:** `BackfillCrmContactsJob`
+- Limite: 1 backfill por dia por conexão
+- Progresso rastreável via endpoint de status
+
+### RF-103: CRM Intelligence — Atribuição de conversão (ADR-017 N6)
+- Quando um deal é criado/fechado ou contato é sincronizado com `interaction_data` rastreável, o sistema atribui automaticamente a conversão ao conteúdo social de origem
+- Conteúdos com atribuições de conversão ganham boost no ranking RAG (N2)
+- Dados de conversão são agregados semanalmente e injetados no contexto de geração IA
+- **Jobs:** `AttributeCrmConversionJob`, `EnrichAIContextFromCrmJob`
+- **Feature gate:** Exclusivo plano Agency com CRM conector ativo
+- Tabela: `crm_conversion_attributions` (AI Intelligence BC)

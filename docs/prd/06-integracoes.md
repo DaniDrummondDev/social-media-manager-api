@@ -194,13 +194,14 @@ O sistema utiliza **5 capabilities de IA**, cada uma com interface própria no D
 
 ### AI Learning & Feedback Loop (ADR-017)
 
-O sistema implementa um loop de aprendizado em 5 níveis:
+O sistema implementa um loop de aprendizado em 6 níveis ativos + 1 futuro:
 
 1. **Generation Feedback Tracking** — Registra aceitar/editar/rejeitar de cada geração IA
 2. **RAG (Retrieval-Augmented Generation)** — Busca top performers similares via pgvector para enriquecer gerações
 3. **Prompt Optimization Engine** — Templates versionados com A/B testing e auto-seleção por performance
 4. **Prediction Accuracy Feedback** — Valida predições vs métricas reais 7 dias após publicação
 5. **Organization Style Learning** — Aprende estilo da org a partir de padrões de edição
+6. **CRM Intelligence Feedback** — Conecta dados de conversão CRM à geração de conteúdo, priorizando conteúdo que gera vendas (ADR-017 N6 + ADR-018)
 
 ### Configuração por organização
 
@@ -222,13 +223,151 @@ Cada organização pode configurar seu provider preferido por capability via `PU
 
 ---
 
-## 6.6 CRM (Webhooks Genéricos)
+## 6.6 CRM — Conectores Nativos + Webhooks
+
+> **Referência:** ADR-018 (Native CRM Connectors Strategy)
 
 ### Arquitetura
-O sistema não se integra diretamente com CRMs específicos. Em vez disso, oferece
-um sistema de webhooks configurável que permite conectar qualquer CRM.
 
-### Payload padrão
+O sistema oferece **duas camadas** de integração com CRMs:
+
+1. **Conectores nativos** (plug-and-play): Integração direta com os CRMs mais populares via OAuth, com mapeamento automático de campos e sincronização bidirecional.
+2. **Webhooks genéricos** (fallback universal): Sistema de webhooks configurável para qualquer CRM ou ferramenta não suportada nativamente.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  Social Media Manager API                  │
+│                                                            │
+│  ┌──────────────────┐        ┌──────────────────────────┐ │
+│  │  CRM Connectors  │        │  Webhooks Genéricos      │ │
+│  │  (Nativos)       │        │  (Fallback universal)    │ │
+│  │                  │        │                          │ │
+│  │  CrmConnector    │        │  POST → URL + HMAC       │ │
+│  │  Interface       │        │                          │ │
+│  └────────┬─────────┘        └─────────┬────────────────┘ │
+└───────────┼────────────────────────────┼──────────────────┘
+            │                            │
+    ┌───────┴───────┐            ┌───────┴────────┐
+    │ CRM APIs      │            │ Qualquer URL   │
+    │ (OAuth 2.0)   │            │ (HMAC-SHA256)  │
+    └───────────────┘            └────────────────┘
+```
+
+---
+
+### 6.6.1 Conectores Nativos
+
+#### CRMs Suportados
+
+**Fase 1 (Sprint 15):**
+
+| CRM | Mercado | Público-alvo | Auth |
+|-----|---------|-------------|------|
+| **HubSpot** | Global (228k+ clientes) | PMEs, agências de marketing | OAuth 2.0 |
+| **RD Station** | Brasil (dominante) | PMEs, agências digitais | OAuth 2.0 |
+| **Pipedrive** | Global (100k+ em 175 países) | SMEs, startups, agências BR | OAuth 2.0 |
+
+**Fase 2 (Sprint 16):**
+
+| CRM | Mercado | Público-alvo | Auth |
+|-----|---------|-------------|------|
+| **Salesforce** | Global (#1 IDC 2025) | Enterprise, agências grandes | OAuth 2.0 |
+| **ActiveCampaign** | Global + Brasil forte | Agências digitais, automação | API Key |
+
+#### Interface CrmConnector (Adapter Pattern — ADR-006)
+
+```
+Interface: CrmConnectorInterface
+├── authenticate(code, state): CrmTokenResponse
+├── refreshToken(refreshToken): CrmTokenResponse
+├── revokeToken(accessToken): bool
+├── createContact(accessToken, contactData): CrmContactResult
+├── updateContact(accessToken, contactId, data): CrmContactResult
+├── createDeal(accessToken, dealData): CrmDealResult
+├── updateDeal(accessToken, dealId, data): CrmDealResult
+├── logActivity(accessToken, entityId, activityData): CrmActivityResult
+├── searchContacts(accessToken, query): CrmContactCollection
+├── getConnectionStatus(accessToken): CrmConnectionStatus
+```
+
+#### Autenticação
+
+| CRM | Método | Access Token TTL | Refresh |
+|-----|--------|-----------------|---------|
+| HubSpot | OAuth 2.0 | 30 min | Sim |
+| RD Station | OAuth 2.0 | 24h | Sim |
+| Pipedrive | OAuth 2.0 | 60 min | Sim |
+| Salesforce | OAuth 2.0 | 2h | Sim |
+| ActiveCampaign | API Key | Não expira | N/A |
+
+- Tokens armazenados com **AES-256-GCM** e chave dedicada (mesma estratégia de redes sociais — ADR-012).
+- Refresh automático antes da expiração via `RefreshCrmTokenJob`.
+- Máximo **1 conexão CRM por provider por organização**.
+
+#### Fluxo de Dados — Outbound (SMM → CRM)
+
+| Trigger no SMM | Ação no CRM | Exemplo |
+|---------------|------------|---------|
+| Comentário positivo capturado | Cria/atualiza contato | Autor do comentário vira lead |
+| Lead identificado por automação | Cria oportunidade/deal | "Comentou pedindo preço" → deal |
+| Post publicado com sucesso | Registra atividade no contato | Histórico de publicações |
+| Automação executada | Atualiza custom field | Tags, status, engagement score |
+| Métricas de engagement | Enriquece dados do contato | Engagement rate, alcance |
+
+#### Fluxo de Dados — Inbound (CRM → SMM)
+
+| Trigger no CRM | Ação no SMM | Exemplo |
+|---------------|------------|---------|
+| Novo contato/deal criado | Tag para segmentação | Personaliza conteúdo por segmento |
+| Deal fechado (won) | Trigger de campanha | Campanha "pós-venda" automática |
+| Contato atualizado | Sincroniza dados de audiência | Enriquece perfil do público |
+| Stage do deal mudou | Ajusta automação de engajamento | Altera tom das respostas automáticas |
+
+#### Mapeamento de Campos
+
+Cada conector possui **default mapping** que o usuário pode customizar:
+
+| Campo SMM | HubSpot | RD Station | Pipedrive | Salesforce | ActiveCampaign |
+|----------|---------|------------|-----------|------------|----------------|
+| Nome do autor | `firstname` + `lastname` | `name` | `name` | `Name` | `firstName` + `lastName` |
+| External ID | `hs_additional_id` | `cf_social_id` | Custom field | `Social_ID__c` | Custom field |
+| Rede social | `hs_content_source` | `cf_social_network` | Custom field | `Social_Network__c` | Custom field |
+| Sentimento | Custom property | Custom field | Custom field | Custom field | Custom field |
+| Campanha | `hs_campaign` | `cf_campaign` | Custom field | `Campaign` | Tag |
+
+#### Rate Limits por CRM
+
+| CRM | Limite | Estratégia |
+|-----|--------|-----------|
+| HubSpot | 150 req/10s (OAuth) | Token bucket, throttle por org |
+| RD Station | 120 req/min | Token bucket, fila dedicada |
+| Pipedrive | 80 req/2s | Throttle agressivo, batch quando possível |
+| Salesforce | 15.000 req/dia (standard) | Contagem diária, Bulk API para backfill |
+| ActiveCampaign | 5 req/s | Throttle por org |
+
+#### Endpoints da API
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/api/v1/crm/providers` | Lista CRMs disponíveis |
+| `POST` | `/api/v1/crm/connect/{provider}` | Inicia OAuth flow |
+| `GET` | `/api/v1/crm/callback/{provider}` | Callback OAuth |
+| `DELETE` | `/api/v1/crm/connections/{id}` | Desconecta CRM |
+| `GET` | `/api/v1/crm/connections` | Lista conexões da org |
+| `GET` | `/api/v1/crm/connections/{id}/status` | Status da conexão |
+| `GET` | `/api/v1/crm/connections/{id}/mappings` | Lista mapeamento de campos |
+| `PUT` | `/api/v1/crm/connections/{id}/mappings` | Atualiza mapeamento |
+| `GET` | `/api/v1/crm/connections/{id}/logs` | Logs de sincronização |
+| `POST` | `/api/v1/crm/connections/{id}/sync` | Força sincronização manual |
+| `POST` | `/api/v1/crm/connections/{id}/test` | Testa conexão |
+
+---
+
+### 6.6.2 Webhooks Genéricos (Fallback)
+
+Sistema de webhooks configurável para qualquer CRM ou ferramenta externa não suportada nativamente.
+
+#### Payload padrão
 
 ```json
 {
@@ -250,13 +389,13 @@ um sistema de webhooks configurável que permite conectar qualquer CRM.
 }
 ```
 
-### Segurança dos webhooks
+#### Segurança dos webhooks
 - Assinatura HMAC-SHA256 no header `X-Webhook-Signature`
 - Secret único por webhook configurado
 - Timestamp no header `X-Webhook-Timestamp` para prevenção de replay attacks
 - Validação: rejeitar requests com timestamp > 5 minutos
 
-### Eventos disponíveis
+#### Eventos disponíveis
 | Evento | Descrição | Trigger |
 |--------|-----------|---------|
 | `comment.created` | Novo comentário capturado | Sync de comentários |
@@ -266,7 +405,7 @@ um sistema de webhooks configurável que permite conectar qualquer CRM.
 | `post.published` | Post publicado com sucesso | Publishing pipeline |
 | `post.failed` | Falha na publicação | Publishing pipeline |
 
-### Retry policy
+#### Retry policy
 - 3 tentativas: 1 minuto, 5 minutos, 30 minutos
 - Após 3 falhas: webhook marcado como failed, notificação ao usuário
 - Dashboard com log de entregas e status

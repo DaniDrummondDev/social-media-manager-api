@@ -36,10 +36,18 @@
 
 ## 7.2 Regras de Conexão de Redes Sociais
 
-### RN-010: Uma conta por rede por usuário
-- O usuário pode conectar apenas uma conta por rede social.
-- Para trocar de conta, deve desconectar a atual e conectar a nova.
-- Exceção futura: planos que permitam múltiplas contas por rede.
+### RN-010: Limite de contas sociais por organização
+- O número máximo de contas sociais conectadas é definido pelo plano da organização:
+  - **Free**: 3 contas sociais.
+  - **Creator**: 5 contas sociais.
+  - **Professional**: 15 contas sociais.
+  - **Agency**: 50 contas sociais.
+- Planos **Creator** e **Professional** podem adquirir contas adicionais (add-on R$ 15/conta/mês).
+- Nos planos **Free** e **Creator**, é permitida apenas **uma conta por rede social** por organização.
+- Nos planos **Professional** e **Agency**, são permitidas **múltiplas contas da mesma rede social** (ex.: 5 contas Instagram de clientes diferentes).
+- Contas sociais pertencem à **organização**, não ao usuário individual.
+- Todos os membros da organização (owner, admin, member) podem operar as contas conectadas conforme suas permissões.
+- Para trocar uma conta específica, deve desconectar a atual e conectar a nova.
 
 ### RN-011: Requisitos da conta Instagram
 - Somente contas **Business** ou **Creator** são aceitas.
@@ -363,3 +371,61 @@ engagement_rate = (likes + comments + shares + saves) / reach * 100
 - Nenhum nível do Learning Loop é critical path.
 - Toda falha resulta em graceful degradation, NEVER em erro para o usuário.
 - A geração de conteúdo funciona identicamente com ou sem Learning Loop.
+
+---
+
+## 7.11 CRM Connectors
+
+> **Referência:** ADR-018 (Native CRM Connectors Strategy)
+
+### RN-090: Limite de conexões CRM
+- Máximo **1 conexão por CRM provider por organização** (ex: 1 HubSpot + 1 Pipedrive = OK; 2 HubSpots = NOK).
+- Reconexão requer desconectar a conexão existente primeiro.
+- Conexão desativada (soft delete) mantém logs de sincronização por 30 dias.
+
+### RN-091: Tokens CRM
+- Tokens de CRM são criptografados com **AES-256-GCM** e chave dedicada (mesma estratégia de redes sociais — ADR-012).
+- Refresh automático executado quando faltam **menos de 10% do TTL** para expirar.
+- Token expirado → status `expired`, evento `CrmTokenExpired`, notificação ao usuário.
+- Token revogado pelo CRM → status `revoked`, notificação ao usuário.
+
+### RN-092: Sincronização outbound
+- Sincronização é **assíncrona** — nunca bloqueia a operação principal.
+- Falha na sincronização com CRM **não impede** a operação no SMM (comentário é capturado, automação é executada, post é publicado).
+- Retry: 3 tentativas com backoff (60s, 300s, 900s). Após 3 falhas → log + alerta.
+- Sincronização é **idempotente**: enviar o mesmo evento 2x não duplica contato/deal no CRM.
+- Contatos são criados/atualizados usando `external_id` (ID do autor na rede social) como chave de deduplicação.
+
+### RN-093: Sincronização inbound
+- Webhooks recebidos do CRM são validados por assinatura/token conforme provider.
+- Eventos inbound são processados em **fila `default`** via `ProcessCrmWebhookJob`.
+- Ações inbound nunca executam operações destrutivas (não deletam dados no SMM).
+- Rate limiting: máximo 100 webhooks inbound por minuto por conexão.
+
+### RN-094: Mapeamento de campos
+- Default mappings são aplicados automaticamente na primeira conexão.
+- Usuário pode sobrescrever qualquer campo (exceto campos obrigatórios do CRM).
+- Campos sem mapeamento são ignorados silenciosamente (sem erro).
+- Mapeamento inválido (campo não existe no CRM) → erro claro na validação, não na sincronização.
+
+### RN-095: Rate limits de CRM
+- Cada CRM impõe limites de API próprios. O sistema respeita esses limites via throttling por provider.
+- Contadores de rate limit armazenados em Redis com TTL correspondente ao window do CRM.
+- Quando rate limit é atingido: job é reenfileirado com delay, **nunca descartado**.
+- Circuit breaker por CRM: 10 falhas consecutivas → circuit open, 120s reset.
+
+### RN-096: Feature gates CRM
+- Conectores nativos: Professional+ (conectores Fase 1 e Fase 2).
+- Webhooks genéricos: Professional+ (mantido conforme RF-066).
+- Free e Creator: sem acesso a CRM connectors ou webhooks.
+- Número máximo de CRM connections: Professional = 2, Agency = 5.
+- Logs de sincronização: Professional = 90 dias, Agency = 180 dias.
+
+### RN-097: CRM Intelligence (ADR-017 Nível 6)
+- CRM Intelligence é exclusivo do plano **Agency** e requer pelo menos 1 CRM conector ativo (ADR-018).
+- Atribuição CRM→conteúdo requer `interaction_data` rastreável (post_external_id ou comment_id). Sem dados rastreáveis, a atribuição **não** é criada.
+- Conteúdos com conversão CRM recebem boost no ranking RAG: 0.15 (lead_capture), 0.30 (deal_closed), 0.50 (deal_closed com valor > mediana).
+- Dados de conversão são agregados semanalmente em `ai_generation_context` com `context_type = 'crm_conversion_data'`.
+- Segmentos/tags CRM são injetados em `ai_generation_context` com `context_type = 'crm_audience_segments'`.
+- Se o CRM for desconectado, atribuições existentes são preservadas; novas não são criadas.
+- Dados de conversão CRM **nunca** são compartilhados entre organizações (isolamento de tenant).

@@ -115,6 +115,13 @@ publicando, analisando e automatizando interações com inteligência artificial
 - Marketplace de templates de conteúdo
 - **Geração de mídia com IA** (imagens e vídeos via agentes de IA a partir de prompts do usuário)
 
+### Fase 4 — Integrações CRM Nativas
+
+- **Conectores nativos CRM Fase 1** (HubSpot, RD Station, Pipedrive) — OAuth, sincronização bidirecional, mapeamento de campos
+- **Conectores nativos CRM Fase 2** (Salesforce, ActiveCampaign) — Enterprise CRM e automação avançada
+- Sincronização bidirecional SMM ↔ CRM (comentários → contatos, leads → deals, publicações → atividades)
+- Webhooks inbound do CRM (deal fechado → trigger campanha)
+
 ## 1.8 Fora de Escopo (v1)
 
 - Frontend (será outro projeto separado)

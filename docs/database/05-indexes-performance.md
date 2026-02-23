@@ -9,7 +9,7 @@
 ### Princípios
 
 1. **Índices parciais** para tabelas com soft delete — exclui registros deletados
-2. **Índices compostos** alinhados com os padrões de query mais frequentes
+2. **Índices compostos** alinhados com os padrões de query mais frequentes — `organization_id` como coluna líder em tabelas multi-tenant (ADR-019)
 3. **GIN indexes** para arrays (tags, hashtags, events) e full-text search
 4. **IVFFlat** para embeddings vetoriais (pgvector)
 5. **Índices funcionais** para queries com transformações (LOWER, date_trunc)

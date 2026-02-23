@@ -21,7 +21,7 @@ CREATE TYPE usage_resource_type      AS ENUM (
 
 ## Tabela: `plans`
 
-Planos disponíveis na plataforma (Free, Pro, Enterprise).
+Planos disponíveis na plataforma (Free, Creator, Professional, Agency).
 
 ```sql
 CREATE TABLE plans (

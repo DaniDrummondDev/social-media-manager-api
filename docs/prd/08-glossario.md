@@ -41,6 +41,12 @@ Limite conceitual dentro do domínio onde um modelo particular é definido e apl
 
 ## C
 
+### CRM Connector (Conector CRM)
+Implementação do padrão Adapter que encapsula a comunicação com um CRM específico. Cada CRM tem seu próprio conector que implementa a interface `CrmConnectorInterface`. Suporta autenticação OAuth, sincronização bidirecional e mapeamento de campos. Providers Fase 1: HubSpot, RD Station, Pipedrive. Providers Fase 2: Salesforce, ActiveCampaign.
+
+### CRM Field Mapping (Mapeamento de Campos CRM)
+Configuração que mapeia campos do Social Media Manager para campos correspondentes no CRM. Cada conector possui default mappings que podem ser customizados pelo usuário. Suporta transformações opcionais (uppercase, lowercase, prefix).
+
 ### Campanha (Campaign)
 Agrupamento lógico de peças de conteúdo com um objetivo comum. Possui nome, descrição, período (início/fim) e status. Uma campanha contém múltiplas peças de conteúdo.
 
@@ -110,7 +116,7 @@ Algoritmo usado para assinar payloads de webhooks, garantindo autenticidade e in
 Usuário de rede social identificado como potencial cliente por meio de regras de automação (ex: comentou pedindo preço). Pode ser enviado para CRM via webhook.
 
 ### Learning Loop (AI Learning & Feedback Loop)
-Sistema de 5 níveis que permite à IA aprender e melhorar com o uso: (1) Generation Feedback Tracking, (2) RAG, (3) Prompt Optimization Engine, (4) Prediction Accuracy Feedback, (5) Organization Style Learning. Definido no ADR-017.
+Sistema de 6 níveis ativos + 1 futuro que permite à IA aprender e melhorar com o uso: (1) Generation Feedback Tracking, (2) RAG, (3) Prompt Optimization Engine, (4) Prediction Accuracy Feedback, (5) Organization Style Learning, (6) CRM Intelligence Feedback. Definido no ADR-017.
 
 ### Long-lived Token
 Token de longa duração obtido após troca de um short-lived token. No Instagram, dura ~60 dias. Renovável antes da expiração.

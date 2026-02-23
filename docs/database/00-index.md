@@ -13,13 +13,13 @@
 | 01 | [Identity & Social Account](01-identity-social-account.md) | users, refresh_tokens, password_reset_tokens, login_histories, audit_logs, social_accounts |
 | 02 | [Campaign & Media](02-campaign-media.md) | campaigns, contents, content_network_overrides, content_media, media |
 | 03 | [Publishing & Analytics](03-publishing-analytics.md) | scheduled_posts, content_metrics, content_metric_snapshots, account_metrics, report_exports |
-| 04 | [Engagement & Automation](04-engagement-automation.md) | comments, automation_rules, automation_rule_conditions, automation_executions, webhook_endpoints, webhook_deliveries |
+| 04 | [Engagement & Automation](04-engagement-automation.md) | comments, automation_rules, automation_rule_conditions, automation_executions, webhook_endpoints, webhook_deliveries, crm_connections, crm_field_mappings, crm_sync_logs *(Fase 4)* |
 | 05 | [Índices & Performance](05-indexes-performance.md) | Estratégia de índices, particionamento, views materializadas |
 | 06 | [Billing & Subscription](06-billing-subscription.md) | plans, subscriptions, invoices, usage_records, stripe_webhook_events |
 | 07 | [Platform Administration](07-platform-administration.md) | platform_admins, system_configs, admin_audit_entries, platform_metrics_cache |
 | 08 | [Client Financial Management](08-client-financial-management.md) | clients, client_contracts, client_invoices, client_invoice_items, cost_allocations *(Fase 2)* |
 | 09 | [Social Listening](09-social-listening.md) | listening_queries, mentions (partitioned), listening_alerts, listening_alert_triggers, listening_reports *(Fase 2)* |
-| 10 | [AI Intelligence](10-ai-intelligence.md) | embedding_jobs, content_profiles, performance_predictions, posting_time_recommendations, audience_insights, ai_generation_context, brand_safety_checks, brand_safety_rules, calendar_suggestions, content_gap_analyses, generation_feedback, prompt_templates, prompt_experiments, prediction_validations, org_style_profiles *(Fase 2-3 + Learning Loop)* |
+| 10 | [AI Intelligence](10-ai-intelligence.md) | embedding_jobs, content_profiles, performance_predictions, posting_time_recommendations, audience_insights, ai_generation_context, brand_safety_checks, brand_safety_rules, calendar_suggestions, content_gap_analyses, generation_feedback, prompt_templates, prompt_experiments, prediction_validations, org_style_profiles, crm_conversion_attributions *(Fase 2-3-4 + Learning Loop + CRM Intelligence)* |
 
 ---
 
@@ -220,6 +220,9 @@ CREATE TYPE safety_check_status_type      AS ENUM ('pending', 'passed', 'warning
 CREATE TYPE feedback_action_type          AS ENUM ('accepted', 'edited', 'rejected');
 CREATE TYPE experiment_status_type        AS ENUM ('draft', 'running', 'completed', 'canceled');
 
+-- CRM Connectors (doc 04 — ADR-018)
+CREATE TYPE crm_provider_type             AS ENUM ('hubspot', 'rdstation', 'pipedrive', 'salesforce', 'activecampaign');
+
 -- Alteração em ENUM existente (doc 10)
 ALTER TYPE generation_type ADD VALUE 'cross_network_adaptation';
 ALTER TYPE generation_type ADD VALUE 'calendar_planning';
@@ -289,3 +292,7 @@ ALTER TYPE generation_type ADD VALUE 'calendar_planning';
 | AI Intelligence | `prompt_experiments` | ~5K *(Learning Loop)* |
 | AI Intelligence | `prediction_validations` | ~5M/ano *(Learning Loop)* |
 | AI Intelligence | `org_style_profiles` | ~100K *(Learning Loop)* |
+| AI Intelligence | `crm_conversion_attributions` | ~2M/ano *(CRM Intelligence N6)* |
+| Engagement | `crm_connections` | ~200K *(Fase 4)* |
+| Engagement | `crm_field_mappings` | ~1M *(Fase 4)* |
+| Engagement | `crm_sync_logs` | ~20M/ano *(Fase 4)* |

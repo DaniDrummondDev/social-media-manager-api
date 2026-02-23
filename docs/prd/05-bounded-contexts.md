@@ -64,7 +64,7 @@
 | Engagement | Social Listening | **Shared Kernel** | Reutiliza modelo de sentimento e patterns de captura (Fase 2) |
 | Billing | Client Financial Mgmt | **Shared Kernel** | Reutiliza Money VO e patterns financeiros (Fase 2) |
 | Analytics | AI Intelligence | **Customer-Supplier** | Fornece métricas de engajamento e séries temporais para análise (Fase 2-3) |
-| Engagement | AI Intelligence | **Customer-Supplier** | Fornece comentários com sentimento e embeddings para Feedback Loop (Fase 3) |
+| Engagement | AI Intelligence | **Customer-Supplier** | Fornece comentários com sentimento para Feedback Loop (Fase 3) e dados de conversão CRM para CRM Intelligence (Fase 4) |
 | Social Listening | AI Intelligence | **Customer-Supplier** | Fornece menções de concorrentes para Gap Analysis (Fase 3) |
 | Content AI | AI Intelligence | **Conformist** | AI Intelligence consome dados de gerações para análise de padrões (Fase 2-3) |
 | AI Intelligence | Content AI | **Published Language** | Insights e contexto de audiência injetados em prompts de geração (Fase 3) |
@@ -435,7 +435,10 @@ ReportExport
 - Classificação de sentimento
 - Respostas manuais e automáticas
 - Regras de automação
-- Integração com CRM via webhooks
+- Integração com CRM via webhooks genéricos
+- Conectores nativos com CRMs (HubSpot, RD Station, Pipedrive, Salesforce, ActiveCampaign) — ADR-018
+- Sincronização bidirecional SMM ↔ CRM
+- Mapeamento de campos customizável
 
 ### Agregados
 
@@ -511,12 +514,64 @@ WebhookDelivery
 ├── created_at: DateTimeImmutable
 ```
 
+#### CrmConnection (Aggregate Root) — ADR-018
+```
+CrmConnection
+├── id: CrmConnectionId (UUID)
+├── organization_id: OrganizationId
+├── provider: CrmProvider (Enum: hubspot, rdstation, pipedrive, salesforce, activecampaign)
+├── access_token: EncryptedString
+├── refresh_token: ?EncryptedString
+├── token_expires_at: ?DateTimeImmutable
+├── external_account_id: ?string
+├── account_name: ?string
+├── connection_status: CrmConnectionStatus (Enum: connected, expired, revoked, error)
+├── settings: array
+├── connected_at: DateTimeImmutable
+├── connected_by: UserId
+├── last_sync_at: ?DateTimeImmutable
+├── field_mappings: CrmFieldMapping[]
+│   ├── entity_type: string (contact, deal, activity)
+│   ├── smm_field: string
+│   ├── crm_field: string
+│   ├── transform: ?string
+│   └── is_default: bool
+├── created_at: DateTimeImmutable
+├── updated_at: DateTimeImmutable
+└── deleted_at: ?DateTimeImmutable
+```
+
+#### CrmSyncLog (Entity) — ADR-018
+```
+CrmSyncLog
+├── id: SyncLogId (UUID)
+├── crm_connection_id: CrmConnectionId
+├── direction: string (outbound, inbound)
+├── entity_type: string (contact, deal, activity)
+├── smm_entity_id: ?UUID
+├── crm_entity_id: ?string
+├── action: string (create, update, delete)
+├── status: string (success, failed, skipped)
+├── payload: ?array
+├── error_message: ?string
+├── duration_ms: ?int
+└── created_at: DateTimeImmutable
+```
+
 ### Domain Events
 - `CommentCaptured { commentId, contentId, socialAccountId, capturedAt }`
 - `CommentReplied { commentId, repliedBy, replyText, repliedAt }`
 - `AutomationRuleTriggered { ruleId, commentId, action, triggeredAt }`
 - `WebhookDelivered { deliveryId, webhookId, event, deliveredAt }`
 - `WebhookDeliveryFailed { deliveryId, webhookId, error, failedAt }`
+- `CrmConnected { connectionId, provider, organizationId, connectedAt }` — ADR-018
+- `CrmDisconnected { connectionId, provider, organizationId, disconnectedAt }` — ADR-018
+- `CrmContactSynced { connectionId, provider, crmEntityId, action }` — ADR-018
+- `CrmDealCreated { connectionId, provider, crmDealId }` — ADR-018
+- `CrmActivityLogged { connectionId, provider, crmActivityId }` — ADR-018
+- `CrmSyncFailed { connectionId, provider, entityType, error }` — ADR-018
+- `CrmTokenExpired { connectionId, provider }` — ADR-018
+- `CrmFieldMappingUpdated { connectionId, entityType }` — ADR-018
 
 ---
 
@@ -801,9 +856,9 @@ ListeningReport
 
 ---
 
-## 5.12 Bounded Context: AI Intelligence (Fase 2-3)
+## 5.12 Bounded Context: AI Intelligence (Fase 2-4)
 
-> **Nota:** Este contexto será implementado nas Fases 2 (Sprints 10-11) e 3 (Sprints 12-13). Abrange funcionalidades de **análise inteligente e insights** que consomem dados de Analytics, Engagement e Social Listening para produzir recomendações acionáveis — diferente do Content AI (Sprint 3), que gera conteúdo textual sob demanda.
+> **Nota:** Este contexto será implementado nas Fases 2 (Sprints 10-11), 3 (Sprints 12-14) e 4 (Sprint 16 — CRM Intelligence). Abrange funcionalidades de **análise inteligente e insights** que consomem dados de Analytics, Engagement, Social Listening e CRM para produzir recomendações acionáveis — diferente do Content AI (Sprint 3), que gera conteúdo textual sob demanda.
 
 ### Responsabilidades
 - Cálculo de horários ótimos de publicação (Best Time to Post)
@@ -813,6 +868,7 @@ ListeningReport
 - Análise de feedback da audiência para enriquecer geração de conteúdo (Feedback Loop)
 - Identificação de lacunas de conteúdo vs concorrentes (Gap Analysis)
 - Pipeline de embeddings para conteúdos e comentários
+- Atribuição de conversões CRM a conteúdos sociais (CRM Intelligence — ADR-017 N6)
 
 ### Agregados
 
@@ -1024,3 +1080,5 @@ ContentGapAnalysis
 - `CalendarItemsAccepted { suggestionId, acceptedCount, acceptedAt }`
 - `ContentGapsIdentified { analysisId, organizationId, gapCount, opportunityCount, generatedAt }`
 - `EmbeddingGenerated { entityType, entityId, model, tokensUsed, generatedAt }`
+- `CrmConversionAttributed { attributionId, organizationId, contentId, crmEntityType, attributionType, attributionValue }` *(CRM Intelligence N6)*
+- `CrmAIContextEnriched { organizationId, contextTypesUpdated, conversionCount, segmentsCount }` *(CRM Intelligence N6)*

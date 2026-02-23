@@ -4,10 +4,10 @@
 
 ---
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Data:** 2026-02-23
 - **Decisores:** Equipe de arquitetura
-- **Complementa:** ADR-009 (Laravel AI SDK), ADR-016 (Multi-Provider AI)
+- **Complementa:** ADR-009 (Laravel AI SDK), ADR-016 (Multi-Provider AI), ADR-018 (Native CRM Connectors)
 
 ## Contexto
 
@@ -31,9 +31,9 @@ Nenhum concorrente — brasileiro (mLabs, Etus, Reportei) ou global (Hootsuite, 
 
 ## Decisão
 
-Implementar um **AI Learning & Feedback Loop** com 5 níveis ativos + 1 nível futuro, integrado aos bounded contexts existentes (Content AI #5 e AI Intelligence #12), sem criar novo bounded context.
+Implementar um **AI Learning & Feedback Loop** com 6 níveis ativos + 1 nível futuro, integrado aos bounded contexts existentes (Content AI #5, AI Intelligence #12 e Engagement & Automation #8), sem criar novo bounded context.
 
-### Visão Geral dos 6 Níveis
+### Visão Geral dos 7 Níveis
 
 ```
 Nível 1: Generation Feedback Tracking
@@ -61,7 +61,13 @@ Nível 5: Organization Style Learning
   Construir perfil de estilo por organização.
   Custo: ~$0.0003/semana (LLM summary via GPT-4o-mini).
 
-Nível 6: Fine-tuning Pipeline (FUTURO)
+Nível 6: CRM Intelligence Feedback (ADR-018)
+  Conectar dados de conversão do CRM ao conteúdo social.
+  Atribuir receita/deals a conteúdos que geraram engajamento.
+  Enriquecer RAG com dados de conversão (conteúdo que vende > conteúdo que engaja).
+  Custo: $0 (comparação SQL + context injection).
+
+Nível 7: Fine-tuning Pipeline (FUTURO)
   Usar pares (input, output editado) como dataset de treinamento.
   Fine-tune por vertical/nicho. Documentado mas não implementado.
 ```
@@ -107,13 +113,23 @@ Usuário solicita geração
 │      → Cria prediction_validations record            │
 └──────────────────────────────────────────────────────┘
 
+    ... quando CRM reporta deal/conversão ...
+
+┌──────────────────────────────────────────────────────┐
+│  12. CrmDealCreated / CrmContactSynced (N6)          │
+│      → Atribui conversão ao conteúdo social de       │
+│        origem (crm_conversion_attributions)           │
+│      → Conteúdo com conversão ganha boost no RAG     │
+│      → Segmentos CRM enriquecem audience context     │
+└────────────────┬─────────────────────────────────────┘
+                 │
     ... batch semanal ...
 
 ┌──────────────────────────────────────────────────────┐
-│  12. Recalcula performance_score dos templates (N3)  │
-│  13. Regenera org_style_profile (N5)                 │
-│  14. Atualiza ai_generation_context (N2+N5)          │
-│      → RAG examples + style data                     │
+│  13. Recalcula performance_score dos templates (N3)  │
+│  14. Regenera org_style_profile (N5)                 │
+│  15. Atualiza ai_generation_context (N2+N5+N6)       │
+│      → RAG examples + style data + CRM insights      │
 │                                                      │
 │  Próxima geração é melhor ←──────────────────────────│
 └──────────────────────────────────────────────────────┘
@@ -378,22 +394,124 @@ CREATE INDEX idx_style_profiles_org
 
 ---
 
-### Nível 6 — Fine-tuning Pipeline (Futuro)
+### Nível 6 — CRM Intelligence Feedback
 
-> **Nota:** Este nível é documentado conceitualmente. Não será implementado nas fases 1-3 do roadmap.
+Conecta dados de conversão dos CRMs nativos (ADR-018) ao pipeline de aprendizado da IA, permitindo que o sistema aprenda quais conteúdos **geram resultado de negócio** (leads, deals, receita) — não apenas engajamento.
+
+#### Tabela: `crm_conversion_attributions`
+
+```sql
+CREATE TABLE crm_conversion_attributions (
+    id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id     UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    crm_connection_id   UUID            NOT NULL REFERENCES crm_connections(id) ON DELETE CASCADE,
+    content_id          UUID            NOT NULL,
+    crm_entity_type     VARCHAR(50)     NOT NULL,        -- deal, contact
+    crm_entity_id       VARCHAR(255)    NOT NULL,
+    attribution_type    VARCHAR(50)     NOT NULL,         -- direct_engagement, lead_capture, deal_closed
+    attribution_value   DECIMAL(12,2)   NULL,             -- Valor monetário do deal (se aplicável)
+    currency            VARCHAR(3)      NULL,             -- BRL, USD, etc.
+    crm_stage           VARCHAR(100)    NULL,             -- Pipeline stage no CRM
+    interaction_data    JSONB           NOT NULL DEFAULT '{}', -- Dados da interação social que originou
+    attributed_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_crm_conv_attr_org_content
+    ON crm_conversion_attributions (organization_id, content_id, created_at DESC);
+
+CREATE INDEX idx_crm_conv_attr_org_type
+    ON crm_conversion_attributions (organization_id, attribution_type, attributed_at DESC);
+```
+
+**Campos-chave:**
+
+- `attribution_type`:
+  - `direct_engagement` — comentário/interação social gerou contato no CRM.
+  - `lead_capture` — conteúdo originou lead identificado no CRM.
+  - `deal_closed` — deal associado ao conteúdo foi fechado (tem `attribution_value`).
+- `interaction_data`: `{comment_id, post_external_id, provider, interaction_type, interaction_at}`.
+- `attribution_value`: preenchido apenas para `deal_closed` — valor monetário do deal.
+
+#### Fluxos CRM → IA
+
+```
+CRM → Social Media Manager (via webhook do CRM ou sync bidirecional)
+──────────────────────────────────────────────────────────────────────
+
+1. Deal fechado no CRM (CrmDealCreated)
+   → Identifica conteúdo de origem via interaction_data
+   → Cria crm_conversion_attribution (deal_closed)
+   → Conteúdo ganha boost no RAG ranking (N2)
+   → Atualiza prediction weights: conteúdo com conversão > alto engagement (N4)
+
+2. Contato criado no CRM a partir de interação social (CrmContactSynced)
+   → Cria crm_conversion_attribution (lead_capture)
+   → Segmentos/tags do CRM injetados em ai_generation_context
+
+3. Deal stage mudou no CRM (ProcessCrmWebhookJob)
+   → Atualiza crm_stage na attribution
+   → Se stage = won/closed, registra deal_closed com valor
+
+4. Segmentos/tags atualizados no CRM
+   → Atualiza ai_generation_context.crm_audience_segments
+   → Próxima geração usa audiência mais refinada
+```
+
+#### Enriquecimento do RAG (N2)
+
+Conteúdos com `crm_conversion_attributions` recebem **boost no ranking RAG**:
+
+```
+RAG Score Final = cosine_similarity × (1 + conversion_boost)
+
+Onde:
+  conversion_boost = 0.0 (sem atribuição)
+  conversion_boost = 0.15 (lead_capture)
+  conversion_boost = 0.30 (deal_closed)
+  conversion_boost = 0.50 (deal_closed com attribution_value > mediana)
+```
+
+Isso faz com que a IA priorize conteúdos que **vendem**, não apenas que engajam.
+
+#### Novos `context_type` em `ai_generation_context`
+
+- `'crm_conversion_data'` — resumo de conversões por tipo de conteúdo. Cache semanal.
+- `'crm_audience_segments'` — segmentos/tags do CRM para personalização de tom/audiência. Atualizado a cada sync inbound.
+
+#### Enriquecimento do Prediction Accuracy (N4)
+
+Validação de predição expandida para incluir métricas de conversão:
+
+```sql
+ALTER TABLE prediction_validations ADD COLUMN conversion_count INTEGER NULL;
+ALTER TABLE prediction_validations ADD COLUMN conversion_value DECIMAL(12,2) NULL;
+```
+
+- `conversion_count`: quantas conversões CRM o conteúdo gerou nos 30 dias pós-publicação.
+- `conversion_value`: valor monetário total atribuído ao conteúdo.
+- Novo indicador: **Content-to-Revenue Attribution Rate** = conversions / impressions × 100.
+
+---
+
+### Nível 7 — Fine-tuning Pipeline (Futuro)
+
+> **Nota:** Este nível é documentado conceitualmente. Não será implementado nas fases 1-4 do roadmap.
 
 **Conceito:**
 
 1. Exportar pares `(input, output_editado_pelo_usuario)` de `generation_feedback` onde `action = 'edited'`.
-2. Agrupar por vertical/nicho (não por organização individual — dataset muito pequeno).
-3. Usar APIs de fine-tuning (OpenAI, Anthropic) para criar modelos especializados por vertical.
-4. Registrar modelo fine-tuned no `AIProviderRegistry` como opção para a organização.
+2. Enriquecer com dados de conversão CRM (N6): pares cujo conteúdo gerou deal_closed recebem peso maior no dataset.
+3. Agrupar por vertical/nicho (não por organização individual — dataset muito pequeno).
+4. Usar APIs de fine-tuning (OpenAI, Anthropic) para criar modelos especializados por vertical.
+5. Registrar modelo fine-tuned no `AIProviderRegistry` como opção para a organização.
 
 **Pré-requisitos:**
 
 - Volume significativo de dados (>1.000 pares por vertical).
 - Pipeline de anonimização (remover qualquer dado sensível dos pares de treino).
 - Infraestrutura de avaliação (comparar modelo base vs fine-tuned).
+- Dados de conversão CRM suficientes para ponderar dataset (opcional, mas melhora qualidade).
 
 ---
 
@@ -419,6 +537,8 @@ Novos valores de `context_type` (sem mudança no schema):
 
 - `'rag_examples'` — cache de top performers por tópico frequente.
 - `'org_style'` — resumo do style profile para injeção no prompt.
+- `'crm_conversion_data'` — resumo de conversões CRM por tipo de conteúdo (N6).
+- `'crm_audience_segments'` — segmentos/tags do CRM para personalização (N6).
 
 ---
 
@@ -433,7 +553,9 @@ Novos valores de `context_type` (sem mudança no schema):
 | `EvaluatePromptExperimentJob` | low | Pós-feedback | N3 | Atualiza contadores, verifica significância, declara vencedor |
 | `ValidatePredictionAccuracyJob` | low | 7d pós-publicação | N4 | Compara predição vs métricas reais |
 | `GenerateOrgStyleProfileJob` | low | Semanal | N5 | Analisa padrões de edição, gera perfil + summary LLM |
-| `UpdateLearningContextJob` | low | Pós-style/prompt update | N2+N5 | Atualiza ai_generation_context com RAG + style |
+| `UpdateLearningContextJob` | low | Pós-style/prompt update | N2+N5+N6 | Atualiza ai_generation_context com RAG + style + CRM |
+| `AttributeCrmConversionJob` | low | A cada CrmDealCreated/CrmContactSynced | N6 | Atribui conversão CRM ao conteúdo social de origem |
+| `EnrichAIContextFromCrmJob` | low | Semanal | N6 | Agrega dados de conversão e segmentos CRM para ai_generation_context |
 | `CleanupExpiredLearningDataJob` | low | Semanal | Todos | Expira style profiles, marca experimentos stale |
 
 Todos os jobs seguem padrões existentes: idempotentes, carregam `organization_id`/`user_id`/`correlation_id`/`trace_id`, chamam Use Cases da Application Layer.
@@ -450,6 +572,8 @@ Todos os jobs seguem padrões existentes: idempotentes, carregam `organization_i
 | `PromptExperimentCompleted` | A/B test atinge significância | experiment_id, organization_id, winner_id, confidence_level |
 | `PredictionValidated` | Métricas reais comparadas com predição | validation_id, prediction_id, organization_id, predicted_score, actual_score, absolute_error |
 | `OrgStyleProfileGenerated` | Perfil de estilo criado/atualizado | profile_id, organization_id, generation_type, sample_size, confidence_level |
+| `CrmConversionAttributed` | Conversão CRM atribuída a conteúdo | attribution_id, organization_id, content_id, crm_entity_type, attribution_type, attribution_value |
+| `CrmAIContextEnriched` | Contexto IA enriquecido com dados CRM | organization_id, context_types_updated, conversion_count, segments_count |
 | `LearningContextUpdated` | ai_generation_context atualizado | organization_id, context_types_updated |
 
 ### Novos Async Listeners
@@ -460,6 +584,9 @@ Todos os jobs seguem padrões existentes: idempotentes, carregam `organization_i
 | `MetricsSynced` | `ValidatePredictionIfDue` | Executa validação se 7+ dias desde publicação |
 | `PromptExperimentCompleted` | `ActivateWinningTemplate` | Ativa template vencedor como default |
 | `OrgStyleProfileGenerated` | `UpdateLearningContext` | Atualiza cache de contexto |
+| `CrmDealCreated` | `AttributeCrmConversion` | Atribui conversão ao conteúdo social de origem |
+| `CrmContactSynced` | `AttributeCrmConversion` | Atribui lead capture ao conteúdo social de origem |
+| `CrmConversionAttributed` | `UpdateLearningContext` | Atualiza RAG boost e contexto de conversão |
 
 ---
 
@@ -488,17 +615,22 @@ src/Domain/ContentAI/
 src/Domain/AIIntelligence/
 ├── Entity/
 │   ├── PredictionValidation.php        (N4)
-│   └── OrgStyleProfile.php             (N5 — Aggregate Root)
+│   ├── OrgStyleProfile.php             (N5 — Aggregate Root)
+│   └── CrmConversionAttribution.php    (N6)
 ├── ValueObject/
 │   ├── StylePreferences.php
-│   └── PredictionAccuracy.php
+│   ├── PredictionAccuracy.php
+│   └── AttributionType.php             (direct_engagement, lead_capture, deal_closed)
 ├── Event/
 │   ├── PredictionValidated.php
 │   ├── OrgStyleProfileGenerated.php
+│   ├── CrmConversionAttributed.php
+│   ├── CrmAIContextEnriched.php
 │   └── LearningContextUpdated.php
 └── Interface/
     ├── StyleProfileAnalyzerInterface.php
-    └── PredictionValidatorInterface.php
+    ├── PredictionValidatorInterface.php
+    └── CrmIntelligenceProviderInterface.php
 
 src/Application/ContentAI/UseCase/
 ├── RecordGenerationFeedbackUseCase.php
@@ -511,6 +643,8 @@ src/Application/AIIntelligence/UseCase/
 ├── RetrieveSimilarContentUseCase.php   (RAG)
 ├── ValidatePredictionUseCase.php
 ├── GenerateStyleProfileUseCase.php
+├── AttributeCrmConversionUseCase.php   (N6)
+├── EnrichAIContextFromCrmUseCase.php   (N6)
 └── UpdateLearningContextUseCase.php
 ```
 
@@ -527,9 +661,11 @@ src/Application/AIIntelligence/UseCase/
 | Auto-otimização de prompts | ❌ | ❌ | ✅ | ✅ |
 | Style Learning | ❌ | ❌ | ✅ | ✅ |
 | Prediction Accuracy tracking | ❌ | ❌ | ❌ | ✅ |
+| CRM Intelligence (conversão→IA) | ❌ | ❌ | ❌ | ✅ |
 | Fine-tuning pipeline | ❌ | ❌ | ❌ | 🔜 Futuro |
 
 > **Nota:** Generation Feedback (N1) é coletado para **todos** os planos porque tem custo zero e alimenta a melhoria dos templates globais do sistema.
+> CRM Intelligence (N6) requer CRM conector ativo (ADR-018) e é exclusivo do plano Agency, pois conecta dados de conversão/receita ao pipeline de IA.
 
 ### Custo Mensal Estimado por Plano
 
@@ -541,9 +677,11 @@ src/Application/AIIntelligence/UseCase/
 | Diff calculation | PHP Levenshtein | ~$0.0000 | $0 | $0 | $0 | $0 |
 | Prompt performance | PostgreSQL | ~$0.0000 | $0 | $0 | $0 | $0 |
 | Style profile LLM | GPT-4o-mini | ~$0.0003/semana | $0 | $0 | $0.005 | $0.005 |
+| CRM attribution | PostgreSQL | ~$0.0000 | $0 | $0 | $0 | $0 |
+| CRM context enrichment | PostgreSQL | ~$0.0000 | $0 | $0 | $0 | $0 |
 | **Total mensal** | | | **$0** | **~$0.10** | **~$0.26** | **~$2.51** |
 
-> Impacto nas margens: **negligível** (< 1% em todos os planos). O Learning Loop é um diferencial de alto valor a custo quase zero.
+> Impacto nas margens: **negligível** (< 1% em todos os planos). O Learning Loop é um diferencial de alto valor a custo quase zero. CRM Intelligence (N6) tem custo zero adicional (puro database operations) e agrega valor substancial ao plano Agency.
 
 ---
 
@@ -556,7 +694,7 @@ Construir pipeline de ML com treinamento de modelos custom (scikit-learn, PyTorc
 **Rejeitada porque:**
 - Complexidade de infraestrutura desproporcional ao benefício.
 - Requer equipe de ML dedicada.
-- Os 5 níveis propostos entregam ~80% do valor com ~20% da complexidade.
+- Os 6 níveis propostos entregam ~80% do valor com ~20% da complexidade.
 
 ### Alternativa 2: Apenas RAG (Nível 2)
 
@@ -574,8 +712,8 @@ Investir em fine-tuning de modelos por organização desde a primeira versão.
 **Rejeitada porque:**
 - Requer volume grande de dados (>1.000 pares por vertical).
 - Custo de fine-tuning por organização é proibitivo.
-- Os níveis 1-5 são pré-requisitos (geram os dados para fine-tuning).
-- Será implementado como Nível 6 quando houver volume suficiente.
+- Os níveis 1-6 são pré-requisitos (geram os dados para fine-tuning).
+- Será implementado como Nível 7 quando houver volume suficiente.
 
 ---
 
@@ -588,13 +726,15 @@ Investir em fine-tuning de modelos por organização desde a primeira versão.
 - **Custo quase zero** — a maioria dos níveis são operações de database, não chamadas de IA.
 - **Reutiliza infraestrutura existente** — pgvector, ai_generation_context, analytics pipeline.
 - **Melhoria contínua automática** — templates globais melhoram com uso de todos os usuários.
+- **Ponte CRM↔IA inédita** — nenhum concorrente conecta dados de conversão CRM ao pipeline de geração de conteúdo. Conteúdo otimizado para venda, não apenas engajamento.
 
 ### Negativas
 
 - **Cold start para novas organizações** — sem histórico, não há feedback/style/DNA para usar.
-- **Complexidade adicional** — 5 tabelas, 9 jobs, 9 eventos.
+- **Complexidade adicional** — 6 tabelas, 11 jobs, 11 eventos.
 - **Prompt templates requerem seed** — templates iniciais precisam ser criados e mantidos.
 - **Latência potencial no RAG** — query pgvector antes da geração pode adicionar ~100-200ms.
+- **CRM Intelligence depende de conexão ativa** — sem CRM conectado (ADR-018), N6 fica inativo.
 
 ### Riscos
 
@@ -605,6 +745,8 @@ Investir em fine-tuning de modelos por organização desde a primeira versão.
 | Style learning conflita com tom explícito do usuário | Baixa | Tom explícito no request sempre prevalece sobre style profile |
 | Prompt experiment com amostra enviesada | Baixa | min_sample_size de 50, split 50/50, z-test com confidence 0.95 |
 | Prediction normalization entre orgs heterogêneas | Média | Normalizar contra distribuição da **própria** org, nunca cross-org |
+| Atribuição CRM incorreta (falso positivo) | Média | Atribuição conservadora: apenas conversões com interaction_data rastreável. Sem inferência. |
+| CRM desconectado perde dados de conversão | Baixa | Graceful degradation: N6 desativado silenciosamente, outros níveis continuam normais |
 
 ---
 
@@ -612,6 +754,8 @@ Investir em fine-tuning de modelos por organização desde a primeira versão.
 
 - ADR-009: Laravel AI SDK (Prism) — base para geração de texto
 - ADR-016: Multi-Provider AI — factory e registry de providers
+- ADR-018: Native CRM Connectors — conectores nativos que alimentam N6
 - `.claude/skills/06-domain/ai-intelligence.md` — Content DNA, Performance Prediction, Audience Feedback Loop
 - `.claude/skills/06-domain/ai-content-generation.md` — Tipos de geração, regras de negócio
+- `.claude/skills/06-domain/ai-learning-loop.md` — Regras de negócio do Learning Loop
 - `.claude/skills/03-integrations/ai-integration.md` — Arquitetura de integração IA

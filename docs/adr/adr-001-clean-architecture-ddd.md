@@ -68,7 +68,7 @@ As dependências SEMPRE apontam para dentro:
 
 ### DDD Estratégico
 
-8 Bounded Contexts identificados (ver PRD 05-bounded-contexts.md), cada um com
+12 Bounded Contexts identificados (ver PRD 05-bounded-contexts.md), cada um com
 seu próprio modelo de domínio e linguagem ubíqua.
 
 ## Alternativas consideradas

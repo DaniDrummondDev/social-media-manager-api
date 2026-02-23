@@ -77,7 +77,7 @@ Lista todas as organizações da plataforma.
 | Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|--------|-----------|
 | `status` | string | — | `active`, `suspended`, `deleted` |
-| `plan` | string | — | Slug do plano: `free`, `pro`, `enterprise` |
+| `plan` | string | — | Slug do plano: `free`, `creator`, `professional`, `agency` |
 | `search` | string | — | Busca por nome da org ou email do owner |
 | `from` | datetime | — | Criada a partir de |
 | `to` | datetime | — | Criada até |

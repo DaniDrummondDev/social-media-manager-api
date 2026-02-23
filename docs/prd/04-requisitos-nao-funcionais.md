@@ -92,6 +92,9 @@
 - Índices otimizados para queries frequentes
 - Particionamento de tabelas de analytics por período (quando volume justificar)
 - pgvector para embeddings de conteúdo e busca semântica
+- Multi-tenancy via shared database com isolamento por `organization_id` (ADR-019)
+- Row-Level Security (RLS) como segunda camada de defesa quando volume justificar (ADR-019 Nível 2)
+- Escalabilidade progressiva em 3 níveis documentada (ADR-019)
 
 ### RNF-022: Cache
 - Cache de configurações do usuário: TTL 1h

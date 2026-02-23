@@ -1,6 +1,6 @@
 # Architecture Decision Records (ADR)
 
-> **Projeto:** Social Media Manager
+> **Projeto:** Social Media Manager\
 > **Data de criação:** 2026-02-15
 
 ## O que são ADRs?
@@ -24,6 +24,7 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 | [ADR-003](adr-003-postgresql-pgvector.md) | PostgreSQL com pgvector | Accepted |
 | [ADR-004](adr-004-redis-cache-queues.md) | Redis para cache e filas | Accepted |
 | [ADR-005](adr-005-jwt-authentication.md) | Autenticação JWT com RS256 | Accepted |
+| [ADR-019](adr-019-multi-tenancy-strategy.md) | Multi-Tenancy Strategy — Shared Database | Accepted |
 
 ### Design Patterns & Integrações
 
@@ -50,4 +51,10 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 | # | Título | Status |
 |---|--------|--------|
 | [ADR-016](adr-016-multi-provider-ai.md) | Arquitetura Multi-Provider AI | Accepted |
-| [ADR-017](adr-017-ai-learning-feedback-loop.md) | AI Learning & Feedback Loop | Proposed |
+| [ADR-017](adr-017-ai-learning-feedback-loop.md) | AI Learning & Feedback Loop | Accepted |
+
+### Integrações Externas
+
+| # | Título | Status |
+|---|--------|--------|
+| [ADR-018](adr-018-native-crm-connectors.md) | Native CRM Connectors Strategy | Accepted |

@@ -8,7 +8,7 @@
 
 ## Visao Geral
 
-O roadmap esta dividido em **15 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)** e os Sprints 12-14 cobrem a **Fase 3 (v3.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
+O roadmap esta dividido em **17 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)**, os Sprints 12-14 cobrem a **Fase 3 (v3.0)** e os Sprints 15-16 cobrem a **Fase 4 (v4.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
 
 ```
                            Fase 1 (v1.0)
@@ -28,6 +28,11 @@ Sprint 8 ─────────→ Sprint 9            Sprint 10 ──→ 
             Sprint 12 ─────────→ Sprint 13 ─────────→ Sprint 14
             (Content DNA         (Feedback Loop        (AI Learning
              + Prediction)        + Gap Analysis)       Loop — ADR-017)
+
+                           Fase 4 (v4.0)
+            Sprint 15 ─────────────────→ Sprint 16
+            (CRM Connectors              (CRM Fase 2 +
+             Fase 1 — ADR-018)            CRM Intelligence N6)
 ```
 
 ---
@@ -393,7 +398,7 @@ MediaUpload
 - **RN-MED-22**: Chunks podem ser enviados fora de ordem (S3 Multipart suporta).
 - **RN-MED-23**: Se um chunk falhar, o cliente reenvia apenas aquele chunk (resume).
 - **RN-MED-24**: Checksum SHA-256 calculado incrementalmente conforme chunks chegam. Validado no `complete`.
-- **RN-MED-25**: Limite de tamanho total por upload: definido pelo plano (Free: 500MB, Pro: 2GB, Enterprise: 10GB).
+- **RN-MED-25**: Limite de tamanho total por upload: definido pelo plano (Free: 500MB, Creator: 2GB, Professional: 5GB, Agency: 10GB).
 - **RN-MED-26**: Upload simples (POST /media) continua disponivel para arquivos <= 10MB (imagens, videos curtos).
 - **RN-MED-27**: Progresso do upload disponivel via `GET /media/uploads/{id}` para feedback ao cliente.
 
@@ -630,7 +635,7 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 ### 6.3 Infrastructure Layer
 
 - [ ] Migrations: `plans`, `subscriptions`, `usage_records`, `invoices`
-- [ ] Seeds: planos default (Free, Pro, Enterprise)
+- [ ] Seeds: planos default (Free, Creator, Professional, Agency)
 - [ ] `StripePaymentGateway` (implementa `PaymentGatewayInterface`)
 - [ ] Middleware: `CheckPlanLimit` (verifica limites antes de acoes)
 - [ ] Jobs: `ProcessStripeWebhookJob`, `CheckExpiredSubscriptionsJob`, `DowngradeToFreePlanJob`, `SyncUsageRecordsJob`
@@ -651,7 +656,7 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### Entregaveis Sprint 6
 
-- 3 planos (Free, Pro, Enterprise) com limites definidos
+- 4 planos (Free, Creator, Professional, Agency) com limites definidos
 - Subscription por organizacao com ciclo de vida completo
 - Checkout via Stripe Checkout Session
 - Customer Portal via Stripe
@@ -911,7 +916,7 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 - Mencoes podem gerar **alto volume de dados**. A tabela `mentions` deve ser particionada por mes.
 - Deduplicacao por `external_id + platform` para evitar mencoes duplicadas entre execucoes.
 - Cache de resultados do dashboard (TTL 5min) para evitar queries pesadas em cada request.
-- Limites de queries ativas por plano (Free: 0, Pro: 5, Enterprise: 50) — enforcement via `CheckPlanLimit` middleware.
+- Limites de queries ativas por plano (Free: 0, Creator: 0, Professional: 0, Agency: 10) — enforcement via `CheckPlanLimit` middleware.
 
 ### Entregaveis Sprint 9
 
@@ -1184,7 +1189,7 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 
 ## Sprint 14 — AI Learning & Feedback Loop
 
-**Objetivo:** Implementar o loop de aprendizado da IA em 5 niveis — feedback tracking, RAG, prompt optimization, prediction accuracy e style learning — transformando a IA numa ferramenta que melhora com o uso.
+**Objetivo:** Implementar o loop de aprendizado da IA em 5 dos 6 niveis ativos — feedback tracking, RAG, prompt optimization, prediction accuracy e style learning — transformando a IA numa ferramenta que melhora com o uso. O Nivel 6 (CRM Intelligence) e implementado no Sprint 16.
 
 **Bounded Contexts:** Content AI (expandido), AI Intelligence (expandido)
 
@@ -1277,6 +1282,229 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 
 ---
 
+## Fase 4 — Integracoes CRM Nativas (v4.0)
+
+Os sprints 15 e 16 implementam conectores nativos com os CRMs mais populares do mercado-alvo (Brasil + global), usando o Adapter Pattern (ADR-006) e a estrategia definida no ADR-018.
+
+---
+
+## Sprint 15 — CRM Connectors Fase 1 (HubSpot, RD Station, Pipedrive)
+
+**Objetivo:** Conectores nativos plug-and-play com os 3 CRMs mais relevantes para o publico-alvo brasileiro (PMEs, agencias, freelancers), com sincronizacao bidirecional e mapeamento de campos.
+
+**Bounded Context:** Engagement & Automation (extensao)
+
+> **Nota:** Este sprint implementa a infraestrutura de CRM connectors (interface, factory, tabelas, jobs) que sera reutilizada pelo Sprint 16.
+
+### 15.1 Domain Layer
+
+- [ ] `CrmProvider` enum (hubspot, rdstation, pipedrive, salesforce, activecampaign)
+- [ ] `CrmConnection` entity (provider, tokens, status, settings)
+- [ ] `CrmFieldMapping` value object (smm_field, crm_field, transform)
+- [ ] `CrmSyncResult` value object (direction, entity_type, action, status)
+- [ ] Domain Events: `CrmConnected`, `CrmDisconnected`, `CrmContactSynced`, `CrmDealCreated`, `CrmActivityLogged`, `CrmSyncFailed`, `CrmTokenExpired`, `CrmFieldMappingUpdated`
+- [ ] Contracts: `CrmConnectorInterface` (authenticate, createContact, createDeal, logActivity, searchContacts, etc.)
+- [ ] Repository interfaces: `CrmConnectionRepositoryInterface`, `CrmFieldMappingRepositoryInterface`, `CrmSyncLogRepositoryInterface`
+
+### 15.2 Application Layer
+
+- [ ] Use Cases CRM Connection:
+  - `ConnectCrmUseCase` (inicia OAuth flow)
+  - `HandleCrmCallbackUseCase` (processa callback OAuth)
+  - `DisconnectCrmUseCase` (revoke + soft delete)
+  - `TestCrmConnectionUseCase` (verifica status)
+  - `ListCrmConnectionsUseCase`
+  - `GetCrmConnectionStatusUseCase`
+- [ ] Use Cases CRM Sync (Outbound):
+  - `SyncContactToCrmUseCase` (cria/atualiza contato)
+  - `CreateCrmDealUseCase` (cria oportunidade)
+  - `LogCrmActivityUseCase` (registra atividade)
+- [ ] Use Cases CRM Sync (Inbound):
+  - `ProcessCrmWebhookUseCase` (processa webhook do CRM)
+- [ ] Use Cases Field Mapping:
+  - `GetCrmFieldMappingsUseCase`
+  - `UpdateCrmFieldMappingsUseCase`
+  - `ResetCrmFieldMappingsToDefaultUseCase`
+- [ ] Use Cases Maintenance:
+  - `ForceCrmSyncUseCase` (sincronizacao manual)
+  - `BackfillCrmContactsUseCase` (backfill apos conexao)
+- [ ] DTOs: `CrmConnectionDTO`, `CrmMappingDTO`, `CrmSyncLogDTO`
+- [ ] Listeners:
+  - `CommentCaptured` → `SyncContactToCrmJob` (se CRM conectado)
+  - `AutomationTriggered` (lead) → `CreateCrmDealJob` (se CRM conectado)
+  - `PostPublished` → `LogCrmActivityJob` (se CRM conectado)
+  - `CrmTokenExpired` → `RefreshCrmTokenJob`
+
+### 15.3 Infrastructure Layer
+
+- [ ] Migration: `crm_connections` table
+- [ ] Migration: `crm_field_mappings` table
+- [ ] Migration: `crm_sync_logs` table
+- [ ] Migration: `crm_provider_type` enum
+- [ ] Eloquent Models: CrmConnection, CrmFieldMapping, CrmSyncLog
+- [ ] Repository implementations (Eloquent)
+- [ ] **HubSpot Connector:**
+  - OAuth 2.0 flow (access token 30min, refresh token)
+  - Create/update contacts via HubSpot CRM API v3
+  - Create deals via HubSpot Deals API
+  - Log activities via HubSpot Engagements API
+  - Search contacts via HubSpot Search API
+  - Rate limiting: 150 req/10s (token bucket)
+  - Default field mappings
+- [ ] **RD Station Connector:**
+  - OAuth 2.0 flow (access token 24h, refresh token)
+  - Create/update contacts via RD Station CRM API
+  - Create deals via RD Station Deals API
+  - Rate limiting: 120 req/min
+  - Default field mappings
+- [ ] **Pipedrive Connector:**
+  - OAuth 2.0 flow (access token 60min, refresh token)
+  - Create/update persons via Pipedrive Persons API
+  - Create deals via Pipedrive Deals API
+  - Log activities via Pipedrive Activities API
+  - Rate limiting: 80 req/2s
+  - Default field mappings
+- [ ] `CrmConnectorFactory` — resolve connector por provider
+- [ ] Jobs:
+  - `SyncContactToCrmJob` (queue: default, retry: 3, backoff: 60s/300s/900s)
+  - `CreateCrmDealJob` (queue: default, retry: 3)
+  - `LogCrmActivityJob` (queue: low, retry: 3)
+  - `RefreshCrmTokenJob` (queue: high, retry: 2)
+  - `ProcessCrmWebhookJob` (queue: default, retry: 3)
+  - `BackfillCrmContactsJob` (queue: low, retry: 1)
+- [ ] Controllers: CrmConnectionController, CrmMappingController, CrmSyncController
+- [ ] Routes: 11 endpoints sob `/api/v1/crm/`
+- [ ] Feature gate middleware: Professional+ para CRM connectors
+
+### 15.4 Testes
+
+- [ ] Unit tests: CrmConnection entity, CrmFieldMapping VO, CrmProvider enum
+- [ ] Unit tests: Todos os Use Cases (mock de CrmConnectorInterface)
+- [ ] Integration tests: HubSpot connector (HTTP mock)
+- [ ] Integration tests: RD Station connector (HTTP mock)
+- [ ] Integration tests: Pipedrive connector (HTTP mock)
+- [ ] Integration tests: CrmConnectorFactory
+- [ ] Feature tests: Endpoints de conexao, mapeamento, sync, logs
+- [ ] Feature tests: Feature gate (Free/Creator bloqueado, Professional/Agency permitido)
+- [ ] Feature tests: Fluxo completo outbound (comentario → contato no CRM)
+- [ ] Feature tests: Fluxo completo inbound (webhook CRM → tag no SMM)
+- [ ] Architecture tests: CrmConnectorInterface no Domain, implementacoes no Infrastructure
+
+### Entregaveis Sprint 15
+
+- Infraestrutura de CRM connectors (interface, factory, tabelas, jobs)
+- 3 conectores nativos funcionais: HubSpot, RD Station, Pipedrive
+- OAuth flow completo para cada CRM
+- Sincronizacao outbound: comentarios → contatos, leads → deals, publicacoes → atividades
+- Sincronizacao inbound: webhooks do CRM processados
+- Mapeamento de campos customizavel com defaults sensiveis
+- Logs de sincronizacao com filtros e paginacao
+- Backfill de contatos existentes apos conexao
+- Feature gates: Professional = 2 conexoes, Agency = 5 conexoes
+
+---
+
+## Sprint 16 — CRM Connectors Fase 2 + CRM Intelligence
+
+**Objetivo:** Expandir conectores CRM com Salesforce (enterprise) e ActiveCampaign (automacao), e implementar a ponte CRM→IA (Nivel 6 do ADR-017) que conecta dados de conversao a geracao de conteudo.
+
+**Bounded Context:** Engagement & Automation (extensao), AI Intelligence (extensao)
+
+> **Nota:** Este sprint reutiliza toda a infraestrutura criada no Sprint 15. Os conectores novos sao implementacoes adicionais. A CRM Intelligence (N6) conecta os dados de CRM ao pipeline de aprendizado da IA (ADR-017).
+
+### 16.1 Domain Layer
+
+- [ ] Nenhuma alteracao — infraestrutura ja existe do Sprint 15.
+
+### 16.2 Application Layer
+
+- [ ] Nenhuma alteracao significativa — mesmos Use Cases reutilizados.
+- [ ] Ajustes em DTOs se necessario para campos especificos de Salesforce/ActiveCampaign.
+
+### 16.3 Infrastructure Layer
+
+- [ ] **Salesforce Connector:**
+  - OAuth 2.0 flow (access token 2h, refresh token)
+  - Create/update contacts via Salesforce REST API (SObject)
+  - Create opportunities via Salesforce Opportunities API
+  - Log activities via Salesforce Tasks API
+  - Search contacts via SOQL query
+  - Rate limiting: 15.000 req/dia (standard), Bulk API para backfill
+  - Default field mappings (custom fields com sufixo `__c`)
+- [ ] **ActiveCampaign Connector:**
+  - API Key authentication (nao expira)
+  - Create/update contacts via ActiveCampaign API v3
+  - Create deals via ActiveCampaign Deals API
+  - Add tags e custom fields
+  - Rate limiting: 5 req/s
+  - Default field mappings
+- [ ] Atualizar `CrmConnectorFactory` com novos providers
+- [ ] Feature gate: Salesforce e ActiveCampaign somente Agency
+
+### 16.4 Testes
+
+- [ ] Integration tests: Salesforce connector (HTTP mock)
+- [ ] Integration tests: ActiveCampaign connector (HTTP mock)
+- [ ] Feature tests: OAuth flow Salesforce
+- [ ] Feature tests: API Key flow ActiveCampaign
+- [ ] Feature tests: Feature gate (Professional bloqueado para SF/AC, Agency permitido)
+- [ ] Feature tests: Fluxo completo outbound/inbound para cada novo provider
+
+### 16.5 CRM Intelligence (ADR-017 Nivel 6)
+
+#### Domain Layer
+
+- [ ] `CrmConversionAttribution` entity (AI Intelligence BC)
+- [ ] `AttributionType` value object (direct_engagement, lead_capture, deal_closed)
+- [ ] `CrmConversionAttributed` domain event
+- [ ] `CrmAIContextEnriched` domain event
+- [ ] `CrmIntelligenceProviderInterface`
+
+#### Application Layer
+
+- [ ] `AttributeCrmConversionUseCase` — atribui conversao CRM ao conteudo social de origem
+- [ ] `EnrichAIContextFromCrmUseCase` — agrega dados de conversao e segmentos CRM para ai_generation_context
+
+#### Infrastructure Layer
+
+- [ ] Migration: `crm_conversion_attributions` table
+- [ ] Migration: `ALTER TABLE prediction_validations ADD COLUMN conversion_count, conversion_value`
+- [ ] `CrmIntelligenceProvider` implements `CrmIntelligenceProviderInterface`
+- [ ] Atualizar `RAGContextProvider` com conversion boost logic
+- [ ] Atualizar `UpdateLearningContextJob` para incluir CRM data
+- [ ] `AttributeCrmConversionJob` — triggered por CrmDealCreated/CrmContactSynced
+- [ ] `EnrichAIContextFromCrmJob` — batch semanal
+
+#### Listeners
+
+- [ ] `CrmDealCreated` → `AttributeCrmConversion`
+- [ ] `CrmContactSynced` → `AttributeCrmConversion`
+- [ ] `CrmConversionAttributed` → `UpdateLearningContext`
+
+#### Testes
+
+- [ ] Unit tests: AttributionType value object, conversion boost calculation
+- [ ] Unit tests: CrmConversionAttribution entity rules
+- [ ] Integration tests: AttributeCrmConversionUseCase
+- [ ] Integration tests: EnrichAIContextFromCrmUseCase
+- [ ] Feature tests: CRM Intelligence end-to-end (deal closed → attribution → RAG boost)
+- [ ] Feature tests: Feature gate (Agency only)
+- [ ] Feature tests: Graceful degradation (sem CRM conectado, sem interaction_data)
+
+### Entregaveis Sprint 16
+
+- 2 novos conectores nativos: Salesforce, ActiveCampaign
+- Salesforce: OAuth completo, SOQL search, Bulk API para backfill
+- ActiveCampaign: API Key auth, tags automaticas, custom fields
+- Feature gate: Salesforce e ActiveCampaign exclusivos para Agency
+- Total de 5 CRMs nativos disponiveis no sistema
+- **CRM Intelligence (N6):** Dados de conversao CRM retroalimentam a IA
+- **crm_conversion_attributions:** Rastreia conteudo → lead → deal → receita
+- **RAG boost:** Conteudo que gera vendas e priorizado nas geracoes futuras
+- **Feature gate:** CRM Intelligence exclusivo Agency
+
+---
+
 ## Matriz de Dependencias
 
 | Sprint | Depende de | Bounded Contexts | Fase |
@@ -1296,6 +1524,8 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 | 12 | 3, 5 | AI Intelligence (DNA + Prediction) | 3 |
 | 13 | 5, 9, 12 | AI Intelligence (Feedback Loop + Gap Analysis) | 3 |
 | 14 | 3, 5, 12, 13 | AI Intelligence (Learning Loop — ADR-017) | 3 |
+| 15 | 2, 5, 6 | Engagement & Automation (CRM Connectors Fase 1 — ADR-018) | 4 |
+| 16 | 14, 15 | Engagement & Automation (CRM Fase 2), AI Intelligence (CRM Intelligence N6 — ADR-017+018) | 4 |
 
 > **Nota:** Sprint 6 (Billing) depende apenas do Sprint 1, podendo ser iniciado em paralelo com Sprints 3-5 se houver capacidade.
 
@@ -1304,6 +1534,10 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 > **Nota:** Sprint 13 (Feedback Loop + Gap Analysis) depende do Sprint 9 (Social Listening) para dados de concorrentes e do Sprint 12 para o pipeline de embeddings.
 
 > **Nota:** Sprint 14 (AI Learning Loop) depende do Sprint 3 (Content AI base), Sprint 5 (Analytics para metricas), Sprint 12 (embeddings para RAG) e Sprint 13 (audience insights para contexto).
+
+> **Nota:** Sprint 15 (CRM Connectors Fase 1) depende do Sprint 2 (Social Account — OAuth patterns), Sprint 5 (Engagement & Automation — webhooks/comentarios) e Sprint 6 (Billing — feature gates). Pode rodar em paralelo com Sprints 12-14 se houver capacidade.
+
+> **Nota:** Sprint 16 (CRM Fase 2 + CRM Intelligence) depende do Sprint 15 (infraestrutura CRM) e Sprint 14 (Learning Loop) para conectar dados de conversao CRM ao pipeline de IA.
 
 ---
 
@@ -1357,15 +1591,23 @@ Cada sprint so e considerado concluido quando:
 | 14 | 5 | ~12 | ~12 | 9 | ~65 |
 | **Subtotal Fase 3** | **11** | **~30** | **~32** | **17** | **~175** |
 
+### Fase 4 (v4.0) — Sprints 15-16
+
+| Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--------|-----------|-----------|-----------|------|---------------|
+| 15 | 4 | ~11 | ~14 | 6 | ~70 |
+| 16 | 2 | 0 | ~4 | 2 | ~45 |
+| **Subtotal Fase 4** | **6** | **~11** | **~18** | **8** | **~115** |
+
 | | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--|-----------|-----------|-----------|------|---------------|
-| **Total Geral** | **55** | **~168** | **~183** | **48** | **~805** |
+| **Total Geral** | **61** | **~179** | **~201** | **56** | **~920** |
 
 ---
 
 ## Apos o Roadmap — Features Futuras
 
-Itens para considerar apos a v2.0:
+Itens para considerar apos a v4.0:
 
 - **Notificacoes in-app** (WebSocket ou Pusher)
 - **Threads/Twitter** como nova rede social
@@ -1653,11 +1895,11 @@ Geracao visual e **significativamente mais cara** que geracao textual. O sistema
 
 **Limites por plano (sugestao):**
 
-| Recurso | Free | Pro | Enterprise |
-|---------|------|-----|------------|
-| Geracoes de imagem/mes | 5 | 100 | 1000 |
-| Geracoes de video/mes | 0 | 20 | 200 |
-| Brand presets | 0 | 3 | 20 |
+| Recurso | Free | Creator | Professional | Agency |
+|---------|------|---------|-------------|--------|
+| Geracoes de imagem/mes | 5 | 50 | 200 | 1000 |
+| Geracoes de video/mes | 0 | 10 | 50 | 200 |
+| Brand presets | 0 | 1 | 5 | 20 |
 
 **Regras de custo:**
 - Custo estimado exibido ao usuario **antes** da geracao (confirmacao explicita).

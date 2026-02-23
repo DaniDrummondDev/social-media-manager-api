@@ -145,7 +145,7 @@ CREATE INDEX idx_mentions_pending_sentiment
 - `external_id` + `platform` garante deduplicação cross-query.
 - `sentiment` é preenchido assincronamente pelo `AnalyzeMentionSentimentJob`.
 - `reach_estimate` é o número de seguidores do autor (proxy para alcance potencial).
-- Retenção por plano: Free 30d, Pro 6 meses, Enterprise 2 anos (partições antigas são dropadas).
+- Retenção por plano: Free 30d, Creator 90d, Professional 180d, Agency 730d (partições antigas são dropadas).
 
 ---
 
