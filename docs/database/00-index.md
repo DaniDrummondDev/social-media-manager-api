@@ -10,7 +10,7 @@
 
 | # | Documento | Tabelas |
 |---|-----------|---------|
-| 01 | [Identity & Social Account](01-identity-social-account.md) | users, refresh_tokens, password_reset_tokens, login_histories, audit_logs, social_accounts |
+| 01 | [Identity & Social Account](01-identity-social-account.md) | organizations, organization_members, users, refresh_tokens, password_reset_tokens, login_histories, audit_logs, social_accounts |
 | 02 | [Campaign & Media](02-campaign-media.md) | campaigns, contents, content_network_overrides, content_media, media |
 | 03 | [Publishing & Analytics](03-publishing-analytics.md) | scheduled_posts, content_metrics, content_metric_snapshots, account_metrics, report_exports |
 | 04 | [Engagement & Automation](04-engagement-automation.md) | comments, automation_rules, automation_rule_conditions, automation_executions, webhook_endpoints, webhook_deliveries, crm_connections, crm_field_mappings, crm_sync_logs *(Fase 4)* |
@@ -78,7 +78,7 @@ Tabelas com soft delete usam **índice parcial** para excluir registros deletado
 
 ```sql
 CREATE INDEX idx_campaigns_active
-    ON campaigns (user_id, created_at DESC)
+    ON campaigns (organization_id, created_at DESC)
     WHERE deleted_at IS NULL;
 ```
 
@@ -90,26 +90,27 @@ CREATE INDEX idx_campaigns_active
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                          IDENTITY & ACCESS                               │
 │                                                                          │
-│  ┌──────────┐    ┌─────────────────┐    ┌──────────────────────┐        │
-│  │  users   │───▶│ refresh_tokens  │    │ password_reset_tokens│        │
-│  │          │───▶│                 │    │                      │        │
-│  │          │───▶│ login_histories │    └──────────────────────┘        │
-│  │          │───▶│                 │                                     │
-│  │          │───▶│ audit_logs      │                                     │
-│  └────┬─────┘    └─────────────────┘                                    │
-│       │                                                                  │
-└───────┼──────────────────────────────────────────────────────────────────┘
-        │
-        │  1:N
-        ▼
-┌───────────────────────────────────────────┐
-│          SOCIAL ACCOUNT                    │
-│                                           │
-│  ┌──────────────────┐                     │
-│  │ social_accounts  │                     │
-│  └────────┬─────────┘                     │
-│           │                               │
-└───────────┼───────────────────────────────┘
+│  ┌──────────┐  N:N  ┌────────────────────┐    ┌──────────────────────┐  │
+│  │  users   │◄─────▶│ organization_members│───▶│   organizations     │  │
+│  │          │───▶   └────────────────────┘    │                      │  │
+│  │          │  ┌─────────────────┐             └──────────┬───────────┘  │
+│  │          │──│ refresh_tokens  │                        │              │
+│  │          │──│ login_histories │                        │              │
+│  │          │──│ audit_logs      │                        │              │
+│  └──────────┘  └─────────────────┘                       │              │
+│                                                           │              │
+└───────────────────────────────────────────────────────────┼──────────────┘
+                                                            │
+                                                            │  1:N
+                                                            ▼
+                                              ┌───────────────────────────┐
+                                              │    SOCIAL ACCOUNT         │
+                                              │                           │
+                                              │  ┌──────────────────┐     │
+                                              │  │ social_accounts  │     │
+                                              │  └────────┬─────────┘     │
+                                              │           │               │
+                                              └───────────┼───────────────┘
             │
     ┌───────┼──────────────────────────────────────┐
     │       │              │                        │
@@ -234,6 +235,8 @@ ALTER TYPE generation_type ADD VALUE 'calendar_planning';
 
 | Bounded Context | Tabela | Estimativa de volume |
 |----------------|--------|---------------------|
+| Identity | `organizations` | ~100K |
+| Identity | `organization_members` | ~300K (N:N users × orgs) |
 | Identity | `users` | ~100K registros |
 | Identity | `refresh_tokens` | ~500K (múltiplas sessões) |
 | Identity | `password_reset_tokens` | ~10K (efêmero) |
@@ -246,7 +249,7 @@ ALTER TYPE generation_type ADD VALUE 'calendar_planning';
 | Campaign | `content_media` | ~3M (pivot) |
 | Media | `media` | ~2M |
 | Content AI | `ai_generations` | ~10M/ano |
-| Content AI | `ai_settings` | ~100K (1 por user) |
+| Content AI | `ai_settings` | ~100K (1 por organização) |
 | Publishing | `scheduled_posts` | ~5M/ano |
 | Analytics | `content_metrics` | ~5M |
 | Analytics | `content_metric_snapshots` | ~50M/ano (particionada) |

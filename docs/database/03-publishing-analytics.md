@@ -11,9 +11,10 @@ Agendamentos de publicação — um registro por conteúdo × rede social.
 ```sql
 CREATE TABLE scheduled_posts (
     id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id     UUID                NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     content_id          UUID                NOT NULL REFERENCES contents(id) ON DELETE CASCADE,
     social_account_id   UUID                NOT NULL REFERENCES social_accounts(id) ON DELETE CASCADE,
-    user_id             UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    scheduled_by        UUID                NOT NULL REFERENCES users(id),
     scheduled_at        TIMESTAMPTZ         NOT NULL,
     published_at        TIMESTAMPTZ         NULL,
     status              post_status_type    NOT NULL DEFAULT 'pending',
@@ -47,9 +48,9 @@ CREATE INDEX idx_scheduled_posts_retry
     WHERE status = 'failed' AND next_retry_at IS NOT NULL
     AND last_error_is_permanent = FALSE;
 
--- Listagem por usuário
-CREATE INDEX idx_scheduled_posts_user
-    ON scheduled_posts (user_id, scheduled_at DESC);
+-- Listagem por organização
+CREATE INDEX idx_scheduled_posts_org
+    ON scheduled_posts (organization_id, scheduled_at DESC);
 
 -- Listagem por conteúdo
 CREATE INDEX idx_scheduled_posts_content
@@ -61,7 +62,7 @@ CREATE INDEX idx_scheduled_posts_account
 
 -- Calendário: busca por período
 CREATE INDEX idx_scheduled_posts_calendar
-    ON scheduled_posts (user_id, scheduled_at)
+    ON scheduled_posts (organization_id, scheduled_at)
     WHERE status IN ('pending', 'dispatched', 'publishing', 'published');
 
 -- Para verificar limite diário por conta
@@ -76,9 +77,9 @@ CREATE UNIQUE INDEX uq_scheduled_posts_publishing
 ```
 
 ### Relacionamentos
+- `N:1` → `organizations`
 - `N:1` → `contents`
 - `N:1` → `social_accounts`
-- `N:1` → `users`
 
 ### Notas
 - Um conteúdo agendado para 3 redes gera 3 registros em `scheduled_posts`.
@@ -253,7 +254,8 @@ Solicitações de exportação de relatórios.
 ```sql
 CREATE TABLE report_exports (
     id              UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id UUID                NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    requested_by    UUID                NOT NULL REFERENCES users(id),
     type            report_type         NOT NULL,
     format          export_format_type  NOT NULL,
     filters         JSONB               NOT NULL DEFAULT '{}',
@@ -268,8 +270,8 @@ CREATE TABLE report_exports (
 );
 
 -- Índices
-CREATE INDEX idx_report_exports_user
-    ON report_exports (user_id, created_at DESC);
+CREATE INDEX idx_report_exports_org
+    ON report_exports (organization_id, created_at DESC);
 
 CREATE INDEX idx_report_exports_status
     ON report_exports (status)
@@ -292,9 +294,10 @@ CREATE INDEX idx_report_exports_expires
 ```
 scheduled_posts
 ├── id (PK)
+├── organization_id (FK → organizations)
 ├── content_id (FK → contents)
 ├── social_account_id (FK → social_accounts)
-├── user_id (FK → users)
+├── scheduled_by (FK → users)
 ├── scheduled_at
 ├── published_at
 ├── status
@@ -325,7 +328,8 @@ account_metrics (PARTITIONED by month)
 
 report_exports
 ├── id (PK)
-├── user_id (FK → users)
+├── organization_id (FK → organizations)
+├── requested_by (FK → users)
 ├── type, format, filters (JSONB)
 ├── status, file_path
 └── expires_at

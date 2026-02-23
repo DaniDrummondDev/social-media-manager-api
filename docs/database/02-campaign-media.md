@@ -11,7 +11,8 @@ Campanhas que agrupam peças de conteúdo.
 ```sql
 CREATE TABLE campaigns (
     id              UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID                    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id UUID                    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    created_by      UUID                    NOT NULL REFERENCES users(id),
     name            VARCHAR(100)            NOT NULL,
     description     TEXT                    NULL,
     starts_at       TIMESTAMPTZ             NULL,
@@ -28,18 +29,18 @@ CREATE TABLE campaigns (
     )
 );
 
--- Nome único por usuário (apenas entre não-deletados)
-CREATE UNIQUE INDEX uq_campaigns_user_name
-    ON campaigns (user_id, LOWER(name))
+-- Nome único por organização (apenas entre não-deletados)
+CREATE UNIQUE INDEX uq_campaigns_org_name
+    ON campaigns (organization_id, LOWER(name))
     WHERE deleted_at IS NULL;
 
 -- Índices
-CREATE INDEX idx_campaigns_user_status
-    ON campaigns (user_id, status, created_at DESC)
+CREATE INDEX idx_campaigns_org_status
+    ON campaigns (organization_id, status, created_at DESC)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_campaigns_user_dates
-    ON campaigns (user_id, starts_at, ends_at)
+CREATE INDEX idx_campaigns_org_dates
+    ON campaigns (organization_id, starts_at, ends_at)
     WHERE deleted_at IS NULL;
 
 CREATE INDEX idx_campaigns_tags
@@ -52,11 +53,13 @@ CREATE INDEX idx_campaigns_purge
 ```
 
 ### Relacionamentos
-- `N:1` → `users`
+- `N:1` → `organizations`
 - `1:N` → `contents`
 
 ### Notas
-- `LOWER(name)` no unique index garante unicidade case-insensitive.
+- Campanhas pertencem à **organização**, não ao usuário individual (ADR-019).
+- `created_by` registra qual usuário criou a campanha (atribuição).
+- `LOWER(name)` no unique index garante unicidade case-insensitive por organização.
 - `tags` usa array nativo + GIN index para busca eficiente por tags.
 - Check constraint `ck_campaigns_dates` valida `ends_at > starts_at` quando ambos são informados.
 
@@ -69,8 +72,9 @@ Peças de conteúdo pertencentes a uma campanha.
 ```sql
 CREATE TABLE contents (
     id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id     UUID                NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     campaign_id         UUID                NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
-    user_id             UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_by          UUID                NOT NULL REFERENCES users(id),
     title               VARCHAR(500)        NULL,
     body                TEXT                NULL,
     hashtags            TEXT[]              NOT NULL DEFAULT '{}',
@@ -90,8 +94,8 @@ CREATE INDEX idx_contents_campaign
     ON contents (campaign_id, status, created_at DESC)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_contents_user
-    ON contents (user_id, created_at DESC)
+CREATE INDEX idx_contents_org
+    ON contents (organization_id, created_at DESC)
     WHERE deleted_at IS NULL;
 
 CREATE INDEX idx_contents_status
@@ -114,8 +118,8 @@ CREATE INDEX idx_contents_embedding
 ```
 
 ### Relacionamentos
+- `N:1` → `organizations`
 - `N:1` → `campaigns`
-- `N:1` → `users`
 - `1:N` → `content_network_overrides`
 - `N:N` → `media` (via `content_media`)
 - `1:N` → `scheduled_posts`
@@ -197,7 +201,8 @@ Arquivos de mídia (imagens e vídeos).
 ```sql
 CREATE TABLE media (
     id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id             UUID            NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id     UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    uploaded_by         UUID            NOT NULL REFERENCES users(id),
     file_name           VARCHAR(255)    NOT NULL,  -- nome gerado (UUID.ext)
     original_name       VARCHAR(255)    NOT NULL,  -- nome original do upload
     mime_type           VARCHAR(100)    NOT NULL,
@@ -223,12 +228,12 @@ CREATE TABLE media (
 );
 
 -- Índices
-CREATE INDEX idx_media_user
-    ON media (user_id, created_at DESC)
+CREATE INDEX idx_media_org
+    ON media (organization_id, created_at DESC)
     WHERE deleted_at IS NULL;
 
-CREATE INDEX idx_media_user_mime
-    ON media (user_id, mime_type)
+CREATE INDEX idx_media_org_mime
+    ON media (organization_id, mime_type)
     WHERE deleted_at IS NULL;
 
 CREATE INDEX idx_media_scan
@@ -240,16 +245,18 @@ CREATE INDEX idx_media_purge
     WHERE purge_at IS NOT NULL;
 
 CREATE INDEX idx_media_checksum
-    ON media (user_id, checksum)
+    ON media (organization_id, checksum)
     WHERE deleted_at IS NULL;
 ```
 
 ### Relacionamentos
-- `N:1` → `users`
+- `N:1` → `organizations`
 - `N:N` → `contents` (via `content_media`)
 
 ### Notas
-- `checksum` permite detectar uploads duplicados do mesmo arquivo.
+- Mídias pertencem à **organização**, não ao usuário individual (ADR-019).
+- `uploaded_by` registra qual usuário fez o upload (atribuição).
+- `checksum` permite detectar uploads duplicados do mesmo arquivo por organização.
 - `scan_status` controla o ciclo de vida do malware scan — mídias `pending` não podem ser usadas em publicação.
 - `ON DELETE RESTRICT` no pivot impede exclusão de mídia vinculada a conteúdo ativo.
 
@@ -262,7 +269,8 @@ Histórico de gerações de conteúdo via IA.
 ```sql
 CREATE TABLE ai_generations (
     id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id             UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id     UUID                NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id             UUID                NOT NULL REFERENCES users(id),
     type                generation_type     NOT NULL,
     input               JSONB               NOT NULL,  -- parâmetros de entrada
     output              JSONB               NOT NULL,  -- resultado da geração
@@ -279,15 +287,15 @@ CREATE TABLE ai_generations (
 );
 
 -- Índices
-CREATE INDEX idx_ai_generations_user
-    ON ai_generations (user_id, created_at DESC);
+CREATE INDEX idx_ai_generations_org
+    ON ai_generations (organization_id, created_at DESC);
 
-CREATE INDEX idx_ai_generations_user_type
-    ON ai_generations (user_id, type, created_at DESC);
+CREATE INDEX idx_ai_generations_org_type
+    ON ai_generations (organization_id, type, created_at DESC);
 
--- Para cálculo de consumo mensal
-CREATE INDEX idx_ai_generations_user_month
-    ON ai_generations (user_id, date_trunc('month', created_at));
+-- Para cálculo de consumo mensal (limite de gerações é por organização/plano)
+CREATE INDEX idx_ai_generations_org_month
+    ON ai_generations (organization_id, date_trunc('month', created_at));
 ```
 
 ### Notas
@@ -299,11 +307,11 @@ CREATE INDEX idx_ai_generations_user_month
 
 ## Tabela: `ai_settings`
 
-Configurações de IA por usuário.
+Configurações de IA por organização.
 
 ```sql
 CREATE TABLE ai_settings (
-    user_id                     UUID        PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    organization_id             UUID        PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
     default_tone                tone_type   NOT NULL DEFAULT 'professional',
     custom_tone_description     TEXT        NULL,
     default_language            language_type NOT NULL DEFAULT 'pt_BR',
@@ -318,7 +326,8 @@ CREATE TABLE ai_settings (
 ```
 
 ### Notas
-- `user_id` é PK e FK (relação 1:1 com users).
+- `organization_id` é PK e FK (relação 1:1 com organizations).
+- Configurações de IA são por organização, não por usuário individual.
 - Check constraint garante que `custom_tone_description` é obrigatório quando `default_tone = 'custom'`.
 
 ---
@@ -328,14 +337,16 @@ CREATE TABLE ai_settings (
 ```
 campaigns
 ├── id (PK)
-├── user_id (FK → users)
-├── name (UNIQUE per user)
+├── organization_id (FK → organizations)
+├── created_by (FK → users)
+├── name (UNIQUE per org)
 ├── status
 │
 └──── contents
       ├── id (PK)
+      ├── organization_id (FK → organizations)
       ├── campaign_id (FK → campaigns)
-      ├── user_id (FK → users)
+      ├── created_by (FK → users)
       ├── title, body, hashtags
       ├── embedding (vector)
       ├── status
@@ -353,7 +364,8 @@ campaigns
 
 media
 ├── id (PK)
-├── user_id (FK → users)
+├── organization_id (FK → organizations)
+├── uploaded_by (FK → users)
 ├── file_name, original_name
 ├── mime_type, file_size
 ├── width, height, duration_seconds
@@ -363,6 +375,7 @@ media
 
 ai_generations
 ├── id (PK)
+├── organization_id (FK → organizations)
 ├── user_id (FK → users)
 ├── type, input (JSONB), output (JSONB)
 ├── model_used, tokens_input, tokens_output
@@ -373,7 +386,7 @@ ai_generations
 └── style_context_used (ADR-017)
 
 ai_settings
-├── user_id (PK, FK → users)  -- 1:1
+├── organization_id (PK, FK → organizations)  -- 1:1
 ├── default_tone
 └── default_language
 ```

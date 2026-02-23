@@ -29,8 +29,9 @@ Retorna métricas globais da plataforma.
       },
       "subscriptions": {
         "free": 800,
-        "pro": 350,
-        "enterprise": 50,
+        "creator": 250,
+        "professional": 120,
+        "agency": 30,
         "trialing": 30,
         "past_due": 20,
         "mrr_cents": 4500000,
@@ -96,9 +97,9 @@ Lista todas as organizações da plataforma.
       "attributes": {
         "name": "Agência Digital XYZ",
         "status": "active",
-        "plan": "pro",
-        "members_count": 3,
-        "social_accounts_count": 7,
+        "plan": "agency",
+        "members_count": 8,
+        "social_accounts_count": 12,
         "owner": {
           "id": "ee0e8400-...",
           "name": "Rafael Santos",
@@ -154,16 +155,16 @@ Retorna detalhes completos de uma organização.
         }
       ],
       "subscription": {
-        "plan": "pro",
+        "plan": "agency",
         "status": "active",
         "billing_cycle": "monthly",
         "current_period_end": "2026-03-01T00:00:00Z"
       },
       "usage": {
-        "publications": { "used": 87, "limit": 300 },
-        "ai_generations": { "used": 234, "limit": 500 },
-        "storage_bytes": { "used": 2147483648, "limit": 10737418240 },
-        "social_accounts": { "used": 4, "limit": 10 }
+        "publications": { "used": 320, "limit": -1 },
+        "ai_generations": { "used": 1450, "limit": 5000 },
+        "storage_bytes": { "used": 21474836480, "limit": 107374182400 },
+        "social_accounts": { "used": 12, "limit": 50 }
       },
       "social_accounts": [
         {
@@ -601,9 +602,13 @@ Cria um novo plano.
     "analytics_retention_days": 90
   },
   "features": {
-    "ai_generation": true,
+    "ai_generation_basic": true,
+    "ai_generation_advanced": true,
+    "ai_intelligence": false,
+    "ai_learning": false,
     "automations": true,
     "webhooks": true,
+    "crm_native": false,
     "export_pdf": false,
     "export_csv": true,
     "priority_publishing": false
@@ -663,13 +668,13 @@ Atualiza um plano existente.
     "id": "aa0e8400-...",
     "type": "plan",
     "attributes": {
-      "name": "Pro",
-      "slug": "pro",
+      "name": "Professional",
+      "slug": "professional",
       "updated_at": "2026-02-23T10:30:00Z"
     }
   },
   "meta": {
-    "message": "Plano atualizado. Alteração de limites afeta 350 organizações assinantes."
+    "message": "Plano atualizado. Alteração de limites afeta 120 organizações assinantes."
   }
 }
 ```
@@ -700,7 +705,7 @@ Desativa um plano (não aceita novas assinaturas).
     }
   },
   "meta": {
-    "message": "Plano desativado. 350 assinantes existentes mantêm acesso."
+    "message": "Plano desativado. 120 assinantes existentes mantêm acesso."
   }
 }
 ```

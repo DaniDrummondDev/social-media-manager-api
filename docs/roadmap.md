@@ -438,7 +438,7 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 - OAuth flow com 3 providers (Instagram, TikTok, YouTube)
 - Tokens criptografados com AES-256-GCM
 - Upload simples para arquivos ate 10MB (imagens, videos curtos)
-- Upload chunked para videos grandes (ate 10GB por plano Enterprise)
+- Upload chunked para videos grandes (ate 10GB por plano Agency)
 - Resume de upload em caso de falha (reenvia apenas chunks faltantes)
 - Progress tracking de uploads em andamento
 - Upload de midia com validacao e thumbnail

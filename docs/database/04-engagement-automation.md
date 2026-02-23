@@ -11,9 +11,9 @@ Comentários capturados das redes sociais.
 ```sql
 CREATE TABLE comments (
     id                      UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id         UUID                    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     content_id              UUID                    NOT NULL REFERENCES contents(id) ON DELETE CASCADE,
     social_account_id       UUID                    NOT NULL REFERENCES social_accounts(id) ON DELETE CASCADE,
-    user_id                 UUID                    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     external_comment_id     VARCHAR(255)            NOT NULL,
     author_name             VARCHAR(255)            NOT NULL,
     author_external_id      VARCHAR(255)            NOT NULL,
@@ -41,9 +41,9 @@ CREATE TABLE comments (
 CREATE UNIQUE INDEX uq_comments_external
     ON comments (social_account_id, external_comment_id);
 
--- Listagem por usuário (inbox unificado)
-CREATE INDEX idx_comments_user_inbox
-    ON comments (user_id, captured_at DESC);
+-- Listagem por organização (inbox unificado)
+CREATE INDEX idx_comments_org_inbox
+    ON comments (organization_id, captured_at DESC);
 
 -- Filtro por conteúdo
 CREATE INDEX idx_comments_content
@@ -51,17 +51,17 @@ CREATE INDEX idx_comments_content
 
 -- Filtro por sentimento
 CREATE INDEX idx_comments_sentiment
-    ON comments (user_id, sentiment, captured_at DESC)
+    ON comments (organization_id, sentiment, captured_at DESC)
     WHERE sentiment IS NOT NULL;
 
 -- Filtro por status de leitura
 CREATE INDEX idx_comments_unread
-    ON comments (user_id, captured_at DESC)
+    ON comments (organization_id, captured_at DESC)
     WHERE is_read = FALSE;
 
 -- Filtro por status de resposta
 CREATE INDEX idx_comments_unreplied
-    ON comments (user_id, captured_at DESC)
+    ON comments (organization_id, captured_at DESC)
     WHERE replied_at IS NULL AND is_from_owner = FALSE;
 
 -- Busca textual (full-text search)
@@ -80,9 +80,9 @@ CREATE INDEX idx_comments_account_captured
 ```
 
 ### Relacionamentos
+- `N:1` → `organizations`
 - `N:1` → `contents`
 - `N:1` → `social_accounts`
-- `N:1` → `users`
 
 ### Notas
 - `external_comment_id` + `social_account_id` garante deduplicação.
@@ -100,7 +100,7 @@ Regras de automação para processamento de comentários.
 ```sql
 CREATE TABLE automation_rules (
     id                  UUID                    PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id             UUID                    NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id     UUID                    NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name                VARCHAR(100)            NOT NULL,
     priority            SMALLINT                NOT NULL DEFAULT 0,  -- menor = maior prioridade
     action_type         automation_action_type  NOT NULL,
@@ -127,14 +127,14 @@ CREATE TABLE automation_rules (
     )
 );
 
--- Prioridade única por usuário (entre ativos)
+-- Prioridade única por organização (entre ativos)
 CREATE UNIQUE INDEX uq_automation_rules_priority
-    ON automation_rules (user_id, priority)
+    ON automation_rules (organization_id, priority)
     WHERE is_active = TRUE AND deleted_at IS NULL;
 
 -- Índices
-CREATE INDEX idx_automation_rules_user
-    ON automation_rules (user_id, priority)
+CREATE INDEX idx_automation_rules_org
+    ON automation_rules (organization_id, priority)
     WHERE is_active = TRUE AND deleted_at IS NULL;
 
 CREATE INDEX idx_automation_rules_purge
@@ -191,9 +191,9 @@ Log de execuções do motor de automação.
 ```sql
 CREATE TABLE automation_executions (
     id                  UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id     UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     automation_rule_id  UUID            NOT NULL REFERENCES automation_rules(id) ON DELETE CASCADE,
     comment_id          UUID            NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
-    user_id             UUID            NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_type         automation_action_type NOT NULL,
     response_text       TEXT            NULL,      -- resposta enviada (se aplicável)
     success             BOOLEAN         NOT NULL DEFAULT TRUE,
@@ -207,15 +207,15 @@ CREATE TABLE automation_executions (
 CREATE INDEX idx_automation_executions_rule
     ON automation_executions (automation_rule_id, executed_at DESC);
 
-CREATE INDEX idx_automation_executions_user
-    ON automation_executions (user_id, executed_at DESC);
+CREATE INDEX idx_automation_executions_org
+    ON automation_executions (organization_id, executed_at DESC);
 
 CREATE INDEX idx_automation_executions_comment
     ON automation_executions (comment_id);
 
--- Para contagem de limite diário
+-- Para contagem de limite diário (por organização/plano)
 CREATE INDEX idx_automation_executions_daily
-    ON automation_executions (user_id, date_trunc('day', executed_at))
+    ON automation_executions (organization_id, date_trunc('day', executed_at))
     WHERE success = TRUE;
 ```
 
@@ -232,17 +232,17 @@ Palavras que bloqueiam resposta automática.
 
 ```sql
 CREATE TABLE automation_blacklist_words (
-    id          UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id     UUID            NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    word        VARCHAR(100)    NOT NULL,
-    is_regex    BOOLEAN         NOT NULL DEFAULT FALSE,
-    created_at  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    word            VARCHAR(100)    NOT NULL,
+    is_regex        BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT uq_blacklist_user_word UNIQUE (user_id, LOWER(word))
+    CONSTRAINT uq_blacklist_org_word UNIQUE (organization_id, LOWER(word))
 );
 
 -- Índice
-CREATE INDEX idx_blacklist_user ON automation_blacklist_words (user_id);
+CREATE INDEX idx_blacklist_org ON automation_blacklist_words (organization_id);
 ```
 
 ### Notas
@@ -258,7 +258,7 @@ Endpoints de webhook configurados pelo usuário para integração com CRM.
 ```sql
 CREATE TABLE webhook_endpoints (
     id              UUID            PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID            NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    organization_id UUID            NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     name            VARCHAR(100)    NOT NULL,
     url             VARCHAR(2000)   NOT NULL,
     secret          TEXT            NOT NULL,  -- criptografado (AES-256-GCM), usado para HMAC
@@ -275,8 +275,8 @@ CREATE TABLE webhook_endpoints (
 );
 
 -- Índices
-CREATE INDEX idx_webhook_endpoints_user
-    ON webhook_endpoints (user_id)
+CREATE INDEX idx_webhook_endpoints_org
+    ON webhook_endpoints (organization_id)
     WHERE is_active = TRUE AND deleted_at IS NULL;
 
 CREATE INDEX idx_webhook_endpoints_events
@@ -347,9 +347,9 @@ CREATE INDEX idx_webhook_deliveries_event
 ```
 comments
 ├── id (PK)
+├── organization_id (FK → organizations)
 ├── content_id (FK → contents)
 ├── social_account_id (FK → social_accounts)
-├── user_id (FK → users)
 ├── external_comment_id (UNIQUE per account)
 ├── author_name, author_external_id
 ├── text
@@ -361,7 +361,7 @@ comments
 
 automation_rules
 ├── id (PK)
-├── user_id (FK → users)
+├── organization_id (FK → organizations)
 ├── name, priority
 ├── action_type, response_template
 ├── webhook_id (FK → webhook_endpoints)
@@ -384,13 +384,13 @@ automation_rules
 
 automation_blacklist_words
 ├── id (PK)
-├── user_id (FK → users)
-├── word (UNIQUE per user)
+├── organization_id (FK → organizations)
+├── word (UNIQUE per org)
 └── is_regex
 
 webhook_endpoints
 ├── id (PK)
-├── user_id (FK → users)
+├── organization_id (FK → organizations)
 ├── name, url
 ├── secret (encrypted)
 ├── events[] (GIN indexed)

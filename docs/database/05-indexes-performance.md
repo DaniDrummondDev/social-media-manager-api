@@ -21,8 +21,8 @@ excluídos sem custo adicional:
 
 ```sql
 -- Padrão: exclui soft-deleted dos índices
-CREATE INDEX idx_campaigns_user_status
-    ON campaigns (user_id, status, created_at DESC)
+CREATE INDEX idx_campaigns_org_status
+    ON campaigns (organization_id, status, created_at DESC)
     WHERE deleted_at IS NULL;
 ```
 
@@ -33,10 +33,17 @@ usam o índice automaticamente.
 
 ## 5.2 Resumo de todos os índices
 
-### Identity & Access
+### Identity & Organization
 
 | Tabela | Índice | Colunas | Tipo | Filtro parcial |
 |--------|--------|---------|------|----------------|
+| organizations | `uq_organizations_slug` | slug | UNIQUE | — |
+| organizations | `idx_organizations_status` | status | B-tree | deleted_at IS NULL |
+| organizations | `idx_organizations_stripe` | stripe_customer_id | B-tree | stripe_customer_id IS NOT NULL |
+| organizations | `idx_organizations_purge` | purge_at | B-tree | purge_at IS NOT NULL |
+| organization_members | `uq_org_members` | organization_id, user_id | UNIQUE | — |
+| organization_members | `idx_org_members_user` | user_id | B-tree | — |
+| organization_members | `idx_org_members_org` | organization_id, role | B-tree | — |
 | users | `uq_users_email` | email | UNIQUE | — |
 | users | `idx_users_email_active` | email | B-tree | deleted_at IS NULL |
 | users | `idx_users_status` | status | B-tree | deleted_at IS NULL |
@@ -47,6 +54,7 @@ usam o índice automaticamente.
 | refresh_tokens | `idx_refresh_tokens_expires` | expires_at | B-tree | revoked_at IS NULL |
 | login_histories | `idx_login_histories_user` | user_id, logged_in_at DESC | B-tree | — |
 | login_histories | `idx_login_histories_ip` | ip_address, logged_in_at DESC | B-tree | — |
+| audit_logs | `idx_audit_logs_org` | organization_id, created_at DESC | B-tree | organization_id IS NOT NULL |
 | audit_logs | `idx_audit_logs_user` | user_id, created_at DESC | B-tree | — |
 | audit_logs | `idx_audit_logs_resource` | resource_type, resource_id, created_at DESC | B-tree | — |
 | audit_logs | `idx_audit_logs_action` | action, created_at DESC | B-tree | — |
@@ -56,8 +64,8 @@ usam o índice automaticamente.
 
 | Tabela | Índice | Colunas | Tipo | Filtro parcial |
 |--------|--------|---------|------|----------------|
-| social_accounts | `uq_social_accounts_user_provider` | user_id, provider | UNIQUE | deleted_at IS NULL |
-| social_accounts | `idx_social_accounts_user` | user_id | B-tree | deleted_at IS NULL |
+| social_accounts | `uq_social_accounts_org_provider_user` | organization_id, provider, provider_user_id | UNIQUE | deleted_at IS NULL |
+| social_accounts | `idx_social_accounts_org` | organization_id | B-tree | deleted_at IS NULL |
 | social_accounts | `idx_social_accounts_status` | status | B-tree | deleted_at IS NULL |
 | social_accounts | `idx_social_accounts_expires` | token_expires_at | B-tree | status = connected, deleted_at IS NULL |
 | social_accounts | `idx_social_accounts_provider` | provider, status | B-tree | deleted_at IS NULL |
@@ -66,13 +74,13 @@ usam o índice automaticamente.
 
 | Tabela | Índice | Colunas | Tipo | Filtro parcial |
 |--------|--------|---------|------|----------------|
-| campaigns | `uq_campaigns_user_name` | user_id, LOWER(name) | UNIQUE | deleted_at IS NULL |
-| campaigns | `idx_campaigns_user_status` | user_id, status, created_at DESC | B-tree | deleted_at IS NULL |
-| campaigns | `idx_campaigns_user_dates` | user_id, starts_at, ends_at | B-tree | deleted_at IS NULL |
+| campaigns | `uq_campaigns_org_name` | organization_id, LOWER(name) | UNIQUE | deleted_at IS NULL |
+| campaigns | `idx_campaigns_org_status` | organization_id, status, created_at DESC | B-tree | deleted_at IS NULL |
+| campaigns | `idx_campaigns_org_dates` | organization_id, starts_at, ends_at | B-tree | deleted_at IS NULL |
 | campaigns | `idx_campaigns_tags` | tags | GIN | deleted_at IS NULL |
 | campaigns | `idx_campaigns_purge` | purge_at | B-tree | purge_at IS NOT NULL |
 | contents | `idx_contents_campaign` | campaign_id, status, created_at DESC | B-tree | deleted_at IS NULL |
-| contents | `idx_contents_user` | user_id, created_at DESC | B-tree | deleted_at IS NULL |
+| contents | `idx_contents_org` | organization_id, created_at DESC | B-tree | deleted_at IS NULL |
 | contents | `idx_contents_status` | status | B-tree | deleted_at IS NULL |
 | contents | `idx_contents_hashtags` | hashtags | GIN | deleted_at IS NULL |
 | contents | `idx_contents_embedding` | embedding | IVFFlat (cosine) | embedding IS NOT NULL, deleted_at IS NULL |
@@ -85,11 +93,11 @@ usam o índice automaticamente.
 
 | Tabela | Índice | Colunas | Tipo | Filtro parcial |
 |--------|--------|---------|------|----------------|
-| media | `idx_media_user` | user_id, created_at DESC | B-tree | deleted_at IS NULL |
-| media | `idx_media_user_mime` | user_id, mime_type | B-tree | deleted_at IS NULL |
+| media | `idx_media_org` | organization_id, created_at DESC | B-tree | deleted_at IS NULL |
+| media | `idx_media_org_mime` | organization_id, mime_type | B-tree | deleted_at IS NULL |
 | media | `idx_media_scan` | scan_status | B-tree | scan_status = pending |
 | media | `idx_media_purge` | purge_at | B-tree | purge_at IS NOT NULL |
-| media | `idx_media_checksum` | user_id, checksum | B-tree | deleted_at IS NULL |
+| media | `idx_media_checksum` | organization_id, checksum | B-tree | deleted_at IS NULL |
 
 ### Publishing
 
@@ -97,10 +105,10 @@ usam o índice automaticamente.
 |--------|--------|---------|------|----------------|
 | scheduled_posts | `idx_scheduled_posts_due` | scheduled_at | B-tree | status = pending |
 | scheduled_posts | `idx_scheduled_posts_retry` | next_retry_at | B-tree | status = failed, not permanent |
-| scheduled_posts | `idx_scheduled_posts_user` | user_id, scheduled_at DESC | B-tree | — |
+| scheduled_posts | `idx_scheduled_posts_org` | organization_id, scheduled_at DESC | B-tree | — |
 | scheduled_posts | `idx_scheduled_posts_content` | content_id, status | B-tree | — |
 | scheduled_posts | `idx_scheduled_posts_account` | social_account_id, scheduled_at DESC | B-tree | — |
-| scheduled_posts | `idx_scheduled_posts_calendar` | user_id, scheduled_at | B-tree | status IN (pending, dispatched, publishing, published) |
+| scheduled_posts | `idx_scheduled_posts_calendar` | organization_id, scheduled_at | B-tree | status IN (pending, dispatched, publishing, published) |
 | scheduled_posts | `idx_scheduled_posts_daily` | social_account_id, date_trunc('day', scheduled_at) | B-tree | status IN (...) |
 
 ### Analytics
@@ -121,16 +129,16 @@ usam o índice automaticamente.
 | Tabela | Índice | Colunas | Tipo | Filtro parcial |
 |--------|--------|---------|------|----------------|
 | comments | `uq_comments_external` | social_account_id, external_comment_id | UNIQUE | — |
-| comments | `idx_comments_user_inbox` | user_id, captured_at DESC | B-tree | — |
+| comments | `idx_comments_org_inbox` | organization_id, captured_at DESC | B-tree | — |
 | comments | `idx_comments_content` | content_id, captured_at DESC | B-tree | — |
-| comments | `idx_comments_sentiment` | user_id, sentiment, captured_at DESC | B-tree | sentiment IS NOT NULL |
-| comments | `idx_comments_unread` | user_id, captured_at DESC | B-tree | is_read = FALSE |
-| comments | `idx_comments_unreplied` | user_id, captured_at DESC | B-tree | replied_at IS NULL, not owner |
+| comments | `idx_comments_sentiment` | organization_id, sentiment, captured_at DESC | B-tree | sentiment IS NOT NULL |
+| comments | `idx_comments_unread` | organization_id, captured_at DESC | B-tree | is_read = FALSE |
+| comments | `idx_comments_unreplied` | organization_id, captured_at DESC | B-tree | replied_at IS NULL, not owner |
 | comments | `idx_comments_text_search` | to_tsvector('portuguese', text) | GIN | — |
 | comments | `idx_comments_embedding` | embedding | IVFFlat (cosine) | embedding IS NOT NULL |
-| automation_rules | `uq_automation_rules_priority` | user_id, priority | UNIQUE | active, not deleted |
-| automation_rules | `idx_automation_rules_user` | user_id, priority | B-tree | active, not deleted |
-| automation_executions | `idx_automation_executions_daily` | user_id, date_trunc('day', executed_at) | B-tree | success = TRUE |
+| automation_rules | `uq_automation_rules_priority` | organization_id, priority | UNIQUE | active, not deleted |
+| automation_rules | `idx_automation_rules_org` | organization_id, priority | B-tree | active, not deleted |
+| automation_executions | `idx_automation_executions_daily` | organization_id, date_trunc('day', executed_at) | B-tree | success = TRUE |
 | webhook_endpoints | `idx_webhook_endpoints_events` | events | GIN | active, not deleted |
 | webhook_deliveries | `idx_webhook_deliveries_retry` | next_retry_at | B-tree | failed_at IS NULL, retry pending |
 
@@ -201,18 +209,18 @@ LIMIT 100;
 -- Estimativa: < 1ms (índice parcial, poucos registros pending)
 ```
 
-### Q2: Listar campanhas do usuário (paginação cursor)
+### Q2: Listar campanhas da organização (paginação cursor)
 
 ```sql
 SELECT * FROM campaigns
-WHERE user_id = :userId
+WHERE organization_id = :orgId
   AND deleted_at IS NULL
   AND status = :status
   AND (created_at, id) < (:cursorCreatedAt, :cursorId)
 ORDER BY created_at DESC, id DESC
 LIMIT 21;
 
--- Usa: idx_campaigns_user_status
+-- Usa: idx_campaigns_org_status
 -- Estimativa: < 5ms
 ```
 
@@ -220,7 +228,7 @@ LIMIT 21;
 
 ```sql
 SELECT * FROM comments
-WHERE user_id = :userId
+WHERE organization_id = :orgId
   AND is_read = FALSE
   AND (captured_at, id) < (:cursorCapturedAt, :cursorId)
 ORDER BY captured_at DESC, id DESC
@@ -240,10 +248,10 @@ SELECT
     COUNT(*) as total_posts
 FROM content_metrics cm
 JOIN contents c ON c.id = cm.content_id
-WHERE c.user_id = :userId
+WHERE c.organization_id = :orgId
   AND cm.synced_at >= :startDate;
 
--- Usa: idx_content_metrics_content + idx_contents_user
+-- Usa: idx_content_metrics_content + idx_contents_org
 -- Estimativa: < 50ms (dependendo do volume)
 ```
 
@@ -251,12 +259,12 @@ WHERE c.user_id = :userId
 
 ```sql
 SELECT * FROM comments
-WHERE user_id = :userId
+WHERE organization_id = :orgId
   AND to_tsvector('portuguese', text) @@ plainto_tsquery('portuguese', :searchTerm)
 ORDER BY captured_at DESC
 LIMIT 20;
 
--- Usa: idx_comments_text_search + idx_comments_user_inbox
+-- Usa: idx_comments_text_search + idx_comments_org_inbox
 -- Estimativa: < 20ms
 ```
 
@@ -266,7 +274,7 @@ LIMIT 20;
 SELECT id, title, body,
        1 - (embedding <=> :queryEmbedding) as similarity
 FROM contents
-WHERE user_id = :userId
+WHERE organization_id = :orgId
   AND embedding IS NOT NULL
   AND deleted_at IS NULL
 ORDER BY embedding <=> :queryEmbedding
@@ -280,7 +288,7 @@ LIMIT 10;
 
 ```sql
 SELECT COUNT(*) FROM automation_executions
-WHERE user_id = :userId
+WHERE organization_id = :orgId
   AND success = TRUE
   AND executed_at >= date_trunc('day', NOW());
 

@@ -40,13 +40,18 @@ Lista planos disponíveis na plataforma.
           "active_campaigns": 3,
           "automations": 0,
           "webhooks": 0,
+          "crm_connections": 0,
           "reports_month": 5,
           "analytics_retention_days": 30
         },
         "features": {
-          "ai_generation": true,
+          "ai_generation_basic": true,
+          "ai_generation_advanced": false,
+          "ai_intelligence": false,
+          "ai_learning": false,
           "automations": false,
           "webhooks": false,
+          "crm_native": false,
           "export_pdf": false,
           "export_csv": true,
           "priority_publishing": false
@@ -58,29 +63,34 @@ Lista planos disponíveis na plataforma.
       "id": "aa0e8400-e29b-41d4-a716-446655440002",
       "type": "plan",
       "attributes": {
-        "name": "Pro",
-        "slug": "pro",
-        "description": "Para profissionais e pequenas equipes. Recursos avançados.",
-        "price_monthly_cents": 9900,
-        "price_yearly_cents": 99900,
+        "name": "Creator",
+        "slug": "creator",
+        "description": "Crie conteúdo profissional com IA avançada que aprende com seu conteúdo.",
+        "price_monthly_cents": 4900,
+        "price_yearly_cents": 49000,
         "currency": "BRL",
         "limits": {
-          "members": 5,
-          "social_accounts": 10,
-          "publications_month": 300,
-          "ai_generations_month": 500,
-          "storage_gb": 10,
-          "active_campaigns": 20,
-          "automations": 10,
-          "webhooks": 3,
-          "reports_month": 50,
-          "analytics_retention_days": 180
+          "members": 2,
+          "social_accounts": 5,
+          "publications_month": 150,
+          "ai_generations_month": 200,
+          "storage_gb": 5,
+          "active_campaigns": 10,
+          "automations": 5,
+          "webhooks": 0,
+          "crm_connections": 0,
+          "reports_month": 15,
+          "analytics_retention_days": 90
         },
         "features": {
-          "ai_generation": true,
+          "ai_generation_basic": true,
+          "ai_generation_advanced": true,
+          "ai_intelligence": false,
+          "ai_learning": false,
           "automations": true,
-          "webhooks": true,
-          "export_pdf": true,
+          "webhooks": false,
+          "crm_native": false,
+          "export_pdf": false,
           "export_csv": true,
           "priority_publishing": true
         },
@@ -91,11 +101,49 @@ Lista planos disponíveis na plataforma.
       "id": "aa0e8400-e29b-41d4-a716-446655440003",
       "type": "plan",
       "attributes": {
-        "name": "Enterprise",
-        "slug": "enterprise",
-        "description": "Para agências e grandes equipes. Sem limites.",
-        "price_monthly_cents": 29900,
-        "price_yearly_cents": 299900,
+        "name": "Professional",
+        "slug": "professional",
+        "description": "Gerencie múltiplos clientes com IA preditiva que evolui com seu estilo.",
+        "price_monthly_cents": 14900,
+        "price_yearly_cents": 149000,
+        "currency": "BRL",
+        "limits": {
+          "members": 5,
+          "social_accounts": 15,
+          "publications_month": 500,
+          "ai_generations_month": 500,
+          "storage_gb": 15,
+          "active_campaigns": 30,
+          "automations": 15,
+          "webhooks": 5,
+          "crm_connections": 2,
+          "reports_month": 50,
+          "analytics_retention_days": 180
+        },
+        "features": {
+          "ai_generation_basic": true,
+          "ai_generation_advanced": true,
+          "ai_intelligence": true,
+          "ai_learning": true,
+          "automations": true,
+          "webhooks": true,
+          "crm_native": true,
+          "export_pdf": true,
+          "export_csv": true,
+          "priority_publishing": true
+        },
+        "sort_order": 3
+      }
+    },
+    {
+      "id": "aa0e8400-e29b-41d4-a716-446655440004",
+      "type": "plan",
+      "attributes": {
+        "name": "Agency",
+        "slug": "agency",
+        "description": "Escale sua operação com IA completa que se auto-otimiza. Membros ilimitados.",
+        "price_monthly_cents": 39900,
+        "price_yearly_cents": 399000,
         "currency": "BRL",
         "limits": {
           "members": -1,
@@ -106,18 +154,23 @@ Lista planos disponíveis na plataforma.
           "active_campaigns": -1,
           "automations": 100,
           "webhooks": 20,
+          "crm_connections": 5,
           "reports_month": -1,
           "analytics_retention_days": 730
         },
         "features": {
-          "ai_generation": true,
+          "ai_generation_basic": true,
+          "ai_generation_advanced": true,
+          "ai_intelligence": true,
+          "ai_learning": true,
           "automations": true,
           "webhooks": true,
+          "crm_native": true,
           "export_pdf": true,
           "export_csv": true,
           "priority_publishing": true
         },
-        "sort_order": 3
+        "sort_order": 4
       }
     }
   ]
@@ -128,7 +181,8 @@ Lista planos disponíveis na plataforma.
 
 - Limite `-1` significa ilimitado.
 - Preços em centavos para evitar problemas de ponto flutuante.
-- `price_yearly_cents` reflete desconto anual (~16% sobre mensal × 12).
+- `price_yearly_cents` reflete desconto anual (~17% sobre mensal × 12 — equivalente a 2 meses grátis).
+- 4 planos: Free, Creator, Professional e Agency (ver `docs/pricing/pricing-strategy.md`).
 
 ---
 
@@ -148,9 +202,9 @@ Retorna a subscription ativa da organização.
     "type": "subscription",
     "attributes": {
       "plan": {
-        "id": "aa0e8400-e29b-41d4-a716-446655440002",
-        "name": "Pro",
-        "slug": "pro"
+        "id": "aa0e8400-e29b-41d4-a716-446655440003",
+        "name": "Professional",
+        "slug": "professional"
       },
       "status": "active",
       "billing_cycle": "monthly",
@@ -187,18 +241,19 @@ Retorna uso atual da organização vs limites do plano.
   "data": {
     "type": "usage",
     "attributes": {
-      "plan": "pro",
+      "plan": "professional",
       "billing_cycle": "monthly",
       "current_period_end": "2026-03-01T00:00:00Z",
       "usage": {
-        "publications": { "used": 87, "limit": 300, "percentage": 29 },
+        "publications": { "used": 87, "limit": 500, "percentage": 17 },
         "ai_generations": { "used": 234, "limit": 500, "percentage": 47 },
-        "storage_bytes": { "used": 2147483648, "limit": 10737418240, "percentage": 20 },
-        "social_accounts": { "used": 4, "limit": 10, "percentage": 40 },
+        "storage_bytes": { "used": 2147483648, "limit": 16106127360, "percentage": 13 },
+        "social_accounts": { "used": 8, "limit": 15, "percentage": 53 },
         "members": { "used": 3, "limit": 5, "percentage": 60 },
-        "active_campaigns": { "used": 8, "limit": 20, "percentage": 40 },
-        "automations": { "used": 3, "limit": 10, "percentage": 30 },
-        "webhooks": { "used": 1, "limit": 3, "percentage": 33 },
+        "active_campaigns": { "used": 12, "limit": 30, "percentage": 40 },
+        "automations": { "used": 5, "limit": 15, "percentage": 33 },
+        "webhooks": { "used": 2, "limit": 5, "percentage": 40 },
+        "crm_connections": { "used": 1, "limit": 2, "percentage": 50 },
         "reports": { "used": 12, "limit": 50, "percentage": 24 }
       }
     }
@@ -208,7 +263,7 @@ Retorna uso atual da organização vs limites do plano.
 
 ### Notas
 
-- `limit: -1` indica recurso ilimitado (plano Enterprise).
+- `limit: -1` indica recurso ilimitado (plano Agency).
 - `percentage` é calculado no servidor (arredondado para inteiro).
 - Dados de uso são cacheados em Redis com TTL 60s.
 
@@ -241,7 +296,7 @@ Lista faturas da organização.
       "id": "cc0e8400-e29b-41d4-a716-446655440000",
       "type": "invoice",
       "attributes": {
-        "amount_cents": 9900,
+        "amount_cents": 14900,
         "currency": "BRL",
         "status": "paid",
         "invoice_url": "https://invoice.stripe.com/i/acct_xxx/inv_xxx",
@@ -273,7 +328,7 @@ Cria uma Stripe Checkout Session para upgrade de plano.
 
 ```json
 {
-  "plan_slug": "pro",
+  "plan_slug": "professional",
   "billing_cycle": "monthly",
   "success_url": "https://app.example.com/billing/success",
   "cancel_url": "https://app.example.com/billing/cancel"
