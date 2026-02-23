@@ -326,3 +326,40 @@ engagement_rate = (likes + comments + shares + saves) / reach * 100
 - Para vídeos: captura frame aos 2 segundos.
 - Para imagens: redimensiona para 300x300 mantendo proporção.
 - Thumbnails são armazenadas junto com a mídia original.
+
+---
+
+## 7.10 AI Learning & Feedback Loop
+
+> **Fase 3 — Sprint 14.** Regras detalhadas (RN-ALL-01 a RN-ALL-45) estão definidas na skill `06-domain/ai-learning-loop.md` e formalizadas no ADR-017.
+
+### RN-084: Feedback de geração IA
+- Toda geração MUST suportar feedback (accepted, edited, rejected).
+- Feedback é upsert por `ai_generation_id` — duplicatas substituem o anterior.
+- Feedback MUST NOT bloquear o fluxo do usuário (processado assincronamente).
+
+### RN-085: RAG (Retrieval-Augmented Generation)
+- RAG MUST usar apenas conteúdos publicados com embedding e engagement acima da mediana.
+- RAG é filtrado por `organization_id` (isolamento de tenant).
+- RAG MUST ser silenciosamente ignorado se < 5 conteúdos elegíveis (sem erro).
+
+### RN-086: Prompt templates
+- Templates globais (`organization_id = NULL`) são seedados no deploy.
+- Versões são imutáveis — editar cria nova versão.
+- Auto-seleção requer mínimo 20 uses.
+- Máximo 1 experimento A/B ativo por (organization_id, generation_type).
+
+### RN-087: Prediction accuracy
+- Validação triggered 7 dias após publicação.
+- Apenas predições geradas ANTES da publicação são validadas.
+- Mínimo 10 validações para exibir métricas de acurácia.
+
+### RN-088: Style learning
+- Perfil requer mínimo 10 feedbacks com `action = 'edited'`.
+- Tom explícito no request SEMPRE prevalece sobre style profile.
+- Perfil expira após 14 dias (recalculado semanalmente).
+
+### RN-089: Graceful degradation
+- Nenhum nível do Learning Loop é critical path.
+- Toda falha resulta em graceful degradation, NEVER em erro para o usuário.
+- A geração de conteúdo funciona identicamente com ou sem Learning Loop.

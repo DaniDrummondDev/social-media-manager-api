@@ -19,6 +19,11 @@
 | 06 | [Analytics](06-analytics.md) | Overview, By Network, By Content, Export |
 | 07 | [Engagement](07-engagement.md) | Comments, Automation Rules, Webhooks |
 | 08 | [Mídia](08-media.md) | Upload, List, Delete |
+| 09 | [Billing & Subscription](09-billing.md) | Plans, Subscription, Usage, Invoices, Checkout, Portal, Stripe Webhooks |
+| 10 | [Platform Administration](10-admin.md) | Dashboard, Organizations, Users, Plans, Config, Audit Log |
+| 11 | [Client Financial Management](11-client-finance.md) | Clients, Contracts, Invoices, Cost Allocations, Reports *(Fase 2)* |
+| 12 | [Social Listening](12-social-listening.md) | Queries, Mentions, Alerts, Dashboard, Reports *(Fase 2)* |
+| 13 | [AI Intelligence](13-ai-intelligence.md) | Content DNA, Prediction, Best Time, Audience Insights, Brand Safety, Calendar, Gap Analysis *(Fase 2-3)* |
 
 ---
 
@@ -146,6 +151,13 @@ HTTP/1.1 204 No Content
 | `PUBLISHING_ERROR` | Erro na publicação |
 | `MEDIA_SCAN_FAILED` | Falha no scan de malware da mídia |
 | `EXPORT_ERROR` | Erro na geração de relatório |
+| `PLAN_LIMIT_REACHED` | Limite do plano atingido |
+| `PAYMENT_REQUIRED` | Pagamento necessário (upgrade de plano) |
+| `LISTENING_ADAPTER_ERROR` | Erro na comunicação com API de listening |
+| `INSUFFICIENT_DATA` | Dados insuficientes para análise de IA |
+| `PROFILE_NOT_FOUND` | Perfil de conteúdo (Content DNA) não encontrado |
+| `NO_COMPETITOR_QUERIES` | Nenhuma query de competitor ativa para gap analysis |
+| `BRAND_SAFETY_BLOCKED` | Conteúdo bloqueado por verificação de brand safety |
 
 ---
 

@@ -261,17 +261,21 @@ Histórico de gerações de conteúdo via IA.
 
 ```sql
 CREATE TABLE ai_generations (
-    id              UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    type            generation_type     NOT NULL,
-    input           JSONB               NOT NULL,  -- parâmetros de entrada
-    output          JSONB               NOT NULL,  -- resultado da geração
-    model_used      VARCHAR(50)         NOT NULL,  -- 'gpt-4o', 'gpt-4o-mini'
-    tokens_input    INTEGER             NOT NULL DEFAULT 0,
-    tokens_output   INTEGER             NOT NULL DEFAULT 0,
-    cost_estimate   DECIMAL(10,6)       NOT NULL DEFAULT 0,  -- USD
-    duration_ms     INTEGER             NOT NULL DEFAULT 0,
-    created_at      TIMESTAMPTZ         NOT NULL DEFAULT NOW()
+    id                  UUID                PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id             UUID                NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type                generation_type     NOT NULL,
+    input               JSONB               NOT NULL,  -- parâmetros de entrada
+    output              JSONB               NOT NULL,  -- resultado da geração
+    model_used          VARCHAR(50)         NOT NULL,  -- 'gpt-4o', 'gpt-4o-mini'
+    tokens_input        INTEGER             NOT NULL DEFAULT 0,
+    tokens_output       INTEGER             NOT NULL DEFAULT 0,
+    cost_estimate       DECIMAL(10,6)       NOT NULL DEFAULT 0,  -- USD
+    duration_ms         INTEGER             NOT NULL DEFAULT 0,
+    prompt_template_id  UUID                NULL,      -- Learning Loop: qual template gerou (ADR-017)
+    experiment_id       UUID                NULL,      -- Learning Loop: se parte de A/B test (ADR-017)
+    rag_context_used    JSONB               NULL,      -- Learning Loop: {similar_content_ids, context_tokens} (ADR-017)
+    style_context_used  BOOLEAN             NOT NULL DEFAULT FALSE,  -- Learning Loop: se style profile injetado (ADR-017)
+    created_at          TIMESTAMPTZ         NOT NULL DEFAULT NOW()
 );
 
 -- Índices
@@ -362,7 +366,11 @@ ai_generations
 ├── user_id (FK → users)
 ├── type, input (JSONB), output (JSONB)
 ├── model_used, tokens_input, tokens_output
-└── cost_estimate
+├── cost_estimate, duration_ms
+├── prompt_template_id (Learning Loop — ADR-017)
+├── experiment_id (Learning Loop — ADR-017)
+├── rag_context_used (JSONB — ADR-017)
+└── style_context_used (ADR-017)
 
 ai_settings
 ├── user_id (PK, FK → users)  -- 1:1

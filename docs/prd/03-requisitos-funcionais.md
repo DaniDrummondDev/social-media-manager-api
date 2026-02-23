@@ -348,7 +348,7 @@
 - **Endpoint:** `POST /api/v1/media`
 - Upload multipart/form-data
 - Tipos aceitos: image/jpeg, image/png, image/webp, image/gif, video/mp4, video/quicktime
-- Tamanho máximo: imagens 10MB, vídeos 500MB
+- Tamanho máximo: imagens 10MB, vídeos 500MB (saber max upload size YouTube)
 - Validações: dimensões mínimas, duração máxima de vídeo por rede
 - Geração de thumbnail automática
 - Armazenamento em object storage (S3-compatible)
@@ -365,3 +365,183 @@
 - Bloqueia se mídia está vinculada a peça agendada
 - Soft delete (30 dias para restauração)
 - **Job agendado:** exclusão física do storage após 30 dias
+
+---
+
+## 3.9 Módulo: AI Intelligence
+
+> **Fase:** 2 (Sprints 10-11) e 3 (Sprints 12-13)
+
+### RF-080: Best Time to Post — Horários ótimos
+- **Endpoint:** `GET /api/v1/ai-intelligence/best-times`
+- **Endpoint:** `GET /api/v1/ai-intelligence/best-times/heatmap`
+- **Endpoint:** `GET /api/v1/ai-intelligence/best-times/{provider}`
+- **Endpoint:** `POST /api/v1/ai-intelligence/best-times/recalculate`
+- Calcula horários ótimos por organização/rede/dia da semana
+- Baseado em: engagement rate histórico de `content_metric_snapshots` + `scheduled_posts`
+- Heatmap 7 dias × 24 horas com scores por slot
+- Nível de confiança: low (<10 posts), medium (10-50), high (>50)
+- **Job:** `CalculateBestPostingTimesJob` — semanal por organização
+- Resultado cacheado com TTL de 7 dias
+
+### RF-081: Brand Safety — Verificação de conteúdo
+- **Endpoint:** `POST /api/v1/contents/{id}/safety-check`
+- **Endpoint:** `GET /api/v1/contents/{id}/safety-checks`
+- Verifica conteúdo antes de publicar via LLM
+- Categorias: lgpd_compliance, advertising_disclosure, platform_policy, sensitivity, profanity
+- Status: pending → passed | warning | blocked
+- Score geral 0-100 (100 = totalmente seguro)
+- Check automático assíncrono ao agendar (não bloqueia o agendamento)
+- Na publicação: `blocked` impede publicação; `warning` publica + notifica
+- **Job:** `RunBrandSafetyCheckJob` — on-demand + pré-publicação
+
+### RF-082: Brand Safety — Regras customizáveis
+- **Endpoint:** `GET /api/v1/brand-safety/rules`
+- **Endpoint:** `POST /api/v1/brand-safety/rules`
+- **Endpoint:** `PUT /api/v1/brand-safety/rules/{id}`
+- **Endpoint:** `DELETE /api/v1/brand-safety/rules/{id}`
+- Tipos: blocked_word, required_disclosure, custom_check
+- Severidade: warning, block
+- Regras da organização aplicadas junto com verificação LLM
+- Organização configura se `blocked` realmente previne publicação
+
+### RF-083: Cross-Network Content Adaptation
+- **Endpoint:** `POST /api/v1/ai/adapt-content`
+- Input: content_id, source_network, target_networks[], preserve_tone
+- Adapta conteúdo que performou bem em uma rede para formato/estilo de outras
+- Respeita limites de caracteres, convenções de hashtag, specs de mídia por rede
+- Resultado pode auto-preencher `content_network_overrides` (com confirmação do usuário)
+- Usa modelo GPT-4o; registrado em `ai_generations` com tipo `cross_network_adaptation`
+- Tokens e custo rastreados no histórico de gerações
+
+### RF-084: AI Content Calendar Planning
+- **Endpoint:** `POST /api/v1/ai-intelligence/calendar/suggest`
+- **Endpoint:** `GET /api/v1/ai-intelligence/calendar/suggestions`
+- **Endpoint:** `GET /api/v1/ai-intelligence/calendar/suggestions/{id}`
+- **Endpoint:** `POST /api/v1/ai-intelligence/calendar/suggestions/{id}/accept`
+- Input: period_start, period_end, target_networks[]
+- Gera sugestões de calendário editorial para período selecionado (semanal/mensal)
+- Baseado em: top performers históricos, lacunas no cronograma, posts agendados existentes
+- Cada sugestão: data, tópicos, tipo de conteúdo, redes-alvo, prioridade, justificativa
+- Usuário pode aceitar itens individuais (não aceita automaticamente)
+- **Job:** `GenerateCalendarSuggestionsJob` — assíncrono, on-demand
+- Sugestões expiram após 7 dias
+
+### RF-085: Content DNA Profiling
+- **Endpoint:** `POST /api/v1/ai-intelligence/content-profile/generate`
+- **Endpoint:** `GET /api/v1/ai-intelligence/content-profile`
+- **Endpoint:** `GET /api/v1/ai-intelligence/content-profile/themes`
+- **Endpoint:** `POST /api/v1/ai-intelligence/content-profile/recommend`
+- Analisa conteúdo publicado histórico da organização via pgvector
+- Gera "DNA de conteúdo": temas dominantes, padrões de engajamento, traits de alto desempenho
+- Centroid embedding dos top 20% de conteúdos (VECTOR(1536))
+- Recomendações de temas baseadas em similaridade com conteúdos de alta performance
+- **Job:** `GenerateContentProfileJob` — semanal ou on-demand
+- Perfil cacheado com TTL de 7 dias
+- Requer pipeline de embeddings (RF-090)
+
+### RF-086: Pre-publish Performance Prediction
+- **Endpoint:** `POST /api/v1/contents/{id}/predict-performance`
+- **Endpoint:** `GET /api/v1/contents/{id}/predictions`
+- **Endpoint:** `GET /api/v1/contents/{id}/predictions/{provider}`
+- Score 0-100 prevendo engajamento antes de publicar
+- Breakdown: content_similarity, timing, hashtags, length, media_type
+- Top 5 conteúdos similares usados como referência
+- Recomendações acionáveis (ex: "horário sub-ótimo", "hashtags de alta competição")
+- Abordagem híbrida: Layer 1 estatístico (pgvector + SQL), Layer 2 LLM opcional (insights ricos)
+- **Job:** `CalculatePerformancePredictionJob` — on-demand
+- Requer pipeline de embeddings (RF-090) e Content DNA Profile (RF-085)
+
+### RF-087: Audience Feedback Loop
+- **Endpoint:** `GET /api/v1/ai-intelligence/audience-insights`
+- **Endpoint:** `GET /api/v1/ai-intelligence/audience-insights/{type}`
+- **Endpoint:** `POST /api/v1/ai-intelligence/audience-insights/refresh`
+- Tipos de insight: preferred_topics, sentiment_trends, engagement_drivers, audience_preferences
+- Analisa embeddings e sentimento de comentários para extrair preferências da audiência
+- Insights compilados em cache (`ai_generation_context`) para injeção em prompts
+- Geração de conteúdo (RF-030 a RF-033) automaticamente inclui contexto da audiência
+- Usuário vê qual contexto foi usado; pode desativar via `PUT /api/v1/ai/settings`
+- IA **nunca** age autonomamente — insights são apenas contexto para geração manual
+- **Jobs:** `RefreshAudienceInsightsJob` (semanal), `UpdateAIGenerationContextJob` (pós-refresh)
+- Requer pipeline de embeddings em comentários (RF-090)
+
+### RF-088: Competitive Content Gap Analysis
+- **Endpoint:** `POST /api/v1/ai-intelligence/gap-analysis/generate`
+- **Endpoint:** `GET /api/v1/ai-intelligence/gap-analyses`
+- **Endpoint:** `GET /api/v1/ai-intelligence/gap-analyses/{id}`
+- **Endpoint:** `GET /api/v1/ai-intelligence/gap-analyses/{id}/opportunities`
+- Depende de Social Listening (RF-060+) com queries tipo `competitor`
+- Compara tópicos de conteúdo próprio vs menções de concorrentes
+- Identifica lacunas: "concorrentes publicam sobre X mas você não"
+- Oportunidades acionáveis com score de oportunidade e sugestão de tipo de conteúdo
+- **Job:** `GenerateContentGapAnalysisJob` — on-demand + mensal
+- Análise expira após 7 dias
+
+### RF-090: Pipeline de Embeddings
+- Infraestrutura compartilhada para features RF-085, RF-086, RF-087, RF-091
+- Gera embeddings para conteúdos e comentários usando OpenAI `text-embedding-3-small` (1536 dim)
+- Event-driven: `ContentCreated`/`ContentUpdated` → `GenerateContentEmbeddingJob` (async)
+- Batch: `CommentCaptured` → agrupado em batches de 50 por job
+- Backfill: `BackfillEmbeddingsJob` semanal para catch-up de entidades sem embedding
+- Tracking via tabela `embedding_jobs` (status, tokens, erros)
+- Colunas `contents.embedding` e `comments.embedding` já existem (VECTOR(1536))
+- **Jobs:** `GenerateContentEmbeddingJob`, `GenerateCommentEmbeddingJob`, `BackfillEmbeddingsJob`
+
+---
+
+## 3.11 AI Learning & Feedback Loop (ADR-017)
+
+> **Fase 3 — Sprint 14.** Referência completa: Skill `06-domain/ai-learning-loop.md`, ADR-017.
+
+### RF-091: Generation Feedback Tracking (Nível 1)
+- **Endpoint:** `POST /api/v1/ai/generations/{id}/feedback`
+- Registrar ação do usuário: `accepted`, `edited` ou `rejected`
+- Quando `edited`: `original_output` e `edited_output` obrigatórios, diff calculado assincronamente
+- `time_to_decision_ms` calculado automaticamente (timestamp da geração → timestamp do feedback)
+- Acceptance rate por (organization_id, generation_type)
+- Feedback **nunca** bloqueia o fluxo do usuário (processado via `TrackGenerationFeedbackJob`)
+- **Jobs:** `TrackGenerationFeedbackJob`, `CalculateDiffSummaryJob`
+
+### RF-092: RAG para Content Generation (Nível 2)
+- Antes da geração de texto, buscar até 5 conteúdos publicados com maior similaridade via pgvector
+- Filtro: publicados, engagement rate acima da mediana da org, mesma organização
+- Exemplos injetados no prompt como "Conteúdo de alta performance similar"
+- Desativável via `PUT /api/v1/ai/settings` (`rag_enabled: false`)
+- Requer mínimo 5 conteúdos publicados com embedding. Abaixo disso, skip silencioso
+- Response inclui `rag_context_used` com IDs dos conteúdos usados
+- Feature gate: Creator+ (3 exemplos), Professional+ (5 exemplos)
+- **Job:** `RetrieveSimilarContentJob`
+
+### RF-093: Prompt Optimization Engine (Nível 3)
+- **Endpoint:** `GET /api/v1/ai/prompt-templates`
+- **Endpoint:** `POST /api/v1/ai/prompt-templates` (Professional+)
+- **Endpoint:** `POST /api/v1/ai/prompt-experiments` (Agency only)
+- **Endpoint:** `GET /api/v1/ai/prompt-experiments/{id}`
+- Templates versionados com system prompt + user prompt template + variables
+- `performance_score = (accepted + edited × 0.7) / total_uses × 100` — recalculado semanalmente
+- Auto-seleção do melhor template por performance (mínimo 20 uses)
+- A/B testing: 2 variantes, split configurável, mínimo 50 gerações por variante
+- Vencedor declarado por z-test com confidence ≥ 0.95
+- Templates globais (system) seedados no deploy; templates custom por organização (Professional+)
+- **Jobs:** `CalculatePromptPerformanceJob`, `EvaluatePromptExperimentJob`
+
+### RF-094: Prediction Accuracy Feedback (Nível 4)
+- **Endpoint:** `GET /api/v1/ai/intelligence/prediction-accuracy`
+- 7 dias após publicação, comparar score predito vs métricas reais
+- `actual_normalized_score` = percentile rank × 100 na distribuição da própria org
+- `prediction_accuracy = 100 - |predicted_score - actual_normalized_score|`
+- Métricas expostas: MAE, correlação, tendência das últimas 12 semanas
+- Mínimo 10 predições validadas para exibir métricas
+- Feature gate: Agency only
+- **Job:** `ValidatePredictionAccuracyJob` (triggered por `MetricsSynced`)
+
+### RF-095: Organization Style Learning (Nível 5)
+- **Endpoint:** `GET /api/v1/ai/style-profile`
+- Perfil gerado a partir de padrões de edição (mínimo 10 edições)
+- Analisa: tom, tamanho, vocabulário, estrutura, hashtags
+- `style_summary` gerado por LLM (GPT-4o-mini, max 200 tokens)
+- Injetado no prompt como "Preferências de estilo da organização"
+- Desativável via `PUT /api/v1/ai/settings` (`style_learning_enabled: false`)
+- TTL 14 dias, recalculado semanalmente
+- Feature gate: Professional+
+- **Job:** `GenerateOrgStyleProfileJob`, `UpdateLearningContextJob`

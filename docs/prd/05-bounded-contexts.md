@@ -7,33 +7,41 @@
 ## 5.1 Context Map
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Social Media Manager                         │
-│                                                                     │
-│  ┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐  │
-│  │   Identity    │    │  Social Account  │    │    Campaign      │  │
-│  │   & Access    │───▶│   Management     │    │   Management     │  │
-│  │              │    │                  │    │                  │  │
-│  └──────┬───────┘    └────────┬─────────┘    └────────┬─────────┘  │
-│         │                     │                       │            │
-│         │                     ▼                       ▼            │
-│         │            ┌──────────────────┐    ┌──────────────────┐  │
-│         │            │   Publishing     │◀───│   Content AI     │  │
-│         │            │                  │    │                  │  │
-│         │            └────────┬─────────┘    └──────────────────┘  │
-│         │                     │                                    │
-│         │           ┌─────────┼──────────┐                        │
-│         │           ▼                    ▼                         │
-│         │   ┌──────────────────┐ ┌──────────────────┐             │
-│         │   │   Analytics      │ │   Engagement     │             │
-│         │   │                  │ │   & Automation   │             │
-│         │   └──────────────────┘ └──────────────────┘             │
-│         │                                                         │
-│         │   ┌──────────────────┐                                  │
-│         └──▶│   Media          │                                  │
-│             │   Management     │                                  │
-│             └──────────────────┘                                  │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                           Social Media Manager                               │
+│                                                                              │
+│  ┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐            │
+│  │   Identity   │    │  Social Account  │    │    Campaign      │            │
+│  │   & Access   │───▶│   Management     │    │   Management     │            │
+│  └──────┬───────┘    └────────┬─────────┘    └────────┬─────────┘            │
+│         │                     │                       │                      │
+│         │                     ▼                       ▼                      │
+│         │            ┌──────────────────┐    ┌──────────────────┐            │
+│         │            │   Publishing     │◀───│   Content AI     │            │
+│         │            │                  │    │                  │            │
+│         │            └────────┬─────────┘    └────────┬─────────┘            │
+│         │                     │                       │                      │
+│         │           ┌─────────┼──────────┐            │                      │
+│         │           ▼                    ▼            │                      │
+│         │   ┌──────────────────┐ ┌──────────────────┐ │                      │
+│         │   │   Analytics      │ │   Engagement     │ │                      │
+│         │   │                  │ │   & Automation   │ │                      │
+│         │   └────────┬─────────┘ └────────┬─────────┘ │                      │
+│         │            │                    │           │                      │
+│         │            │    ┌───────────────┼───────────┘                      │
+│         │            │    │               │                                  │
+│         │            ▼    ▼               ▼                                  │
+│         │   ┌──────────────────────────────────────┐                         │
+│         │   │         AI Intelligence              │ (Fase 2-3)              │
+│         │   │  DNA · Prediction · Best Time ·      │                         │
+│         │   │  Feedback · Safety · Gap Analysis    │                         │
+│         │   └──────────────────────────────────────┘                         │
+│         │                                                                    │
+│         │   ┌──────────────────┐    ┌──────────────────┐                     │
+│         └──▶│   Media          │    │ Social Listening │ (Fase 2)            │
+│             │   Management     │    │                  │                     │
+│             └──────────────────┘    └──────────────────┘                     │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Relações entre contextos
@@ -44,12 +52,23 @@
 | Social Account | Publishing | **Conformist** | Publishing consome tokens e dados do Social Account sem modificá-los |
 | Social Account | Analytics | **Conformist** | Analytics usa credenciais para buscar métricas |
 | Social Account | Engagement | **Conformist** | Engagement usa credenciais para buscar e publicar comentários |
+| Social Account | Social Listening | **Conformist** | Listening usa credenciais para buscar menções (Fase 3) |
 | Campaign | Publishing | **Customer-Supplier** | Campaign fornece conteúdos, Publishing agenda e publica |
 | Campaign | Analytics | **Customer-Supplier** | Campaign fornece referência de conteúdos para métricas |
+| Campaign | Client Financial Mgmt | **Customer-Supplier** | Campanhas são base para alocação de custos por cliente (Fase 2) |
 | Content AI | Campaign | **Conformist** | Campaign consome conteúdos gerados pelo Content AI |
 | Publishing | Analytics | **Published Language** | Publishing emite eventos que Analytics consome |
 | Publishing | Engagement | **Published Language** | Publishing emite eventos que Engagement consome |
 | Media | Campaign | **Shared Kernel** | Mídias são referenciadas pelas peças de conteúdo |
+| Analytics | Client Financial Mgmt | **Customer-Supplier** | Analytics fornece dados de uso para alocação de custos (Fase 2) |
+| Engagement | Social Listening | **Shared Kernel** | Reutiliza modelo de sentimento e patterns de captura (Fase 2) |
+| Billing | Client Financial Mgmt | **Shared Kernel** | Reutiliza Money VO e patterns financeiros (Fase 2) |
+| Analytics | AI Intelligence | **Customer-Supplier** | Fornece métricas de engajamento e séries temporais para análise (Fase 2-3) |
+| Engagement | AI Intelligence | **Customer-Supplier** | Fornece comentários com sentimento e embeddings para Feedback Loop (Fase 3) |
+| Social Listening | AI Intelligence | **Customer-Supplier** | Fornece menções de concorrentes para Gap Analysis (Fase 3) |
+| Content AI | AI Intelligence | **Conformist** | AI Intelligence consome dados de gerações para análise de padrões (Fase 2-3) |
+| AI Intelligence | Content AI | **Published Language** | Insights e contexto de audiência injetados em prompts de geração (Fase 3) |
+| AI Intelligence | Publishing | **Published Language** | Prediction scores e safety checks consultados pré-publicação (Fase 2-3) |
 
 ---
 
@@ -130,7 +149,8 @@ RefreshToken
 ```
 SocialAccount
 ├── id: SocialAccountId (UUID)
-├── user_id: UserId
+├── organization_id: OrganizationId (tenant — a conta pertence à organização, não ao usuário)
+├── connected_by_user_id: UserId (quem realizou o OAuth — audit trail)
 ├── provider: SocialProvider (Enum: instagram, tiktok, youtube)
 ├── provider_user_id: string
 ├── username: string
@@ -546,3 +566,461 @@ Media
 - `MediaScanned { mediaId, scanStatus, scannedAt }`
 - `MediaDeleted { mediaId, deletedAt }`
 - `MediaPurged { mediaId, purgedAt }`
+
+---
+
+## 5.10 Bounded Context: Client Financial Management (Fase 2)
+
+> **Nota:** Este contexto será implementado na Fase 2 (Sprint 8). Trata da gestão financeira que **agências e gestores** fazem com seus **próprios clientes** — diferente do Billing & Subscription (Sprint 6), que trata da cobrança do SaaS à organização.
+
+### Responsabilidades
+- Cadastro e gestão de clientes da agência
+- Alocação de custos por cliente (campanhas, IA, mídia, publicações)
+- Geração de faturas para clientes
+- Controle de pagamentos recebidos
+- Relatórios financeiros (receita, lucratividade, custos)
+
+### Agregados
+
+#### Client (Aggregate Root)
+```
+Client
+├── id: ClientId (UUID)
+├── organization_id: OrganizationId
+├── name: string
+├── email: ?Email (Value Object)
+├── phone: ?Phone (Value Object)
+├── company_name: ?string
+├── tax_id: ?TaxId (Value Object — CPF/CNPJ)
+├── billing_address: ?Address (Value Object)
+├── notes: ?string
+├── status: ClientStatus (Enum: active, inactive, archived)
+├── created_at: DateTimeImmutable
+├── updated_at: DateTimeImmutable
+└── deleted_at: ?DateTimeImmutable
+```
+
+#### ClientContract (Aggregate Root)
+```
+ClientContract
+├── id: ContractId (UUID)
+├── client_id: ClientId
+├── organization_id: OrganizationId
+├── name: string
+├── type: ContractType (Enum: fixed_monthly, per_campaign, per_post, hourly)
+├── value_cents: int
+├── currency: Currency (Value Object)
+├── starts_at: DateTimeImmutable
+├── ends_at: ?DateTimeImmutable
+├── social_account_ids: SocialAccountId[] (contas vinculadas ao contrato)
+├── status: ContractStatus (Enum: active, paused, completed, cancelled)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### ClientInvoice (Aggregate Root)
+```
+ClientInvoice
+├── id: InvoiceId (UUID)
+├── client_id: ClientId
+├── contract_id: ?ContractId
+├── organization_id: OrganizationId
+├── reference_month: YearMonth (Value Object)
+├── items: InvoiceItem[] (Entity)
+│   ├── description: string
+│   ├── quantity: int
+│   ├── unit_price_cents: int
+│   └── total_cents: int
+├── subtotal_cents: int
+├── discount_cents: int
+├── total_cents: int
+├── currency: Currency (Value Object)
+├── status: InvoiceStatus (Enum: draft, sent, paid, overdue, cancelled)
+├── due_date: DateOnly
+├── paid_at: ?DateTimeImmutable
+├── sent_at: ?DateTimeImmutable
+├── notes: ?string
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### CostAllocation (Entity)
+```
+CostAllocation
+├── id: AllocationId (UUID)
+├── client_id: ClientId
+├── organization_id: OrganizationId
+├── resource_type: ResourceType (Enum: campaign, ai_generation, media_storage, publication)
+├── resource_id: UUID (referência ao recurso específico)
+├── description: string
+├── cost_cents: int
+├── currency: Currency (Value Object)
+├── allocated_at: DateTimeImmutable
+```
+
+### Value Objects
+- **ClientId** — UUID wrapper
+- **ContractId** — UUID wrapper
+- **InvoiceId** — UUID wrapper
+- **TaxId** — Validação de CPF/CNPJ
+- **Address** — Rua, número, complemento, cidade, estado, CEP
+- **Currency** — Enum: BRL, USD, EUR
+- **YearMonth** — Ano-mês (ex: 2026-03)
+- **ContractType** — Enum com regras de cálculo por tipo
+- **InvoiceStatus** — Enum com transições válidas
+
+### Domain Events
+- `ClientCreated { clientId, organizationId, name, createdAt }`
+- `ClientUpdated { clientId, changes, updatedAt }`
+- `ClientArchived { clientId, archivedAt }`
+- `ContractCreated { contractId, clientId, type, valueCents, createdAt }`
+- `ContractCompleted { contractId, completedAt }`
+- `InvoiceGenerated { invoiceId, clientId, totalCents, referenceMonth }`
+- `InvoiceSent { invoiceId, sentAt }`
+- `InvoiceMarkedPaid { invoiceId, paidAt }`
+- `InvoiceOverdue { invoiceId, dueDate }`
+- `CostAllocated { allocationId, clientId, resourceType, costCents }`
+
+---
+
+## 5.11 Bounded Context: Social Listening (Fase 3)
+
+> **Nota:** Este contexto será implementado na Fase 3 (Sprint 9). Permite monitorar menções à marca, keywords, hashtags e concorrentes **fora do conteúdo próprio da organização** nas redes sociais.
+
+### Responsabilidades
+- Configuração de queries de monitoramento (keywords, hashtags, menções, concorrentes)
+- Captura e indexação de menções externas
+- Análise de sentimento de menções (reutiliza infraestrutura do Engagement)
+- Alertas configuráveis por condição (spike de volume, sentimento negativo)
+- Dashboards de listening e relatórios de tendências
+- Monitoramento de concorrentes
+
+### Agregados
+
+#### ListeningQuery (Aggregate Root)
+```
+ListeningQuery
+├── id: QueryId (UUID)
+├── organization_id: OrganizationId
+├── name: string
+├── type: QueryType (Enum: keyword, hashtag, mention, competitor)
+├── value: string (ex: "social media manager", "#marketingdigital", "@concorrente")
+├── platforms: SocialProvider[] (redes a monitorar)
+├── language_filter: ?Language (Value Object)
+├── is_active: bool
+├── last_fetched_at: ?DateTimeImmutable
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### Mention (Aggregate Root)
+```
+Mention
+├── id: MentionId (UUID)
+├── query_id: QueryId
+├── organization_id: OrganizationId
+├── platform: SocialProvider
+├── external_id: string (ID na rede social)
+├── author_name: string
+├── author_username: string
+├── author_external_id: string
+├── author_followers_count: ?int
+├── content_text: string
+├── content_url: ?string
+├── media_urls: string[]
+├── sentiment: Sentiment (Enum: positive, neutral, negative)
+├── reach_estimate: ?int
+├── engagement_count: ?int (likes + comments + shares)
+├── mentioned_at: DateTimeImmutable
+├── captured_at: DateTimeImmutable
+├── is_read: bool
+└── flagged: bool (destaque manual pelo usuário)
+```
+
+#### ListeningAlert (Aggregate Root)
+```
+ListeningAlert
+├── id: AlertId (UUID)
+├── organization_id: OrganizationId
+├── name: string
+├── query_ids: QueryId[] (queries monitoradas por este alerta)
+├── condition: AlertCondition (Value Object)
+│   ├── type: ConditionType (Enum: volume_spike, negative_sentiment_spike, keyword_detected, influencer_mention)
+│   ├── threshold: int (ex: 50 menções/hora, sentimento < 0.3)
+│   └── window_minutes: int (janela de avaliação)
+├── notification_channels: NotificationChannel[] (Value Object)
+│   ├── type: ChannelType (Enum: email, webhook, in_app)
+│   └── target: string (email, URL, ou user_id)
+├── is_active: bool
+├── last_triggered_at: ?DateTimeImmutable
+├── cooldown_minutes: int (evitar alertas repetidos)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### ListeningReport (Entity)
+```
+ListeningReport
+├── id: ReportId (UUID)
+├── organization_id: OrganizationId
+├── query_ids: QueryId[]
+├── period_start: DateTimeImmutable
+├── period_end: DateTimeImmutable
+├── total_mentions: int
+├── sentiment_breakdown: SentimentBreakdown (Value Object)
+│   ├── positive_count: int
+│   ├── neutral_count: int
+│   └── negative_count: int
+├── top_authors: array
+├── platform_breakdown: array
+├── trend_data: array (série temporal de menções)
+├── format: ExportFormat (Enum: pdf, csv)
+├── file_path: ?string
+├── status: ExportStatus (Enum: processing, ready, expired)
+├── created_at: DateTimeImmutable
+```
+
+### Value Objects
+- **QueryId** — UUID wrapper
+- **MentionId** — UUID wrapper
+- **AlertId** — UUID wrapper
+- **QueryType** — Enum com regras de busca por tipo
+- **AlertCondition** — Condição composta (tipo + threshold + janela)
+- **NotificationChannel** — Canal + target de notificação
+- **SentimentBreakdown** — Contagem agregada por sentimento
+
+### Domain Events
+- `ListeningQueryCreated { queryId, organizationId, type, value, createdAt }`
+- `ListeningQueryPaused { queryId, pausedAt }`
+- `ListeningQueryResumed { queryId, resumedAt }`
+- `MentionDetected { mentionId, queryId, platform, sentiment, mentionedAt }`
+- `MentionFlagged { mentionId, flaggedBy, flaggedAt }`
+- `ListeningAlertTriggered { alertId, conditionType, value, triggeredAt }`
+- `ListeningReportGenerated { reportId, organizationId, totalMentions, generatedAt }`
+- `SentimentSpikeDetected { organizationId, queryId, sentiment, count, windowMinutes }`
+
+---
+
+## 5.12 Bounded Context: AI Intelligence (Fase 2-3)
+
+> **Nota:** Este contexto será implementado nas Fases 2 (Sprints 10-11) e 3 (Sprints 12-13). Abrange funcionalidades de **análise inteligente e insights** que consomem dados de Analytics, Engagement e Social Listening para produzir recomendações acionáveis — diferente do Content AI (Sprint 3), que gera conteúdo textual sob demanda.
+
+### Responsabilidades
+- Cálculo de horários ótimos de publicação (Best Time to Post)
+- Verificação de segurança de marca antes de publicar (Brand Safety)
+- Geração de perfil de conteúdo da organização via embeddings (Content DNA)
+- Predição de performance pré-publicação (Performance Prediction)
+- Análise de feedback da audiência para enriquecer geração de conteúdo (Feedback Loop)
+- Identificação de lacunas de conteúdo vs concorrentes (Gap Analysis)
+- Pipeline de embeddings para conteúdos e comentários
+
+### Agregados
+
+#### ContentProfile (Aggregate Root)
+```
+ContentProfile
+├── id: ProfileId (UUID)
+├── organization_id: OrganizationId
+├── social_account_id: ?SocialAccountId
+├── provider: ?SocialProvider (null = todas as redes)
+├── total_contents_analyzed: int
+├── top_themes: ThemeScore[] (Value Object)
+│   ├── theme: string
+│   ├── score: float
+│   └── content_count: int
+├── engagement_patterns: EngagementPattern (Value Object)
+│   ├── avg_likes: float
+│   ├── avg_comments: float
+│   ├── avg_shares: float
+│   └── best_content_types: string[]
+├── content_fingerprint: ContentFingerprint (Value Object)
+│   ├── avg_length: int
+│   ├── hashtag_patterns: string[]
+│   ├── tone_distribution: array
+│   └── posting_frequency: float
+├── high_performer_traits: array
+├── centroid_embedding: ?Vector (VECTOR(1536))
+├── generated_at: DateTimeImmutable
+├── expires_at: DateTimeImmutable (TTL 7 dias)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### PerformancePrediction (Aggregate Root)
+```
+PerformancePrediction
+├── id: PredictionId (UUID)
+├── organization_id: OrganizationId
+├── content_id: ContentId
+├── provider: SocialProvider
+├── overall_score: PredictionScore (Value Object, 0-100)
+├── breakdown: PredictionBreakdown (Value Object)
+│   ├── content_similarity: int
+│   ├── timing: int
+│   ├── hashtags: int
+│   ├── length: int
+│   └── media_type: int
+├── similar_content_ids: ContentId[] (top 5 referências)
+├── recommendations: Recommendation[] (Value Object)
+│   ├── type: string
+│   ├── message: string
+│   └── impact_estimate: string
+├── model_version: string
+└── created_at: DateTimeImmutable
+```
+
+#### PostingTimeRecommendation (Aggregate Root)
+```
+PostingTimeRecommendation
+├── id: RecommendationId (UUID)
+├── organization_id: OrganizationId
+├── social_account_id: ?SocialAccountId
+├── provider: ?SocialProvider
+├── day_of_week: ?int (0=Sunday...6=Saturday, null = todos)
+├── heatmap: TimeSlotScore[] (Value Object)
+│   ├── hour: int (0-23)
+│   └── score: int (0-100)
+├── top_slots: TopSlot[] (Value Object)
+│   ├── day: int
+│   ├── hour: int
+│   ├── avg_engagement_rate: float
+│   └── sample_size: int
+├── worst_slots: TopSlot[]
+├── sample_size: int
+├── confidence_level: ConfidenceLevel (Enum: low, medium, high)
+├── calculated_at: DateTimeImmutable
+├── expires_at: DateTimeImmutable (TTL 7 dias)
+└── created_at: DateTimeImmutable
+```
+
+#### AudienceInsight (Aggregate Root)
+```
+AudienceInsight
+├── id: InsightId (UUID)
+├── organization_id: OrganizationId
+├── social_account_id: ?SocialAccountId
+├── insight_type: InsightType (Enum: preferred_topics, sentiment_trends, engagement_drivers, audience_preferences)
+├── insight_data: array (structured insight data)
+├── source_comment_count: int
+├── period_start: DateTimeImmutable
+├── period_end: DateTimeImmutable
+├── confidence_score: ?float (0.0-1.0)
+├── generated_at: DateTimeImmutable
+├── expires_at: DateTimeImmutable (TTL 7 dias)
+└── created_at: DateTimeImmutable
+```
+
+#### BrandSafetyCheck (Aggregate Root)
+```
+BrandSafetyCheck
+├── id: CheckId (UUID)
+├── organization_id: OrganizationId
+├── content_id: ContentId
+├── provider: ?SocialProvider (null = verificação geral)
+├── overall_status: SafetyStatus (Enum: pending, passed, warning, blocked)
+├── overall_score: ?int (0-100, 100 = totalmente seguro)
+├── checks: SafetyCheckResult[] (Value Object)
+│   ├── category: string (lgpd_compliance, advertising_disclosure, platform_policy, sensitivity, profanity)
+│   ├── status: SafetyStatus
+│   ├── message: string
+│   └── severity: string
+├── model_used: ?string
+├── tokens_input: ?int
+├── tokens_output: ?int
+├── checked_at: ?DateTimeImmutable
+└── created_at: DateTimeImmutable
+```
+
+#### BrandSafetyRule (Aggregate Root)
+```
+BrandSafetyRule
+├── id: RuleId (UUID)
+├── organization_id: OrganizationId
+├── rule_type: SafetyRuleType (Enum: blocked_word, required_disclosure, custom_check)
+├── rule_config: array (words[], pattern, message)
+├── severity: RuleSeverity (Enum: warning, block)
+├── is_active: bool
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### CalendarSuggestion (Aggregate Root)
+```
+CalendarSuggestion
+├── id: SuggestionId (UUID)
+├── organization_id: OrganizationId
+├── period_start: DateOnly
+├── period_end: DateOnly
+├── suggestions: CalendarItem[] (Value Object)
+│   ├── date: DateOnly
+│   ├── topics: string[]
+│   ├── content_type: string
+│   ├── target_networks: SocialProvider[]
+│   ├── reasoning: string
+│   └── priority: int
+├── based_on: array (top_performers, gaps, trends, existing_schedule)
+├── status: SuggestionStatus (Enum: generated, reviewed, accepted, expired)
+├── accepted_items: ?array
+├── generated_at: DateTimeImmutable
+├── expires_at: DateTimeImmutable (TTL 7 dias)
+└── created_at: DateTimeImmutable
+```
+
+#### ContentGapAnalysis (Aggregate Root)
+```
+ContentGapAnalysis
+├── id: AnalysisId (UUID)
+├── organization_id: OrganizationId
+├── competitor_query_ids: QueryId[] (listening_queries tipo competitor)
+├── analysis_period_start: DateTimeImmutable
+├── analysis_period_end: DateTimeImmutable
+├── our_topics: TopicAnalysis[] (Value Object)
+│   ├── topic: string
+│   ├── frequency: int
+│   └── avg_engagement: float
+├── competitor_topics: CompetitorTopic[] (Value Object)
+│   ├── topic: string
+│   ├── source_competitor: string
+│   ├── frequency: int
+│   └── avg_engagement: float
+├── gaps: ContentGap[] (Value Object)
+│   ├── topic: string
+│   ├── opportunity_score: int
+│   ├── competitor_count: int
+│   └── recommendation: string
+├── opportunities: Opportunity[] (Value Object)
+│   ├── topic: string
+│   ├── reason: string
+│   ├── suggested_content_type: string
+│   └── estimated_impact: string
+├── generated_at: DateTimeImmutable
+├── expires_at: DateTimeImmutable (TTL 7 dias)
+└── created_at: DateTimeImmutable
+```
+
+### Value Objects
+- **ProfileId**, **PredictionId**, **RecommendationId**, **InsightId**, **CheckId**, **SuggestionId**, **AnalysisId** — UUID wrappers
+- **PredictionScore** — Int 0-100 com validação
+- **EngagementPattern** — Padrão de engajamento agregado
+- **ContentFingerprint** — Características estatísticas do conteúdo
+- **TimeSlotScore** — Hora + score de engajamento
+- **TopSlot** — Slot com dados de performance
+- **ConfidenceLevel** — Enum: low (<10 posts), medium (10-50), high (>50)
+- **InsightType** — Enum: preferred_topics, sentiment_trends, engagement_drivers, audience_preferences
+- **SafetyStatus** — Enum: pending, passed, warning, blocked
+- **SafetyRuleType** — Enum: blocked_word, required_disclosure, custom_check
+- **RuleSeverity** — Enum: warning, block
+- **SuggestionStatus** — Enum: generated, reviewed, accepted, expired
+- **GapCategory** — Categorização de lacunas de conteúdo
+
+### Domain Events
+- `ContentProfileGenerated { profileId, organizationId, totalAnalyzed, generatedAt }`
+- `PredictionCalculated { predictionId, contentId, provider, score, calculatedAt }`
+- `PostingTimesUpdated { recommendationId, organizationId, provider, calculatedAt }`
+- `AudienceInsightsRefreshed { insightId, organizationId, insightType, commentCount, refreshedAt }`
+- `BrandSafetyChecked { checkId, contentId, overallStatus, score, checkedAt }`
+- `BrandSafetyBlocked { checkId, contentId, blockedCategories, checkedAt }`
+- `CalendarSuggestionGenerated { suggestionId, organizationId, periodStart, periodEnd, itemCount }`
+- `CalendarItemsAccepted { suggestionId, acceptedCount, acceptedAt }`
+- `ContentGapsIdentified { analysisId, organizationId, gapCount, opportunityCount, generatedAt }`
+- `EmbeddingGenerated { entityType, entityId, model, tokensUsed, generatedAt }`

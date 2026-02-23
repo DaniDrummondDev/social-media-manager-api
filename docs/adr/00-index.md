@@ -44,3 +44,10 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 | [ADR-013](adr-013-queue-publishing-strategy.md) | Estratégia de filas para publicação | Accepted |
 | [ADR-014](adr-014-cursor-pagination.md) | Cursor-based pagination | Accepted |
 | [ADR-015](adr-015-soft-delete-strategy.md) | Estratégia de soft delete | Accepted |
+
+### IA & Machine Learning
+
+| # | Título | Status |
+|---|--------|--------|
+| [ADR-016](adr-016-multi-provider-ai.md) | Arquitetura Multi-Provider AI | Accepted |
+| [ADR-017](adr-017-ai-learning-feedback-loop.md) | AI Learning & Feedback Loop | Proposed |

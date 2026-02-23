@@ -87,7 +87,7 @@ publicando, analisando e automatizando interações com inteligência artificial
 - Relatórios básicos de performance (geral, por rede, por conteúdo)
 - Fila assíncrona de publicação com retry
 
-### Fase 2 — Automação & Engajamento
+### Fase 2 — Automação, Engajamento & IA Inteligente
 
 - Captura de comentários via webhooks
 - Respostas automáticas baseadas em regras
@@ -95,21 +95,29 @@ publicando, analisando e automatizando interações com inteligência artificial
 - Classificação de sentimento dos comentários (IA)
 - Novas redes sociais (Facebook, LinkedIn, X, Pinterest)
 - Relatórios avançados e exportação
+- **Gestão financeira / faturamento de clientes** (agências faturando seus próprios clientes)
+- **Social listening** (monitoramento de menções, keywords e concorrentes)
+- **Best Time to Post** (horários ótimos personalizados por organização/rede com base em dados históricos)
+- **Brand Safety & Compliance Pre-Check** (verificação de LGPD, políticas de plataforma e sensibilidade antes de publicar)
+- **Cross-Network Content Adaptation** (adaptar conteúdo de sucesso em uma rede para formato/estilo de outras redes)
+- **AI Content Calendar Planning** (sugestões de calendário editorial baseadas em performance histórica e lacunas)
 
-### Fase 3 — Escala & Inteligência
+### Fase 3 — Escala & Inteligência Avançada
 
-- Sugestões de melhor horário para publicar (IA)
+- **Content DNA Profiling** (análise de padrões de conteúdo via pgvector para identificar "DNA" que gera engajamento)
+- **Pre-publish Performance Prediction** (score 0-100 de engajamento previsto antes de publicar)
+- **Audience Feedback Loop** (análise de comentários alimenta automaticamente geração de conteúdo com preferências da audiência)
+- **Competitive Content Gap Analysis** (identificação de lacunas de conteúdo vs concorrentes via Social Listening)
 - A/B testing de conteúdo
 - Fluxos de aprovação para equipes
 - White-label para agências
 - Mais redes sociais (Threads, Kwai, Telegram)
 - Marketplace de templates de conteúdo
+- **Geração de mídia com IA** (imagens e vídeos via agentes de IA a partir de prompts do usuário)
 
 ## 1.8 Fora de Escopo (v1)
 
 - Frontend (será outro projeto separado)
 - App mobile nativo
 - Editor de imagem/vídeo embutido
-- Gestão financeira / faturamento de clientes
 - Chat ao vivo com seguidores
-- Social listening (monitoramento de menções externas)

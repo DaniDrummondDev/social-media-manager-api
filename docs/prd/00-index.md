@@ -1,7 +1,7 @@
 # Social Media Manager — PRD (Product Requirements Document)
 
-> **Versão:** 1.0.0
-> **Data:** 2026-02-15
+> **Versão:** 1.0.0\
+> **Data:** 2026-02-15\
 > **Status:** Draft
 
 ## Sobre este documento
@@ -27,11 +27,11 @@ e automação de engajamento.
 
 | Camada | Tecnologia |
 |--------|-----------|
-| Linguagem | PHP 8.4 |
-| Framework | Laravel 12 |
+| Linguagem | PHP 8.4+ |
+| Framework | Laravel 12+ |
 | Banco de dados | PostgreSQL (pgvector) |
 | Cache / Filas | Redis |
-| IA | Laravel AI SDK (OpenAI / ChatGPT) |
+| IA | Laravel AI SDK (Prism) — Multi-Provider (ADR-016) |
 | Testes | Pest 4 (com plugin de arquitetura) |
 | Arquitetura | DDD, Clean Architecture, SOLID |
 

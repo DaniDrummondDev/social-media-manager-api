@@ -176,3 +176,10 @@ class TitleSuggestion
 - OpenAI mudar a API breaking — mitigado pelo Prism que absorve mudanças
 - Custos de IA escalar inesperadamente — mitigado por rate limiting e limites configuráveis
 - Prism descontinuado — interfaces no domínio permitem reimplementar com outro SDK
+
+---
+
+## Referências
+
+- ADR-016: Arquitetura Multi-Provider AI — expande esta decisão para 5 capabilities com múltiplos providers
+- ADR-017: AI Learning & Feedback Loop — usa Prism para geração de texto enriquecida com RAG, style learning e prompt optimization

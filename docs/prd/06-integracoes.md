@@ -155,42 +155,70 @@
 
 ---
 
-## 6.5 OpenAI (via Laravel AI SDK)
+## 6.5 IA Multi-Provider (via Laravel AI SDK — Prism)
 
-### Configuração
-- **SDK:** Laravel AI SDK (prism)
-- **Modelo padrão:** GPT-4o
-- **Fallback:** GPT-4o-mini (para geração de hashtags e tarefas mais simples)
+> **Referências:** ADR-009 (Laravel AI SDK), ADR-016 (Multi-Provider AI), ADR-017 (AI Learning & Feedback Loop)
 
-### Endpoints utilizados
-| Funcionalidade | Endpoint | Modelo |
-|----------------|----------|--------|
-| Gerar título | Chat Completions | GPT-4o |
-| Gerar descrição | Chat Completions | GPT-4o |
-| Gerar hashtags | Chat Completions | GPT-4o-mini |
-| Gerar conteúdo completo | Chat Completions | GPT-4o |
-| Classificar sentimento | Chat Completions | GPT-4o-mini |
-| Sugerir resposta | Chat Completions | GPT-4o |
+### Arquitetura Multi-Provider
 
-### Prompt Engineering
-Cada tipo de geração terá system prompts específicos:
-- **Títulos:** Instruções sobre limite de caracteres, call-to-action, rede social
-- **Descrições:** Tom de voz, keywords, CTA, formato da rede
-- **Hashtags:** Mix de popularidade, relevância, nicho
-- **Sentimento:** Classificação em 3 categorias com confiança
-- **Respostas:** Contexto do post original, tom de voz, objetivo
+O sistema utiliza **5 capabilities de IA**, cada uma com interface própria no Domain e múltiplas implementações por provider na Infrastructure:
+
+| Capability | Interface | Providers (Fase 1) | Providers (Futuro) |
+|-----------|-----------|-------------------|-------------------|
+| Texto | `TextGeneratorInterface` | OpenAI (GPT-4o, GPT-4o-mini) | Anthropic (Claude), Ollama |
+| Imagem | `ImageGeneratorInterface` | — | DALL-E 3, Stability AI, Midjourney |
+| Vídeo | `VideoGeneratorInterface` | — | Sora, Runway, Kling, Luma |
+| Embedding | `EmbeddingGeneratorInterface` | OpenAI (text-embedding-3-small) | Cohere, Voyage AI |
+| Classificação | `ClassifierInterface` | OpenAI (GPT-4o-mini) | Anthropic (Claude Haiku), Ollama |
+
+### SDK e Factory
+
+- **SDK:** Laravel AI SDK (Prism) para capabilities de texto e classificação.
+- **Factory:** `AIProviderFactory` resolve provider por capability + configuração da organização.
+- **Registry:** `AIProviderRegistry` com defaults do sistema e override por organização.
+- **Fallback Chain:** Provider primário → fallback da org → default do sistema → HTTP 503.
+- **Circuit Breaker:** 5 falhas consecutivas → circuit open, 60s reset, Redis-based.
+
+### Funcionalidades por modelo
+
+| Funcionalidade | Modelo Default | Fallback |
+|----------------|---------------|----------|
+| Gerar título | GPT-4o | GPT-4o-mini |
+| Gerar descrição | GPT-4o | GPT-4o-mini |
+| Gerar hashtags | GPT-4o-mini | GPT-4o-mini |
+| Gerar conteúdo completo | GPT-4o | GPT-4o-mini |
+| Classificar sentimento | GPT-4o-mini | GPT-4o-mini |
+| Sugerir resposta | GPT-4o | GPT-4o-mini |
+| Brand Safety | GPT-4o-mini | GPT-4o-mini |
+| Embeddings | text-embedding-3-small | — |
+
+### AI Learning & Feedback Loop (ADR-017)
+
+O sistema implementa um loop de aprendizado em 5 níveis:
+
+1. **Generation Feedback Tracking** — Registra aceitar/editar/rejeitar de cada geração IA
+2. **RAG (Retrieval-Augmented Generation)** — Busca top performers similares via pgvector para enriquecer gerações
+3. **Prompt Optimization Engine** — Templates versionados com A/B testing e auto-seleção por performance
+4. **Prediction Accuracy Feedback** — Valida predições vs métricas reais 7 dias após publicação
+5. **Organization Style Learning** — Aprende estilo da org a partir de padrões de edição
+
+### Configuração por organização
+
+Cada organização pode configurar seu provider preferido por capability via `PUT /api/v1/ai/settings`.
 
 ### Controle de custos
-- Registro de tokens consumidos por geração
-- Limite mensal configurável por usuário (soft limit com alerta)
-- Dashboard de consumo de tokens
+- Registro de tokens consumidos por geração (tabela `ai_generations`)
+- Limite mensal por plano (Free: 50, Creator: 200, Professional: 500, Agency: 5.000)
+- Tabela `ai_provider_pricing` com preços por modelo administrável via admin
 - Rate limiting: máximo 10 gerações por minuto por usuário
 
 ### Tratamento de erros
-- Timeout: 30 segundos
-- Retry: até 2 tentativas com backoff
-- Fallback para modelo mais barato se GPT-4o indisponível
-- Erro claro para o usuário quando serviço indisponível
+- Timeout texto: 30 segundos
+- Timeout imagem: 120 segundos (assíncrono via job)
+- Timeout vídeo: 300 segundos (assíncrono via job + polling)
+- Fallback chain: provider primário → fallback → default do sistema
+- Circuit breaker por provider (5 falhas → open, 60s reset)
+- Erro claro para o usuário quando todos os providers indisponíveis (HTTP 503)
 
 ---
 

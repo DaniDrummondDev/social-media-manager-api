@@ -1,22 +1,33 @@
 # Roadmap de Implementacao — Social Media Manager API
 
-> **Versao:** 1.0.0
-> **Data:** 2026-02-16
+> **Versao:** 1.1.0\
+> **Data:** 2026-02-23\
 > **Status:** Draft
 
 ---
 
 ## Visao Geral
 
-O roadmap esta dividido em **8 sprints** organizados por dependencia entre bounded contexts. Cada sprint entrega valor incremental e pode ser testado isoladamente.
+O roadmap esta dividido em **15 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)** e os Sprints 12-14 cobrem a **Fase 3 (v3.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
 
 ```
+                           Fase 1 (v1.0)
 Sprint 0 ─→ Sprint 1 ─→ Sprint 2 ─→ Sprint 3 ─→ Sprint 4
 (Infra)     (Auth)      (Social)    (Content)    (Publish)
                                         ↓
             Sprint 7 ←─ Sprint 6 ←─ Sprint 5
             (Admin)     (Billing)   (Analytics
                                     + Engage)
+
+                           Fase 2 (v2.0)
+Sprint 8 ─────────→ Sprint 9            Sprint 10 ──→ Sprint 11
+(Client Finance)    (Social Listening)   (Best Time     (Cross-Network
+                                         + Safety)      + Calendar)
+
+                           Fase 3 (v3.0)
+            Sprint 12 ─────────→ Sprint 13 ─────────→ Sprint 14
+            (Content DNA         (Feedback Loop        (AI Learning
+             + Prediction)        + Gap Analysis)       Loop — ADR-017)
 ```
 
 ---
@@ -238,7 +249,12 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
   - `RefreshTokenUseCase`
   - `CheckAccountHealthUseCase`
 - [ ] Use Cases Media:
-  - `UploadMediaUseCase`
+  - `InitiateUploadUseCase` (cria sessao de upload, retorna upload_id)
+  - `UploadChunkUseCase` (recebe chunk individual com offset)
+  - `CompleteUploadUseCase` (finaliza upload, inicia pos-processamento)
+  - `AbortUploadUseCase` (cancela upload em andamento)
+  - `GetUploadStatusUseCase` (status de upload em andamento)
+  - `UploadSmallMediaUseCase` (upload simples para arquivos <= 10MB)
   - `ListMediaUseCase`
   - `DeleteMediaUseCase`
   - `ScanMediaUseCase`
@@ -246,29 +262,180 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 2.3 Infrastructure Layer
 
-- [ ] Migrations: `social_accounts`, `media`
+- [ ] Migrations: `social_accounts`, `media`, `media_uploads` (sessoes de upload em andamento)
 - [ ] `SocialTokenEncrypter` (AES-256-GCM com chave dedicada `SOCIAL_TOKEN_KEY`)
 - [ ] Adapters (implementacao inicial — pode usar stubs):
   - `InstagramAuthenticator`, `TikTokAuthenticator`, `YouTubeAuthenticator`
 - [ ] `SocialAccountAdapterFactory` (resolve adapter por provider)
 - [ ] Media storage service (S3-compatible / local em dev)
-- [ ] Jobs: `RefreshExpiringTokensJob`, `ScanMediaJob`, `GenerateThumbnailJob`
-- [ ] Controllers: `SocialAccountController`, `MediaController`
-- [ ] Scheduler: token refresh (12h), health check (6h)
+- [ ] Chunked upload service (S3 Multipart Upload / tus protocol) — ver secao 2.5
+- [ ] Jobs: `RefreshExpiringTokensJob`, `ScanMediaJob`, `GenerateThumbnailJob`, `CleanupAbandonedUploadsJob`
+- [ ] Controllers: `SocialAccountController`, `MediaController`, `MediaUploadController`
+- [ ] Scheduler: token refresh (12h), health check (6h), cleanup uploads abandonados (1h)
 
 ### 2.4 Testes
 
 - [ ] Unit: EncryptedToken VO, SocialProvider enum, Media entity, FileSize/MimeType validation
+- [ ] Unit: ChunkValidation (offset, size, sequence), UploadSession lifecycle
 - [ ] Integration: SocialTokenEncrypter (encrypt/decrypt roundtrip)
-- [ ] Integration: Media storage (upload, delete)
+- [ ] Integration: Media storage (upload simples, chunked upload, delete)
+- [ ] Integration: S3 Multipart Upload (initiate, upload parts, complete, abort)
 - [ ] Feature: OAuth flow (mock de providers)
+- [ ] Feature: Upload simples (imagens e videos pequenos)
+- [ ] Feature: Upload chunked (videos grandes, resume apos falha)
 - [ ] Feature: Upload/list/delete de midia
 - [ ] Feature: Isolamento por organization_id
+
+### 2.5 Chunked Upload para Videos Grandes
+
+Videos para YouTube (tutoriais, lives, conteudo longo) podem ultrapassar 1GB. Upload em um unico request HTTP e inviavel:
+
+- **Timeout**: requests de minutos sao frageis — qualquer instabilidade de rede mata o upload
+- **Memoria**: servidor precisaria manter o arquivo inteiro em memoria
+- **UX**: sem progress bar, sem resume em caso de falha
+- **Infraestrutura**: ALB/NLB tem limites de body size e timeout de conexao
+
+#### Estrategia: Dual-Mode Upload
+
+```
+Arquivo <= 10MB  ─→  Upload simples (POST /api/v1/media)
+                     Multipart/form-data em um unico request
+
+Arquivo > 10MB   ─→  Upload chunked (3-step flow)
+                     1. Initiate → recebe upload_id
+                     2. Upload chunks → envia partes de 5-10MB
+                     3. Complete → finaliza e pos-processa
+```
+
+#### Fluxo Chunked Upload
+
+```
+Cliente                         API                              S3
+  │                              │                               │
+  │ POST /media/uploads          │                               │
+  │ { file_name, file_size,      │                               │
+  │   mime_type, total_chunks }  │                               │
+  │─────────────────────────────→│                               │
+  │                              │ CreateMultipartUpload          │
+  │                              │──────────────────────────────→│
+  │                              │◀─── upload_id + s3_upload_id  │
+  │◀── { upload_id, chunk_size,  │                               │
+  │      upload_urls[] }         │                               │
+  │                              │                               │
+  │ PATCH /media/uploads/{id}    │                               │
+  │ Content-Range: bytes 0-5MB   │                               │
+  │ [chunk binary data]          │                               │
+  │─────────────────────────────→│ UploadPart(part=1)            │
+  │                              │──────────────────────────────→│
+  │                              │◀──────── ETag                 │
+  │◀── { chunk: 1, received: ok }│                               │
+  │                              │                               │
+  │ PATCH /media/uploads/{id}    │                               │
+  │ Content-Range: bytes 5MB-10MB│                               │
+  │ [chunk binary data]          │                               │
+  │─────────────────────────────→│ UploadPart(part=2)            │
+  │                              │──────────────────────────────→│
+  │                              │◀──────── ETag                 │
+  │◀── { chunk: 2, received: ok }│                               │
+  │                              │                               │
+  │ ... (repete para N chunks)   │                               │
+  │                              │                               │
+  │ POST /media/uploads/{id}/    │                               │
+  │      complete                │                               │
+  │─────────────────────────────→│ CompleteMultipartUpload        │
+  │                              │──────────────────────────────→│
+  │                              │◀──────── final URL            │
+  │                              │                               │
+  │                              │ Dispatch: ScanMediaJob         │
+  │                              │ Dispatch: GenerateThumbnailJob │
+  │                              │ Dispatch: CalcCompatibilityJob │
+  │◀── { media_id, status:       │                               │
+  │      processing }            │                               │
+```
+
+#### Endpoints de Upload
+
+| Endpoint | Metodo | Descricao |
+|----------|--------|-----------|
+| `POST /api/v1/media` | POST | Upload simples (arquivos <= 10MB) |
+| `POST /api/v1/media/uploads` | POST | Iniciar sessao de upload chunked |
+| `PATCH /api/v1/media/uploads/{id}` | PATCH | Enviar chunk individual (Content-Range header) |
+| `GET /api/v1/media/uploads/{id}` | GET | Status do upload (chunks recebidos, progresso) |
+| `POST /api/v1/media/uploads/{id}/complete` | POST | Finalizar upload e iniciar pos-processamento |
+| `DELETE /api/v1/media/uploads/{id}` | DELETE | Cancelar upload em andamento |
+
+#### MediaUpload Entity
+
+```
+MediaUpload
+├── id: UploadId (UUID)
+├── organization_id: OrganizationId
+├── user_id: UserId
+├── file_name: string (nome original)
+├── mime_type: MimeType (Value Object)
+├── total_bytes: int
+├── chunk_size_bytes: int (default: 5MB)
+├── total_chunks: int
+├── received_chunks: int[] (indices dos chunks recebidos)
+├── s3_upload_id: string (S3 Multipart Upload ID)
+├── s3_parts: array (part_number → ETag)
+├── status: UploadStatus (Enum: initiated, uploading, completing, completed, aborted, expired)
+├── checksum: ?string (SHA-256, calculado incrementalmente)
+├── expires_at: DateTimeImmutable (sessao expira em 24h)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### Regras de Negocio
+
+- **RN-MED-20**: Chunk size padrao: 5MB. Minimo: 1MB. Maximo: 10MB. Configuravel por request.
+- **RN-MED-21**: Sessao de upload expira em 24h. `CleanupAbandonedUploadsJob` aborta uploads expirados no S3.
+- **RN-MED-22**: Chunks podem ser enviados fora de ordem (S3 Multipart suporta).
+- **RN-MED-23**: Se um chunk falhar, o cliente reenvia apenas aquele chunk (resume).
+- **RN-MED-24**: Checksum SHA-256 calculado incrementalmente conforme chunks chegam. Validado no `complete`.
+- **RN-MED-25**: Limite de tamanho total por upload: definido pelo plano (Free: 500MB, Pro: 2GB, Enterprise: 10GB).
+- **RN-MED-26**: Upload simples (POST /media) continua disponivel para arquivos <= 10MB (imagens, videos curtos).
+- **RN-MED-27**: Progresso do upload disponivel via `GET /media/uploads/{id}` para feedback ao cliente.
+
+#### Integracao com AWS S3
+
+O chunked upload mapeia diretamente para o **S3 Multipart Upload API**:
+
+| Nossa API | S3 Multipart API |
+|-----------|-----------------|
+| `POST /media/uploads` (initiate) | `CreateMultipartUpload` |
+| `PATCH /media/uploads/{id}` (chunk) | `UploadPart` |
+| `POST /media/uploads/{id}/complete` | `CompleteMultipartUpload` |
+| `DELETE /media/uploads/{id}` (abort) | `AbortMultipartUpload` |
+
+**Alternativa**: Presigned URLs — em vez de rotear chunks pelo nosso backend, gerar presigned URLs para o cliente fazer upload direto ao S3. Reduz carga no servidor mas exige mais logica no cliente. Pode ser implementado como otimizacao futura.
+
+#### Fluxo de Publicacao para YouTube (Sprint 4)
+
+O YouTube Data API v3 ja suporta **resumable uploads**. O fluxo completo:
+
+```
+1. Video ja esta no S3 (upload chunked pelo usuario concluido)
+2. PublishToYouTubeJob inicia:
+   a. Obtem URL do video no S3
+   b. Inicia resumable upload session no YouTube API
+   c. Faz streaming do S3 → YouTube em chunks de 5MB
+   d. YouTube processa e retorna video_id
+3. Nunca carrega video inteiro em memoria — stream entre S3 e YouTube
+```
+
+Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo e:
+- Cliente → chunks → S3 (via nosso backend ou presigned)
+- S3 → stream → YouTube API (no momento de publicar)
 
 ### Entregaveis Sprint 2
 
 - OAuth flow com 3 providers (Instagram, TikTok, YouTube)
 - Tokens criptografados com AES-256-GCM
+- Upload simples para arquivos ate 10MB (imagens, videos curtos)
+- Upload chunked para videos grandes (ate 10GB por plano Enterprise)
+- Resume de upload em caso de falha (reenvia apenas chunks faltantes)
+- Progress tracking de uploads em andamento
 - Upload de midia com validacao e thumbnail
 - Scan de seguranca assincrono
 - Calculo de compatibilidade por rede
@@ -548,20 +715,595 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ---
 
+---
+
+## Fase 2 — Expansao de Valor (v2.0)
+
+Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades que diferenciam o SaaS no mercado e atendem necessidades avancadas de agencias e marcas.
+
+---
+
+## Sprint 8 — Client Financial Management
+
+**Objetivo:** Permitir que agencias e gestores de social media faturem seus proprios clientes, alocando custos por campanha/servico e gerando faturas.
+
+**Bounded Context:** ClientFinancialManagement
+
+> **Importante:** Este contexto e distinto do Billing & Subscription (Sprint 6). O Billing trata da cobranca do SaaS a organizacao. O Client Financial Management trata da **gestao financeira que a agencia faz com seus clientes finais**.
+
+### 8.1 Domain Layer
+
+- [ ] `Client` entity (id, organization_id, name, email, company_name, tax_id, status)
+- [ ] `ClientContract` entity (id, client_id, type, value, period, social_accounts vinculadas)
+- [ ] `ClientInvoice` entity (id, client_id, contract_id, items, totals, status, due_date)
+- [ ] `CostAllocation` entity (id, client_id, resource_type, resource_id, cost)
+- [ ] Value Objects: `ClientId`, `TaxId` (CPF/CNPJ), `Address`, `Currency`, `YearMonth`, `ContractType`, `InvoiceStatus`, `ContractStatus`
+- [ ] Domain Events: `ClientCreated`, `ClientArchived`, `ContractCreated`, `ContractCompleted`, `InvoiceGenerated`, `InvoiceSent`, `InvoiceMarkedPaid`, `InvoiceOverdue`, `CostAllocated`
+- [ ] Repository interfaces: `ClientRepositoryInterface`, `ClientContractRepositoryInterface`, `ClientInvoiceRepositoryInterface`, `CostAllocationRepositoryInterface`
+- [ ] Domain Service: `InvoiceCalculationService` (calcula totais com base nos items e tipo de contrato)
+
+### 8.2 Application Layer
+
+- [ ] Use Cases Client:
+  - `CreateClientUseCase`
+  - `UpdateClientUseCase`
+  - `ListClientsUseCase`
+  - `GetClientUseCase`
+  - `ArchiveClientUseCase`
+- [ ] Use Cases Contract:
+  - `CreateContractUseCase`
+  - `UpdateContractUseCase`
+  - `ListContractsUseCase`
+  - `PauseContractUseCase`
+  - `CompleteContractUseCase`
+- [ ] Use Cases Invoice:
+  - `GenerateInvoiceUseCase` (manual, com items customizados)
+  - `GenerateMonthlyInvoicesUseCase` (batch, baseado em contratos ativos)
+  - `ListInvoicesUseCase`
+  - `GetInvoiceUseCase`
+  - `SendInvoiceUseCase` (envia por email)
+  - `MarkInvoicePaidUseCase`
+  - `CancelInvoiceUseCase`
+- [ ] Use Cases Cost:
+  - `AllocateCostUseCase`
+  - `GetCostBreakdownUseCase` (custos por cliente, periodo)
+  - `GetProfitabilityReportUseCase` (receita vs custos por cliente)
+- [ ] Use Cases Report:
+  - `GetFinancialDashboardUseCase` (receita total, inadimplencia, top clientes)
+  - `ExportFinancialReportUseCase` (PDF, CSV)
+- [ ] DTOs para input/output de cada use case
+
+### 8.3 Infrastructure Layer
+
+- [ ] Migrations: `clients`, `client_contracts`, `client_invoices`, `client_invoice_items`, `cost_allocations`
+- [ ] Eloquent Models + Repositories
+- [ ] `InvoicePdfGenerator` service (gera PDF da fatura)
+- [ ] Email notifications: fatura enviada, fatura vencida, lembrete de pagamento
+- [ ] Jobs: `GenerateMonthlyInvoicesJob`, `CheckOverdueInvoicesJob`, `ExportFinancialReportJob`, `SendInvoiceReminderJob`
+- [ ] Controllers: `ClientController`, `ClientContractController`, `ClientInvoiceController`, `FinancialReportController`
+- [ ] Scheduler: verificar faturas vencidas (diario), gerar faturas mensais (dia 1 de cada mes)
+
+### 8.4 Testes
+
+- [ ] Unit: Client entity, TaxId VO (CPF/CNPJ validation), Address VO, Currency, InvoiceCalculationService
+- [ ] Unit: Todos os Use Cases (com mocks de repository)
+- [ ] Unit: InvoiceStatus transitions, ContractStatus transitions
+- [ ] Integration: Eloquent repositories
+- [ ] Integration: InvoicePdfGenerator
+- [ ] Feature: CRUD de clientes
+- [ ] Feature: CRUD de contratos
+- [ ] Feature: Geracao e envio de faturas
+- [ ] Feature: Alocacao de custos e relatorios de lucratividade
+- [ ] Feature: Dashboard financeiro
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 8
+
+- CRUD completo de clientes com dados fiscais (CPF/CNPJ)
+- Contratos por tipo (mensal fixo, por campanha, por post, por hora)
+- Geracao manual e automatica de faturas
+- Envio de faturas por email com PDF
+- Alocacao de custos por campanha, geracao IA, midia e publicacao
+- Relatorio de lucratividade por cliente
+- Dashboard financeiro (receita, inadimplencia, top clientes)
+- Exportacao de relatorios financeiros (PDF, CSV)
+
+---
+
+## Sprint 9 — Social Listening
+
+**Objetivo:** Monitoramento de mencoes, keywords, hashtags e concorrentes nas redes sociais, com analise de sentimento, alertas e relatorios de tendencias.
+
+**Bounded Context:** SocialListening
+
+> **Nota:** Social Listening monitora mencoes **externas** — ou seja, publicacoes de terceiros que mencionam a marca, keywords ou concorrentes. E diferente do Engagement (Sprint 5), que trata de comentarios nos posts proprios da organizacao.
+
+### 9.1 Domain Layer
+
+- [ ] `ListeningQuery` entity (id, organization_id, name, type, value, platforms, is_active)
+- [ ] `Mention` entity (id, query_id, platform, author, content, sentiment, reach, engagement)
+- [ ] `ListeningAlert` entity (id, organization_id, query_ids, condition, notification_channels, cooldown)
+- [ ] `ListeningReport` entity (id, organization_id, query_ids, period, metrics, sentiment_breakdown)
+- [ ] Value Objects: `QueryId`, `MentionId`, `AlertId`, `QueryType` (keyword, hashtag, mention, competitor), `AlertCondition`, `ConditionType` (volume_spike, negative_sentiment_spike, keyword_detected, influencer_mention), `NotificationChannel`, `SentimentBreakdown`, `MentionSource`
+- [ ] Domain Events: `ListeningQueryCreated`, `ListeningQueryPaused`, `ListeningQueryResumed`, `MentionDetected`, `MentionFlagged`, `ListeningAlertTriggered`, `ListeningReportGenerated`, `SentimentSpikeDetected`
+- [ ] Repository interfaces: `ListeningQueryRepositoryInterface`, `MentionRepositoryInterface`, `ListeningAlertRepositoryInterface`, `ListeningReportRepositoryInterface`
+- [ ] Domain Service: `AlertEvaluationService` (avalia condicoes de alerta contra mencoes recentes)
+
+### 9.2 Application Layer
+
+- [ ] Use Cases Query:
+  - `CreateListeningQueryUseCase`
+  - `UpdateListeningQueryUseCase`
+  - `ListListeningQueriesUseCase`
+  - `PauseListeningQueryUseCase`
+  - `ResumeListeningQueryUseCase`
+  - `DeleteListeningQueryUseCase`
+- [ ] Use Cases Mention:
+  - `ListMentionsUseCase` (com filtros: query, platform, sentiment, periodo)
+  - `GetMentionDetailsUseCase`
+  - `FlagMentionUseCase` (destaque manual)
+  - `MarkMentionsReadUseCase`
+  - `ProcessMentionsBatchUseCase` (chamado pelo job de captura)
+- [ ] Use Cases Alert:
+  - `CreateAlertUseCase`
+  - `UpdateAlertUseCase`
+  - `ListAlertsUseCase`
+  - `DeleteAlertUseCase`
+  - `EvaluateAlertsUseCase` (chamado pelo job de avaliacao)
+- [ ] Use Cases Dashboard/Report:
+  - `GetListeningDashboardUseCase` (total mencoes, sentimento, tendencias, top autores)
+  - `GetSentimentTrendUseCase` (serie temporal de sentimento)
+  - `GetPlatformBreakdownUseCase` (distribuicao por rede)
+  - `GenerateListeningReportUseCase`
+  - `ExportListeningReportUseCase` (PDF, CSV)
+- [ ] DTOs para input/output de cada use case
+
+### 9.3 Infrastructure Layer
+
+- [ ] Migrations: `listening_queries`, `mentions` (particionada por mes), `listening_alerts`, `listening_alert_notifications`, `listening_reports`
+- [ ] Adapters de listening (implementam `SocialListeningInterface`):
+  - `InstagramListeningAdapter` (Instagram Graph API — hashtag search, mention endpoint)
+  - `TikTokListeningAdapter` (TikTok Research API — keyword search)
+  - `YouTubeListeningAdapter` (YouTube Data API — search endpoint)
+- [ ] `SocialListeningAdapterFactory` (resolve adapter por provider)
+- [ ] Reutilizacao do `SentimentAnalysisService` do Engagement context
+- [ ] Jobs:
+  - `FetchMentionsJob` (captura mencoes por query, com deduplicacao por external_id)
+  - `AnalyzeMentionSentimentJob` (analise de sentimento via IA)
+  - `EvaluateListeningAlertsJob` (verifica condicoes de alerta)
+  - `GenerateListeningReportJob`
+  - `CleanupOldMentionsJob` (retention policy)
+- [ ] Controllers: `ListeningQueryController`, `MentionController`, `ListeningAlertController`, `ListeningDashboardController`, `ListeningReportController`
+- [ ] Scheduler:
+  - Captura de mencoes: a cada 15 min para queries ativas
+  - Avaliacao de alertas: a cada 5 min
+  - Relatorio diario: 1x/dia (06:00 UTC)
+  - Cleanup: mencoes > retention period do plano
+
+### 9.4 Testes
+
+- [ ] Unit: ListeningQuery entity, QueryType enum, AlertCondition VO, AlertEvaluationService
+- [ ] Unit: Mention entity, sentiment assignment, deduplication logic
+- [ ] Unit: Todos os Use Cases (com mocks de repository e adapters)
+- [ ] Integration: Listening adapters (mock de APIs de busca)
+- [ ] Integration: Mention partitioning (inserir e consultar em particoes diferentes)
+- [ ] Feature: CRUD de queries de listening
+- [ ] Feature: Listagem de mencoes com filtros
+- [ ] Feature: CRUD de alertas e avaliacao de condicoes
+- [ ] Feature: Dashboard de listening (total, sentimento, tendencias)
+- [ ] Feature: Geracao e exportacao de relatorios
+- [ ] Feature: Isolamento por organization_id
+
+### 9.5 Consideracoes Tecnicas
+
+#### APIs de Busca/Mencoes por Rede
+
+| Rede | API | Limitacoes |
+|------|-----|------------|
+| Instagram | Hashtag Search + Mention endpoint | Requer Instagram Business Account. Hashtag search limitado a 30 hashtags/7 dias. Mention endpoint requer @menção direta. |
+| TikTok | Research API (keyword search) | Acesso restrito, requer aprovação. Dados disponiveis com 48h de atraso. Rate limits rigorosos. |
+| YouTube | Data API v3 (search.list) | Quota diaria de 10.000 unidades. Search custa 100 unidades. Sem endpoint de mention direta. |
+
+> **Nota:** As limitacoes de API devem ser mapeadas em detalhe durante a implementacao. Algumas redes podem exigir niveis de acesso especiais ou parcerias comerciais para social listening em escala.
+
+#### Volume e Performance
+
+- Mencoes podem gerar **alto volume de dados**. A tabela `mentions` deve ser particionada por mes.
+- Deduplicacao por `external_id + platform` para evitar mencoes duplicadas entre execucoes.
+- Cache de resultados do dashboard (TTL 5min) para evitar queries pesadas em cada request.
+- Limites de queries ativas por plano (Free: 0, Pro: 5, Enterprise: 50) — enforcement via `CheckPlanLimit` middleware.
+
+### Entregaveis Sprint 9
+
+- CRUD de queries de listening (keyword, hashtag, menção, concorrente)
+- Captura automatica de mencoes nas 3 redes (Instagram, TikTok, YouTube)
+- Analise de sentimento de mencoes (reutiliza IA do Engagement)
+- Dashboard de listening (volume, sentimento, tendencias, top autores)
+- Alertas configuraveis (spike de volume, sentimento negativo, influenciador)
+- Notificacoes por email e webhook
+- Relatorios de listening exportaveis (PDF, CSV)
+- Monitoramento de concorrentes
+- Limites por plano integrados ao billing
+
+---
+
+## Sprint 10 — Best Time to Post + Brand Safety & Compliance
+
+**Objetivo:** Horarios otimos de publicacao personalizados e verificacao de seguranca de marca pre-publicacao.
+
+**Bounded Context:** AI Intelligence
+
+> **Nota:** Sprint 10 pode rodar em paralelo com Sprint 8 (Client Finance). Nao depende de pgvector — Best Time to Post e modelo estatistico puro.
+
+### 10.1 Domain Layer
+
+- [ ] `PostingTimeRecommendation` entity (heatmap, top/worst slots, confidence)
+- [ ] `BrandSafetyCheck` entity (status, score, checks por categoria)
+- [ ] `BrandSafetyRule` entity (regras customizaveis por org)
+- [ ] Value Objects: `PredictionScore`, `TimeSlotScore`, `ConfidenceLevel`, `SafetyStatus`, `SafetyRuleType`, `RuleSeverity`
+- [ ] Domain Events: `PostingTimesUpdated`, `BrandSafetyChecked`, `BrandSafetyBlocked`
+- [ ] Repository interfaces
+
+### 10.2 Application Layer
+
+- [ ] Use Cases Best Time:
+  - `GetBestTimesUseCase`
+  - `GetBestTimesHeatmapUseCase`
+  - `GetBestTimesByProviderUseCase`
+  - `RecalculateBestTimesUseCase`
+- [ ] Use Cases Brand Safety:
+  - `RunSafetyCheckUseCase`
+  - `GetSafetyChecksUseCase`
+  - `CreateSafetyRuleUseCase`
+  - `UpdateSafetyRuleUseCase`
+  - `DeleteSafetyRuleUseCase`
+  - `ListSafetyRulesUseCase`
+
+### 10.3 Infrastructure Layer
+
+- [ ] Migrations: `posting_time_recommendations`, `brand_safety_checks`, `brand_safety_rules`
+- [ ] Jobs: `CalculateBestPostingTimesJob`, `RunBrandSafetyCheckJob`
+- [ ] Integracao com `ProcessScheduledPostJob` (consultar safety check antes de publicar)
+- [ ] Controllers: `BestTimesController`, `BrandSafetyController`, `BrandSafetyRuleController`
+- [ ] Scheduler: recalculo semanal de best times
+
+### 10.4 Testes
+
+- [ ] Unit: PostingTimeRecommendation entity, ConfidenceLevel, TimeSlotScore
+- [ ] Unit: BrandSafetyCheck entity, SafetyStatus transitions
+- [ ] Unit: Todos os Use Cases
+- [ ] Integration: Calculo de best times a partir de content_metric_snapshots
+- [ ] Integration: Safety check via LLM (mock de Prism)
+- [ ] Feature: Endpoints de best times (heatmap, top slots)
+- [ ] Feature: Safety check flow (check → publish com warning/block)
+- [ ] Feature: CRUD de safety rules
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 10
+
+- Horarios otimos de publicacao por org/rede/dia com heatmap
+- Nivel de confianca baseado em volume de dados
+- Recalculo semanal automatico + manual
+- Verificacao de Brand Safety pre-publicacao (LGPD, disclosures, policies, sensitivity)
+- Regras customizaveis de safety por organizacao (blocked words, required disclosures)
+- Integracao com pipeline de publicacao (block/warn)
+
+---
+
+## Sprint 11 — Cross-Network Content Adaptation + AI Content Calendar
+
+**Objetivo:** Adaptar conteudo entre redes e gerar sugestoes de calendario editorial com IA.
+
+**Bounded Contexts:** Content AI (expandido), AI Intelligence
+
+> **Nota:** Sprint 11 pode rodar em paralelo com Sprint 9 (Social Listening).
+
+### 11.1 Domain Layer
+
+- [ ] `CalendarSuggestion` entity (sugestoes, based_on, status, accepted_items)
+- [ ] Value Objects: `SuggestionStatus`, `CalendarItem`
+- [ ] Domain Events: `CalendarSuggestionGenerated`, `CalendarItemsAccepted`
+- [ ] Expansao de `GenerationType` enum com `cross_network_adaptation`
+- [ ] Repository interfaces
+
+### 11.2 Application Layer
+
+- [ ] Use Cases Cross-Network:
+  - `AdaptContentUseCase` (adapta conteudo entre redes via LLM)
+- [ ] Use Cases Calendar:
+  - `GenerateCalendarSuggestionsUseCase`
+  - `ListCalendarSuggestionsUseCase`
+  - `GetCalendarSuggestionUseCase`
+  - `AcceptCalendarItemsUseCase`
+
+### 11.3 Infrastructure Layer
+
+- [ ] Migration: `calendar_suggestions`
+- [ ] Alteracao de ENUM: `generation_type` += `cross_network_adaptation`
+- [ ] Jobs: `GenerateCalendarSuggestionsJob`
+- [ ] Prompts especializados para adaptacao cross-network (respeitar limites/convencoes por rede)
+- [ ] Controllers: `ContentAdaptationController`, `CalendarSuggestionController`
+
+### 11.4 Testes
+
+- [ ] Unit: CalendarSuggestion entity, SuggestionStatus transitions
+- [ ] Unit: Todos os Use Cases
+- [ ] Integration: Adaptacao cross-network via LLM (mock)
+- [ ] Integration: Geracao de calendario via LLM (mock)
+- [ ] Feature: Endpoint de adapt-content (request → adaptacoes por rede)
+- [ ] Feature: CRUD de calendar suggestions (generate, list, accept)
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 11
+
+- Adaptacao automatica de conteudo entre redes (respeitando limites e convencoes)
+- Aplicacao opcional em content_network_overrides
+- Sugestoes de calendario editorial para 7-30 dias
+- Baseado em performance historica, lacunas no cronograma e posts existentes
+- Aceitacao individual de itens pelo usuario
+- Sugestoes expiram apos 7 dias
+
+---
+
+---
+
+## Fase 3 — Inteligencia Avancada (v3.0)
+
+Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes do pipeline de embeddings (pgvector), dados acumulados de Social Listening e o AI Learning & Feedback Loop (ADR-017).
+
+---
+
+## Sprint 12 — Content DNA Profiling + Performance Prediction
+
+**Objetivo:** Pipeline de embeddings, perfil de conteudo da organizacao via pgvector e predicao de performance pre-publicacao.
+
+**Bounded Context:** AI Intelligence
+
+> **Nota:** Este sprint implementa a infraestrutura de embeddings compartilhada que sera usada tambem pelo Sprint 13.
+
+### 12.1 Domain Layer
+
+- [ ] `ContentProfile` entity (top_themes, engagement_patterns, centroid_embedding)
+- [ ] `PerformancePrediction` entity (score, breakdown, recommendations)
+- [ ] Value Objects: `EngagementPattern`, `ContentFingerprint`, `PredictionBreakdown`
+- [ ] Domain Events: `EmbeddingGenerated`, `ContentProfileGenerated`, `PredictionCalculated`
+- [ ] Contracts: `EmbeddingGeneratorInterface`, `SimilaritySearchInterface`
+- [ ] Repository interfaces
+
+### 12.2 Application Layer
+
+- [ ] Use Cases Embedding Pipeline:
+  - `GenerateEmbeddingUseCase`
+  - `BackfillEmbeddingsUseCase`
+- [ ] Use Cases Content DNA:
+  - `GenerateContentProfileUseCase`
+  - `GetContentProfileUseCase`
+  - `GetContentThemesUseCase`
+  - `GetContentRecommendationsUseCase`
+- [ ] Use Cases Prediction:
+  - `PredictPerformanceUseCase`
+  - `GetPredictionsUseCase`
+
+### 12.3 Infrastructure Layer
+
+- [ ] Migrations: `embedding_jobs`, `content_profiles`, `performance_predictions`
+- [ ] `OpenAIEmbeddingService` (implementa `EmbeddingGeneratorInterface`)
+- [ ] `PgVectorSimilarityService` (implementa `SimilaritySearchInterface`)
+- [ ] Jobs: `GenerateContentEmbeddingJob`, `GenerateCommentEmbeddingJob`, `BackfillEmbeddingsJob`, `GenerateContentProfileJob`, `CalculatePerformancePredictionJob`
+- [ ] Listeners: `ContentCreated` → dispatch embedding job, `ContentUpdated` → dispatch embedding job
+- [ ] Controllers: `ContentProfileController`, `PerformancePredictionController`
+- [ ] Scheduler: backfill semanal, profile generation semanal
+
+### 12.4 Testes
+
+- [ ] Unit: ContentProfile entity, PredictionScore VO, EngagementPattern
+- [ ] Unit: Todos os Use Cases
+- [ ] Integration: OpenAI Embedding Service (mock de API)
+- [ ] Integration: PgVector similarity search (roundtrip: insert → search)
+- [ ] Integration: Centroid calculation
+- [ ] Feature: Embedding pipeline (create content → embedding generated)
+- [ ] Feature: Content DNA (generate profile, get themes, recommendations)
+- [ ] Feature: Performance Prediction (predict → score + breakdown)
+- [ ] Feature: Prediction com dados insuficientes (InsufficientDataException)
+- [ ] Feature: Isolamento por organization_id em similarity search
+
+### Entregaveis Sprint 12
+
+- Pipeline de embeddings para conteudos e comentarios (event-driven + backfill)
+- Perfil DNA de conteudo com temas dominantes, padroes de engajamento e traits de alta performance
+- Centroid embedding dos top 20% por engagement
+- Recomendacoes de conteudo baseadas em similaridade
+- Predicao de performance 0-100 com breakdown por fator
+- Abordagem hibrida: estatistico (rapido) + LLM opcional (detalhado)
+- Recomendacoes acionaveis (timing, hashtags, formato)
+
+---
+
+## Sprint 13 — Audience Feedback Loop + Competitive Content Gap Analysis
+
+**Objetivo:** Insights de audiencia injetados em geracao de conteudo e analise de lacunas vs concorrentes.
+
+**Bounded Context:** AI Intelligence
+
+> **Nota:** Gap Analysis depende de Social Listening (Sprint 9) com dados acumulados. Feedback Loop depende do pipeline de embeddings (Sprint 12) nos comentarios.
+
+### 13.1 Domain Layer
+
+- [ ] `AudienceInsight` entity (insight_type, insight_data, confidence_score)
+- [ ] `ContentGapAnalysis` entity (our_topics, competitor_topics, gaps, opportunities)
+- [ ] Value Objects: `InsightType`, `GapCategory`
+- [ ] Domain Events: `AudienceInsightsRefreshed`, `ContentGapsIdentified`
+- [ ] Repository interfaces
+
+### 13.2 Application Layer
+
+- [ ] Use Cases Feedback Loop:
+  - `GetAudienceInsightsUseCase`
+  - `GetInsightsByTypeUseCase`
+  - `RefreshAudienceInsightsUseCase`
+- [ ] Use Cases Gap Analysis:
+  - `GenerateGapAnalysisUseCase`
+  - `ListGapAnalysesUseCase`
+  - `GetGapAnalysisUseCase`
+  - `GetOpportunitiesUseCase`
+- [ ] Expansao dos Use Cases de geracao (RF-030 a RF-033) para injetar contexto de audiencia
+
+### 13.3 Infrastructure Layer
+
+- [ ] Migrations: `audience_insights`, `ai_generation_context`, `content_gap_analyses`
+- [ ] Jobs: `RefreshAudienceInsightsJob`, `UpdateAIGenerationContextJob`, `GenerateContentGapAnalysisJob`
+- [ ] Integracao com prompts de geracao (injecao de audience context)
+- [ ] Controllers: `AudienceInsightsController`, `ContentGapAnalysisController`
+- [ ] Scheduler: refresh semanal de insights, gap analysis mensal
+
+### 13.4 Testes
+
+- [ ] Unit: AudienceInsight entity, InsightType, ContentGapAnalysis
+- [ ] Unit: Todos os Use Cases
+- [ ] Integration: Aggregacao de insights de comentarios via LLM (mock)
+- [ ] Integration: Gap analysis com mencoes de Social Listening (mock)
+- [ ] Integration: Injecao de contexto nos prompts de geracao
+- [ ] Feature: Audience insights (get, refresh)
+- [ ] Feature: Campo `audience_context_used` nas respostas de geracao
+- [ ] Feature: Desativar audience context via AI settings
+- [ ] Feature: Gap analysis (generate, list, opportunities)
+- [ ] Feature: Erro quando nao ha queries competitor configuradas
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 13
+
+- Insights de audiencia extraidos de comentarios (topicos preferidos, tendencias de sentimento, drivers de engajamento)
+- Injecao automatica de contexto de audiencia nos prompts de geracao de conteudo
+- Transparencia: usuario ve qual contexto foi utilizado na geracao
+- Controle: audience context desativavel por organizacao
+- Analise de gaps de conteudo vs concorrentes monitorados via Social Listening
+- Oportunidades acionaveis com score de oportunidade e sugestoes de conteudo
+- Gap analysis on-demand + mensal automatica
+
+---
+
+## Sprint 14 — AI Learning & Feedback Loop
+
+**Objetivo:** Implementar o loop de aprendizado da IA em 5 niveis — feedback tracking, RAG, prompt optimization, prediction accuracy e style learning — transformando a IA numa ferramenta que melhora com o uso.
+
+**Bounded Contexts:** Content AI (expandido), AI Intelligence (expandido)
+
+> **Referencia:** ADR-017 (AI Learning & Feedback Loop), Skill `06-domain/ai-learning-loop.md`
+
+### 14.1 Domain Layer
+
+- [ ] `GenerationFeedback` entity (action, original_output, edited_output, diff_summary)
+- [ ] `PromptTemplate` aggregate root (system_prompt, user_prompt_template, performance_score, counters)
+- [ ] `PromptExperiment` entity (A/B test entre 2 templates, z-test, confidence_level)
+- [ ] `PredictionValidation` entity (predicted_score vs actual_normalized_score, accuracy)
+- [ ] `OrgStyleProfile` aggregate root (tone, length, vocabulary, structure, hashtag preferences)
+- [ ] Value Objects: `FeedbackAction`, `DiffSummary`, `PerformanceScore`, `StylePreferences`, `PredictionAccuracy`
+- [ ] Domain Events: `GenerationFeedbackRecorded`, `GenerationEdited`, `PromptTemplateCreated`, `PromptPerformanceCalculated`, `PromptExperimentStarted`, `PromptExperimentCompleted`, `PredictionValidated`, `OrgStyleProfileGenerated`, `LearningContextUpdated`
+- [ ] Contracts: `PromptTemplateResolverInterface`, `RAGContextProviderInterface`, `StyleProfileAnalyzerInterface`, `PredictionValidatorInterface`
+- [ ] Repository interfaces
+
+### 14.2 Application Layer
+
+- [ ] Use Cases Feedback (Nivel 1):
+  - `RecordGenerationFeedbackUseCase`
+- [ ] Use Cases RAG (Nivel 2):
+  - `RetrieveSimilarContentUseCase`
+- [ ] Use Cases Prompt Optimization (Nivel 3):
+  - `ResolvePromptTemplateUseCase`
+  - `CreatePromptTemplateUseCase`
+  - `CreatePromptExperimentUseCase`
+  - `EvaluateExperimentUseCase`
+  - `CalculatePromptPerformanceUseCase`
+- [ ] Use Cases Prediction Accuracy (Nivel 4):
+  - `ValidatePredictionUseCase`
+  - `GetPredictionAccuracyUseCase`
+- [ ] Use Cases Style Learning (Nivel 5):
+  - `GenerateStyleProfileUseCase`
+  - `UpdateLearningContextUseCase`
+- [ ] Expansao dos Use Cases de geracao (Sprint 3) para integrar RAG + style + template resolution
+- [ ] DTOs para input/output de cada use case
+
+### 14.3 Infrastructure Layer
+
+- [ ] Migrations: `generation_feedback`, `prompt_templates`, `prompt_experiments`, `prediction_validations`, `org_style_profiles`
+- [ ] ALTER TABLE `ai_generations`: add `prompt_template_id`, `experiment_id`, `rag_context_used`, `style_context_used`
+- [ ] Seeds: prompt templates globais default por generation_type
+- [ ] Jobs:
+  - `TrackGenerationFeedbackJob` (N1 — a cada feedback)
+  - `CalculateDiffSummaryJob` (N1 — a cada edicao)
+  - `RetrieveSimilarContentJob` (N2 — pre-geracao)
+  - `CalculatePromptPerformanceJob` (N3 — semanal)
+  - `EvaluatePromptExperimentJob` (N3 — pos-feedback)
+  - `ValidatePredictionAccuracyJob` (N4 — 7d pos-publicacao)
+  - `GenerateOrgStyleProfileJob` (N5 — semanal, min 10 edits)
+  - `UpdateLearningContextJob` (N2+N5 — pos-atualizacao)
+  - `CleanupExpiredLearningDataJob` (todos — semanal)
+- [ ] Async Listeners: `PostPublished` → schedule validation, `MetricsSynced` → validate prediction, `PromptExperimentCompleted` → activate winner, `OrgStyleProfileGenerated` → update context
+- [ ] Controllers: `GenerationFeedbackController`, `PromptTemplateController`, `PromptExperimentController`, `PredictionAccuracyController`, `StyleProfileController`
+- [ ] Scheduler: performance recalc semanal, style profile semanal, cleanup semanal
+
+### 14.4 Testes
+
+- [ ] Unit: GenerationFeedback entity, FeedbackAction VO, DiffSummary VO, PerformanceScore VO
+- [ ] Unit: PromptTemplate entity, version immutability, performance_score calculation
+- [ ] Unit: PromptExperiment entity, z-test, confidence threshold, status transitions
+- [ ] Unit: PredictionValidation entity, accuracy calculation, normalization
+- [ ] Unit: OrgStyleProfile entity, confidence levels, TTL
+- [ ] Unit: Todos os Use Cases (com mocks de repository)
+- [ ] Integration: RAG via pgvector (cosine similarity + engagement filter)
+- [ ] Integration: Style profile generation via LLM (mock de Prism)
+- [ ] Integration: Diff calculation (Levenshtein)
+- [ ] Feature: Feedback endpoint (accept/edit/reject)
+- [ ] Feature: CRUD prompt templates (custom + system)
+- [ ] Feature: A/B experiment lifecycle (create → run → complete)
+- [ ] Feature: Prediction accuracy (validate → get metrics)
+- [ ] Feature: Style learning (generate profile → inject in prompt)
+- [ ] Feature: Geracao enriquecida (template + RAG + style + audience context)
+- [ ] Feature: Feature gates por plano (RAG: Creator+, Style: Professional+, A/B: Agency)
+- [ ] Feature: Graceful degradation (cada nivel falha silenciosamente)
+- [ ] Feature: Isolamento por organization_id em todos os niveis
+
+### Entregaveis Sprint 14
+
+- Feedback tracking de todas as geracoes (accept/edit/reject) com diff estruturado
+- RAG automatico: geracao enriquecida com top performers similares via pgvector
+- Prompt templates versionados com auto-selecao por performance
+- A/B testing de prompts com significancia estatistica (z-test, p < 0.05)
+- Validacao de predicoes vs metricas reais 7 dias apos publicacao
+- Perfil de estilo por organizacao aprendido de padroes de edicao
+- Injecao automatica de contexto (RAG + style + audience) em geracao
+- Feature gates por plano integrados ao billing
+- Graceful degradation: nenhum nivel do Learning Loop e critical path
+
+---
+
 ## Matriz de Dependencias
 
-| Sprint | Depende de | Bounded Contexts |
-|--------|-----------|-----------------|
-| 0 | — | Infraestrutura |
-| 1 | 0 | Identity, Organization |
-| 2 | 1 | SocialAccount, Media |
-| 3 | 1, 2 | Campaign, ContentAI |
-| 4 | 2, 3 | Publishing |
-| 5 | 4 | Analytics, Engagement |
-| 6 | 1 | Billing |
-| 7 | 1, 6 | PlatformAdmin |
+| Sprint | Depende de | Bounded Contexts | Fase |
+|--------|-----------|-----------------|------|
+| 0 | — | Infraestrutura | 1 |
+| 1 | 0 | Identity, Organization | 1 |
+| 2 | 1 | SocialAccount, Media | 1 |
+| 3 | 1, 2 | Campaign, ContentAI | 1 |
+| 4 | 2, 3 | Publishing | 1 |
+| 5 | 4 | Analytics, Engagement | 1 |
+| 6 | 1 | Billing | 1 |
+| 7 | 1, 6 | PlatformAdmin | 1 |
+| 8 | 1, 3, 5, 6 | ClientFinancialManagement | 2 |
+| 9 | 2, 5 | SocialListening | 2 |
+| 10 | 4, 5 | AI Intelligence (Best Time + Safety) | 2 |
+| 11 | 3, 5 | AI Intelligence (Adaptation + Calendar), Content AI | 2 |
+| 12 | 3, 5 | AI Intelligence (DNA + Prediction) | 3 |
+| 13 | 5, 9, 12 | AI Intelligence (Feedback Loop + Gap Analysis) | 3 |
+| 14 | 3, 5, 12, 13 | AI Intelligence (Learning Loop — ADR-017) | 3 |
 
 > **Nota:** Sprint 6 (Billing) depende apenas do Sprint 1, podendo ser iniciado em paralelo com Sprints 3-5 se houver capacidade.
+
+> **Nota:** Sprints 10-11 (AI Intelligence Alpha) podem rodar em paralelo com Sprints 8-9, pois dependem apenas dos Sprints 3-5 da Fase 1.
+
+> **Nota:** Sprint 13 (Feedback Loop + Gap Analysis) depende do Sprint 9 (Social Listening) para dados de concorrentes e do Sprint 12 para o pipeline de embeddings.
+
+> **Nota:** Sprint 14 (AI Learning Loop) depende do Sprint 3 (Content AI base), Sprint 5 (Analytics para metricas), Sprint 12 (embeddings para RAG) e Sprint 13 (audience insights para contexto).
 
 ---
 
@@ -582,6 +1324,8 @@ Cada sprint so e considerado concluido quando:
 
 ## Estimativa de Escopo
 
+### Fase 1 (v1.0) — Sprints 0-7
+
 | Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--------|-----------|-----------|-----------|------|---------------|
 | 0 | 0 | 1 (health) | 0 | 0 | ~10 (arch) |
@@ -592,13 +1336,36 @@ Cada sprint so e considerado concluido quando:
 | 5 | 8 | ~18 | ~15 | 4 | ~70 |
 | 6 | 4 | ~7 | ~11 | 4 | ~50 |
 | 7 | 3 | ~12 | ~13 | 3 | ~45 |
-| **Total** | **30** | **~91** | **~95** | **17** | **~405** |
+| **Subtotal Fase 1** | **30** | **~91** | **~95** | **17** | **~405** |
+
+### Fase 2 (v2.0) — Sprints 8-11
+
+| Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--------|-----------|-----------|-----------|------|---------------|
+| 8 | 5 | ~15 | ~18 | 4 | ~65 |
+| 9 | 5 | ~16 | ~20 | 5 | ~70 |
+| 10 | 3 | ~10 | ~10 | 3 | ~50 |
+| 11 | 1 | ~6 | ~8 | 2 | ~40 |
+| **Subtotal Fase 2** | **14** | **~47** | **~56** | **14** | **~225** |
+
+### Fase 3 (v3.0) — Sprints 12-14
+
+| Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--------|-----------|-----------|-----------|------|---------------|
+| 12 | 3 | ~8 | ~10 | 5 | ~55 |
+| 13 | 3 | ~10 | ~10 | 3 | ~55 |
+| 14 | 5 | ~12 | ~12 | 9 | ~65 |
+| **Subtotal Fase 3** | **11** | **~30** | **~32** | **17** | **~175** |
+
+| | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--|-----------|-----------|-----------|------|---------------|
+| **Total Geral** | **55** | **~168** | **~183** | **48** | **~805** |
 
 ---
 
-## Apos o Roadmap (Futuro)
+## Apos o Roadmap — Features Futuras
 
-Itens para considerar apos a v1.0:
+Itens para considerar apos a v2.0:
 
 - **Notificacoes in-app** (WebSocket ou Pusher)
 - **Threads/Twitter** como nova rede social
@@ -609,3 +1376,361 @@ Itens para considerar apos a v1.0:
 - **White-label** (branding customizavel por organizacao)
 - **API publica** (para integracao de terceiros)
 - **Mobile app** (React Native ou Flutter)
+- **Geracao de midia com IA** (descricao detalhada abaixo)
+
+---
+
+## Feature Futura: Geracao de Midia com IA (Agentes de IA)
+
+> **Status:** Proposta para Fase 3+\
+> **Personas beneficiadas:** Persona 3 (Carla — Empreendedora) e Persona 4 (Lucas — Criador de Conteudo)\
+> **Extensao do Bounded Context:** Content AI (Sprint 3)
+
+### Motivacao
+
+As Personas 3 e 4 compartilham uma dor critica: **nao possuem tempo, recursos ou habilidade tecnica para produzir midia visual de qualidade** (imagens para posts e videos para Reels/TikTok/Shorts). Atualmente, o Content AI gera apenas **conteudo textual** (titulos, descricoes, hashtags). A geracao de midia visual via agentes de IA eliminaria a maior barreira de entrada para esses usuarios, permitindo que criem conteudo completo (texto + visual) sem sair da plataforma.
+
+- **Carla (Persona 3)**: "Nao tem tempo nem criatividade para criar posts" — com IA gerando imagens de produtos e videos promocionais a partir de uma descricao simples, ela pode manter consistencia nas redes sem depender de designer ou videomaker.
+- **Lucas (Persona 4)**: "Se eu pudesse automatizar o operacional, focaria so em criar conteudo" — com IA gerando thumbnails, capas e cortes de video, ele pode focar na criatividade estrategica e delegar a producao operacional visual.
+
+### Visao Geral do Processo
+
+```
+Usuario cria prompt ─→ Sistema enriquece prompt ─→ Agente IA gera midia
+         │                      │                           │
+         │                      ▼                           ▼
+         │              Adiciona specs tecnicas     Polling de status
+         │              (resolucao, aspect ratio,   (geracao assincrona)
+         │               estilo da marca)                   │
+         │                                                  ▼
+         │                                          Pos-processamento
+         │                                          (resize, formato,
+         │                                           thumbnail, scan)
+         │                                                  │
+         │                                                  ▼
+         └────────────── Preview + Confirmacao ◄── Media na biblioteca
+                         (usuario aprova antes           │
+                          de usar)                       ▼
+                                                  Vincula ao conteudo
+                                                  (campanha/peca)
+```
+
+### Tipos de Geracao
+
+#### 1. Geracao de Imagens
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Input do usuario** | Prompt textual descrevendo a imagem desejada (ex: "foto de produto de roupa feminina em fundo minimalista pastel") |
+| **Estilos disponiveis** | Fotorrealista, ilustracao, 3D render, flat design, watercolor, collage, minimal |
+| **Formatos de saida** | PNG (alta qualidade), JPEG (otimizado para web), WebP |
+| **Resolucoes** | Automaticas por rede destino (ver tabela abaixo) |
+| **Variantes** | Gera 2-4 variantes para o usuario escolher |
+| **Providers potenciais** | DALL-E 3 (OpenAI), Stable Diffusion XL (Stability AI), Midjourney API (quando disponivel), Ideogram |
+
+**Resolucoes por rede social:**
+
+| Rede | Tipo | Aspect Ratio | Resolucao sugerida |
+|------|------|-------------|-------------------|
+| Instagram | Feed Post | 1:1 | 1080x1080 |
+| Instagram | Story/Reel | 9:16 | 1080x1920 |
+| Instagram | Landscape | 1.91:1 | 1080x566 |
+| TikTok | Video Cover | 9:16 | 1080x1920 |
+| YouTube | Thumbnail | 16:9 | 1280x720 |
+| YouTube | Shorts | 9:16 | 1080x1920 |
+
+#### 2. Geracao de Videos
+
+| Aspecto | Detalhe |
+|---------|---------|
+| **Input do usuario** | Prompt textual + imagem de referencia (opcional) + duracao desejada |
+| **Tipos** | Video curto (5-15s para Reels/TikTok), video medio (15-60s), slideshow animado, video com texto animado |
+| **Estilos** | Cinematico, produto em movimento, timelapse, animacao, motion graphics |
+| **Audio** | Sem audio (usuario adiciona depois), musica de fundo generica (royalty-free), narração via TTS |
+| **Providers potenciais** | OpenAI Sora, Runway ML Gen-3, Kling AI, Luma Dream Machine, Pika Labs |
+
+### Fluxo Detalhado de Implementacao
+
+#### Etapa 1: Request do Usuario
+
+```json
+POST /api/v1/ai/generate-media
+{
+  "type": "image",                          // "image" | "video"
+  "prompt": "Foto de produto: vestido floral em cabide de madeira, fundo branco clean, luz natural suave",
+  "style": "photorealistic",                // estilo visual
+  "target_networks": ["instagram", "tiktok"], // define resolucoes automaticas
+  "aspect_ratios": ["1:1", "9:16"],          // override manual (opcional)
+  "brand_preset_id": null,                   // preset de marca (opcional)
+  "reference_media_id": null,                // imagem de referencia (opcional, para video)
+  "video_duration_seconds": null,            // apenas para video
+  "variants_count": 3                        // quantas variantes gerar
+}
+```
+
+#### Etapa 2: Enriquecimento de Prompt (Agente IA)
+
+O sistema utiliza um **agente de IA orquestrador** para transformar o prompt do usuario em um prompt tecnico otimizado para o provider de geracao visual:
+
+1. **Analise do prompt** — O agente interpreta a intencao do usuario.
+2. **Injecao de specs tecnicas** — Adiciona resolucao, aspect ratio, qualidade, lighting.
+3. **Aplicacao de brand guidelines** — Se a organizacao configurou preset de marca (cores, tipografia, estilo), o agente injeta essas diretrizes no prompt.
+4. **Negative prompts** — Adiciona automaticamente restricoes de seguranca e qualidade (ex: "no text, no watermarks, no distorted faces, high quality").
+5. **Otimizacao por provider** — Cada provider tem um formato ideal de prompt; o agente adapta.
+
+```
+Prompt do usuario:
+"Foto de produto: vestido floral em cabide de madeira"
+
+Prompt enriquecido (enviado ao provider):
+"Professional product photography of a floral summer dress hanging on a
+ wooden hanger, clean white background, soft natural daylight from left,
+ minimal composition, high-end e-commerce style, 8k resolution,
+ sharp focus on fabric texture --ar 1:1 --quality 2"
+```
+
+#### Etapa 3: Despacho para Provider (Assincrono)
+
+```
+                    ┌─────────────────┐
+                    │ MediaGeneration  │
+                    │ AgentOrchestrator│
+                    └────────┬────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              ▼              ▼              ▼
+     ┌────────────┐  ┌────────────┐  ┌────────────┐
+     │  DALL-E 3  │  │ Stability  │  │  Runway ML │
+     │  Adapter   │  │  Adapter   │  │  Adapter   │
+     └────────────┘  └────────────┘  └────────────┘
+```
+
+- Geracao de imagem/video e **assincrona** (pode levar 10s a 5min dependendo do tipo).
+- O sistema cria um `MediaGenerationRequest` com status `processing` e retorna ao usuario um ID para polling.
+- Um **job** (`PollMediaGenerationJob`) verifica o status no provider ate completar ou falhar.
+- Circuit breaker por provider (mesma estrategia do Publishing — Sprint 4).
+- Se o provider primario falhar, **fallback** para provider secundario (ex: DALL-E falhou → tenta Stability AI).
+
+#### Etapa 4: Pos-Processamento
+
+Quando o provider retorna a midia gerada:
+
+1. **Download e armazenamento temporario** — Midia baixada do provider e salva em storage temporario.
+2. **Resize automatico** — Gera versoes em todas as resolucoes necessarias (baseado nas redes destino selecionadas).
+3. **Conversao de formato** — Converte para formatos otimizados (ex: WebP para imagens, MP4 H.264 para videos).
+4. **Geracao de thumbnails** — Thumbnail padrao para preview na biblioteca.
+5. **Scan de seguranca** — Reutiliza `ScanMediaJob` do Media Management (Sprint 2).
+6. **Validacao de qualidade** — Verifica se a midia atende criterios minimos (resolucao, file size, duracao para videos).
+7. **Calculo de compatibilidade** — Reutiliza `CalculateCompatibilityUseCase` do Media Management.
+
+#### Etapa 5: Preview e Confirmacao do Usuario
+
+A midia gerada **nunca e usada automaticamente**. O usuario:
+
+1. Ve preview das variantes geradas (2-4 opcoes).
+2. Pode **selecionar** uma ou mais variantes.
+3. Pode **editar o prompt** e regenerar.
+4. Pode **refinar** via prompt de follow-up (ex: "mais claro", "sem fundo", "angulo diferente").
+5. Ao confirmar, a midia selecionada e **salva na biblioteca de midias** (Media Management).
+6. A midia pode ser diretamente vinculada a uma peca de conteudo.
+
+> **Regra fundamental (herdada do Content AI):** A IA **nunca** toma decisoes autonomas. Toda midia gerada requer confirmacao explicita do usuario antes de ser usada.
+
+### Entidades de Dominio (Extensao do Content AI)
+
+#### MediaGenerationRequest (Aggregate Root)
+```
+MediaGenerationRequest
+├── id: GenerationRequestId (UUID)
+├── organization_id: OrganizationId
+├── user_id: UserId
+├── type: MediaGenerationType (Enum: image, video)
+├── original_prompt: string (prompt do usuario)
+├── enriched_prompt: string (prompt enriquecido pelo agente)
+├── style: GenerationStyle (Value Object)
+├── target_networks: SocialProvider[]
+├── aspect_ratios: AspectRatio[] (Value Object)
+├── reference_media_id: ?MediaId
+├── video_duration_seconds: ?int
+├── brand_preset_id: ?BrandPresetId
+├── variants_requested: int
+├── provider: AIMediaProvider (Enum: dalle3, stability_xl, runway_gen3, sora, kling)
+├── provider_request_id: ?string (ID externo no provider)
+├── status: GenerationStatus (Enum: pending, processing, completed, failed, cancelled)
+├── variants: GeneratedVariant[] (Entity)
+│   ├── id: VariantId (UUID)
+│   ├── file_path: string (storage temporario)
+│   ├── resolution: Dimensions (Value Object)
+│   ├── format: string (png, jpeg, mp4)
+│   ├── file_size_bytes: int
+│   ├── duration_seconds: ?int (video)
+│   ├── selected: bool (usuario selecionou?)
+│   └── media_id: ?MediaId (apos salvar na biblioteca)
+├── cost_estimate_usd: ?decimal
+├── tokens_input: ?int (para prompt enrichment)
+├── tokens_output: ?int
+├── provider_cost_usd: ?decimal (custo direto do provider de geracao)
+├── started_at: ?DateTimeImmutable
+├── completed_at: ?DateTimeImmutable
+├── error: ?GenerationError (Value Object)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### BrandPreset (Aggregate Root)
+```
+BrandPreset
+├── id: BrandPresetId (UUID)
+├── organization_id: OrganizationId
+├── name: string
+├── primary_colors: string[] (hex codes)
+├── secondary_colors: string[]
+├── typography_style: ?string (descricao do estilo tipografico)
+├── visual_style: string (ex: "minimalist", "bold and colorful", "elegant")
+├── brand_elements: ?string (descricao de elementos visuais recorrentes)
+├── example_media_ids: MediaId[] (midias de referencia da marca)
+├── is_default: bool
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+### Domain Events
+
+| Evento | Quando | Dados |
+|--------|--------|-------|
+| `MediaGenerationRequested` | Usuario solicitou geracao | request_id, type, provider, user_id |
+| `MediaGenerationProcessing` | Provider iniciou processamento | request_id, provider_request_id |
+| `MediaGenerationCompleted` | Provider retornou resultado | request_id, variants_count, cost |
+| `MediaGenerationFailed` | Geracao falhou | request_id, error, provider |
+| `MediaVariantSelected` | Usuario selecionou variante | request_id, variant_id |
+| `MediaVariantSaved` | Variante salva na biblioteca | request_id, variant_id, media_id |
+| `BrandPresetCreated` | Preset de marca criado | preset_id, organization_id |
+| `BrandPresetUpdated` | Preset de marca atualizado | preset_id, changes |
+
+### Use Cases
+
+| Use Case | Descricao |
+|----------|-----------|
+| `GenerateImageUseCase` | Solicita geracao de imagem com prompt e parametros |
+| `GenerateVideoUseCase` | Solicita geracao de video com prompt e parametros |
+| `GetGenerationStatusUseCase` | Polling de status de geracao em andamento |
+| `ListGenerationHistoryUseCase` | Historico de geracoes de midia |
+| `SelectVariantUseCase` | Usuario seleciona variante para usar |
+| `SaveVariantToLibraryUseCase` | Salva variante na biblioteca de midias |
+| `RegenerateMediaUseCase` | Regenera com prompt ajustado |
+| `CancelGenerationUseCase` | Cancela geracao em andamento |
+| `CreateBrandPresetUseCase` | Cria preset de marca da organizacao |
+| `UpdateBrandPresetUseCase` | Atualiza preset de marca |
+| `ListBrandPresetsUseCase` | Lista presets da organizacao |
+| `EstimateCostUseCase` | Estima custo antes de gerar (preview de preco) |
+
+### Endpoints Previstos
+
+| Endpoint | Metodo | Descricao |
+|----------|--------|-----------|
+| `/api/v1/ai/generate-media` | POST | Solicitar geracao de imagem ou video |
+| `/api/v1/ai/generations/{id}` | GET | Status e resultado de uma geracao |
+| `/api/v1/ai/generations/{id}/select` | POST | Selecionar variante(s) |
+| `/api/v1/ai/generations/{id}/save` | POST | Salvar variante(s) na biblioteca |
+| `/api/v1/ai/generations/{id}/regenerate` | POST | Regenerar com prompt ajustado |
+| `/api/v1/ai/generations/{id}/cancel` | POST | Cancelar geracao em andamento |
+| `/api/v1/ai/media-history` | GET | Historico de geracoes de midia |
+| `/api/v1/ai/estimate-cost` | POST | Estimar custo de uma geracao |
+| `/api/v1/ai/brand-presets` | GET/POST | Listar/criar presets de marca |
+| `/api/v1/ai/brand-presets/{id}` | GET/PUT/DELETE | CRUD de preset individual |
+
+### Gestao de Custos
+
+Geracao visual e **significativamente mais cara** que geracao textual. O sistema precisa de controle rigoroso:
+
+| Provider | Tipo | Custo estimado por geracao |
+|----------|------|--------------------------|
+| DALL-E 3 | Imagem (1024x1024) | ~$0.04-0.08 USD |
+| DALL-E 3 | Imagem (1024x1792) | ~$0.08-0.12 USD |
+| Stability AI XL | Imagem | ~$0.02-0.06 USD |
+| Sora (OpenAI) | Video (5s) | ~$0.10-0.50 USD (estimado) |
+| Runway Gen-3 | Video (5s) | ~$0.05-0.25 USD |
+
+**Limites por plano (sugestao):**
+
+| Recurso | Free | Pro | Enterprise |
+|---------|------|-----|------------|
+| Geracoes de imagem/mes | 5 | 100 | 1000 |
+| Geracoes de video/mes | 0 | 20 | 200 |
+| Brand presets | 0 | 3 | 20 |
+
+**Regras de custo:**
+- Custo estimado exibido ao usuario **antes** da geracao (confirmacao explicita).
+- Custo real registrado apos conclusao (pode variar do estimado).
+- Geracoes de midia tem contadores separados das geracoes de texto.
+- Organizacao pode definir budget mensal maximo para geracao visual.
+- Alerta ao atingir 80% do limite mensal.
+
+### Infraestrutura (Jobs e Scheduler)
+
+| Job | Descricao | Frequencia |
+|-----|-----------|------------|
+| `DispatchMediaGenerationJob` | Envia request ao provider | On-demand (fila) |
+| `PollMediaGenerationJob` | Verifica status no provider | A cada 5s enquanto processing |
+| `PostProcessGeneratedMediaJob` | Resize, formato, thumbnail, scan | On-demand (apos conclusao) |
+| `CleanupUnselectedVariantsJob` | Remove variantes nao selecionadas apos 24h | Diario |
+| `SyncMediaProviderUsageJob` | Sincroniza uso/creditos com provider | A cada 6h |
+
+### Adapter Pattern (Extensao)
+
+Mesma estrategia do Social Media Adapters (ADR-006). Adicionar nova interface:
+
+```
+AIMediaGeneratorInterface
+├── generateImage(prompt, options): GenerationTicket
+├── generateVideo(prompt, options): GenerationTicket
+├── getStatus(ticketId): GenerationStatus
+├── getResult(ticketId): GenerationResult
+├── cancelGeneration(ticketId): void
+└── estimateCost(type, options): CostEstimate
+```
+
+Cada provider implementa a interface. Factory resolve por configuracao da organizacao ou fallback chain.
+
+### Dependencias
+
+| Depende de | Razao |
+|-----------|-------|
+| Sprint 2 (Media Management) | Storage, scan, thumbnails, validacao, compatibilidade |
+| Sprint 3 (Content AI) | AISettings, historico, cost tracking, Prism SDK |
+| Sprint 6 (Billing) | Limites por plano, contadores de uso, enforcement |
+| Sprint 8 (Client Financial Mgmt) | Alocacao de custo de geracao visual por cliente (opcional) |
+
+### Riscos e Mitigacoes
+
+| Risco | Impacto | Mitigacao |
+|-------|---------|-----------|
+| APIs de video IA ainda imaturas | Qualidade inconsistente, mudancas de pricing | Adapter pattern permite trocar provider sem mudanca no dominio. Comecar com imagens (mais estavel). |
+| Custo alto de geracao | Pode inviabilizar plano Free | Limites conservadores no Free, budget cap por org, estimativa pre-geracao. |
+| Tempo de geracao longo (videos) | UX ruim, timeout | Processamento 100% assincrono, notificacao quando pronto, webhook opcional. |
+| Conteudo inapropriado gerado | Risco reputacional | Safety filters do provider + scan proprio + flag/report do usuario. |
+| Rate limits dos providers | Geracao bloqueada em picos | Fila com prioridade, circuit breaker por provider, fallback chain. |
+| Dependencia de providers externos | Lock-in, mudanca de pricing | Interface abstraida, multiplos providers, possibilidade de self-hosted (Stability AI). |
+
+### Ordem de Implementacao Sugerida
+
+1. **Fase A — Imagens com 1 provider** (menor complexidade)
+   - Integracao com DALL-E 3 (via OpenAI API, ja integrado para texto)
+   - Geracao basica de imagens com prompt
+   - Resize automatico por rede social
+   - Integracao com biblioteca de midias
+   - Limites e cost tracking
+
+2. **Fase B — Brand presets + multiplos providers de imagem**
+   - BrandPreset entity e configuracao
+   - Adicionar Stability AI como segundo provider
+   - Enriquecimento de prompt com brand guidelines
+   - Fallback chain entre providers
+
+3. **Fase C — Geracao de video**
+   - Integracao com provider de video (Sora ou Runway)
+   - Pos-processamento de video (formato, duracao, thumbnail)
+   - Geracao de video a partir de imagem de referencia
+   - Audio/TTS opcional
+
+> **Nota de implementacao:** Esta feature e candidata a ter seu proprio ADR devido a complexidade arquitetural (agentes de IA, orquestracao assincrona, fallback chain, gestao de custos multiplos providers). Recomenda-se criar o ADR antes de iniciar a implementacao.

@@ -35,7 +35,7 @@ Estratégia de retry onde o tempo de espera entre tentativas aumenta exponencial
 Lista de palavras ou expressões que impedem a execução de respostas automáticas. Comentários contendo palavras da blacklist são direcionados para revisão manual.
 
 ### Bounded Context
-Limite conceitual dentro do domínio onde um modelo particular é definido e aplicável. O sistema possui 8 bounded contexts: Identity & Access, Social Account, Campaign, Content AI, Publishing, Analytics, Engagement e Media.
+Limite conceitual dentro do domínio onde um modelo particular é definido e aplicável. O sistema possui 12 bounded contexts: Identity & Access, Organization Management, Social Account Management, Campaign Management, Content AI, Publishing, Analytics, Engagement & Automation, Media Management, Billing & Subscription, Platform Administration e AI Intelligence.
 
 ---
 
@@ -64,6 +64,9 @@ Tempo de espera intencional antes de enviar uma resposta automática a um coment
 
 ## E
 
+### Embedding
+Representação vetorial de texto gerada por IA (OpenAI text-embedding-3-small, 1536 dimensões). Armazenada via pgvector no PostgreSQL. Usada para busca por similaridade semântica em Content DNA, RAG e Performance Prediction.
+
 ### Engagement
 Conjunto de interações dos usuários com um conteúdo publicado. Inclui: likes, comentários, compartilhamentos, salvamentos e cliques.
 
@@ -79,6 +82,9 @@ Erro de API temporário que pode ser resolvido com retry. Exemplos: HTTP 429 (ra
 ---
 
 ## G
+
+### Generation Feedback
+Registro da ação do usuário sobre cada geração de IA: aceitar (`accepted`), editar (`edited`) ou rejeitar (`rejected`). Quando editado, inclui diff estruturado entre output original e editado. Base para o AI Learning Loop.
 
 ### Geração (AI Generation)
 Ato de usar inteligência artificial para criar conteúdo textual (títulos, descrições, hashtags). Cada geração consome tokens e é registrada no histórico.
@@ -102,6 +108,9 @@ Algoritmo usado para assinar payloads de webhooks, garantindo autenticidade e in
 
 ### Lead
 Usuário de rede social identificado como potencial cliente por meio de regras de automação (ex: comentou pedindo preço). Pode ser enviado para CRM via webhook.
+
+### Learning Loop (AI Learning & Feedback Loop)
+Sistema de 5 níveis que permite à IA aprender e melhorar com o uso: (1) Generation Feedback Tracking, (2) RAG, (3) Prompt Optimization Engine, (4) Prediction Accuracy Feedback, (5) Organization Style Learning. Definido no ADR-017.
 
 ### Long-lived Token
 Token de longa duração obtido após troca de um short-lived token. No Instagram, dura ~60 dias. Renovável antes da expiração.
@@ -140,6 +149,12 @@ Fluxo de primeiro acesso onde o usuário seleciona e conecta suas redes sociais.
 
 ## P
 
+### Prediction Validation
+Comparação entre o score predito pelo Performance Prediction e as métricas reais de engajamento 7 dias após publicação. Permite calibrar e melhorar o modelo de predição ao longo do tempo.
+
+### Prompt Template
+Template versionado de prompt para geração de conteúdo. Inclui system prompt, user prompt com placeholders, e métricas de performance (acceptance rate). Pode ser global (sistema) ou custom (por organização).
+
 ### Peça de Conteúdo (Content Piece)
 Unidade de conteúdo dentro de uma campanha. Contém: título, descrição, hashtags, mídias e configurações por rede. Pode ser publicada em uma ou mais redes sociais.
 
@@ -152,6 +167,9 @@ Identificador de uma rede social no sistema. Valores: `instagram`, `tiktok`, `yo
 ---
 
 ## R
+
+### RAG (Retrieval-Augmented Generation)
+Técnica que enriquece gerações de IA com exemplos reais de conteúdo de alta performance da própria organização, buscados via similaridade semântica (pgvector). Parte do Nível 2 do Learning Loop.
 
 ### Rate Limiting
 Mecanismo que limita a quantidade de requisições em um período de tempo. Aplicado tanto internamente (proteção da API) quanto externamente (respeito aos limites das APIs de redes sociais).
@@ -184,6 +202,9 @@ Captura pontual de métricas em um momento específico. Permite construir série
 ### Social Account
 Conta de rede social conectada ao sistema via OAuth. Contém tokens criptografados, dados do perfil e status da conexão.
 
+### Style Learning (Organization Style Learning)
+Análise automática dos padrões de edição do usuário sobre gerações de IA para construir um perfil de preferências de estilo da organização (tom, tamanho, vocabulário, estrutura, hashtags). Parte do Nível 5 do Learning Loop.
+
 ### Soft Delete
 Exclusão lógica onde o registro é marcado como excluído (`deleted_at`) mas permanece no banco de dados. Permite restauração dentro de um período de carência.
 
@@ -192,7 +213,7 @@ Exclusão lógica onde o registro é marcado como excluído (`deleted_at`) mas p
 ## T
 
 ### Tenant
-No contexto deste sistema, cada usuário é um tenant. Todos os dados são isolados por `user_id`. Não há compartilhamento de dados entre tenants.
+No contexto deste sistema, cada **organização** é um tenant. Todos os dados são isolados por `organization_id`. Não há compartilhamento de dados entre tenants. Um usuário pode pertencer a múltiplas organizações (N:N com roles).
 
 ### Thumbnail
 Versão reduzida de uma mídia usada para preview. Gerada automaticamente no upload (imagens: 300x300, vídeos: frame aos 2s).
