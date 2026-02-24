@@ -215,14 +215,14 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 1.3 Infrastructure Layer
 
-- [ ] Migrations: `users`, `organizations`, `organization_members`, `organization_invites`, `refresh_tokens`, `password_resets`, `audit_logs`
-- [ ] Eloquent Models + Repositories
-- [ ] JWT Service (RS256 keypair, access/refresh tokens, blacklist)
-- [ ] Middleware: `Authenticate`, `Resolve OrganizationContext`, `CheckRole`
-- [ ] Controllers: `AuthController`, `ProfileController`, `OrganizationController`, `MemberController`
-- [ ] Form Requests para validacao
-- [ ] API Resources para response
-- [ ] Email notifications: verificacao, reset, convite
+- [x] Migrations: `users`, `organizations`, `organization_members`, `organization_invites`, `refresh_tokens`, `password_resets`, `audit_logs`
+- [x] Eloquent Models + Repositories
+- [x] JWT Service (RS256 keypair, access/refresh tokens, blacklist)
+- [x] Middleware: `Authenticate`, `Resolve OrganizationContext`, `CheckRole`
+- [x] Controllers: `AuthController`, `ProfileController`, `OrganizationController`, `MemberController`
+- [x] Form Requests para validacao
+- [x] API Resources para response
+- [x] Email notifications: verificacao, reset, convite
 
 ### 1.4 Testes
 

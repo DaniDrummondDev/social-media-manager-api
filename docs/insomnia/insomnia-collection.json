@@ -1,14 +1,14 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-02-23T00:00:00.000Z",
+  "__export_date": "2026-02-24T00:00:00.000Z",
   "__export_source": "insomnia.importers",
   "resources": [
     {
       "_id": "wrk_social_media_manager",
       "_type": "workspace",
       "name": "Social Media Manager API",
-      "description": "API SaaS para agendamento, publicação e gestão de conteúdo em múltiplas redes sociais.",
+      "description": "API SaaS para agendamento, publicacao e gestao de conteudo em multiplas redes sociais.",
       "scope": "collection"
     },
     {
@@ -19,7 +19,10 @@
       "data": {
         "base_url": "http://localhost:8080/api/v1",
         "access_token": "",
-        "organization_id": ""
+        "refresh_token": "",
+        "temp_token": "",
+        "organization_id": "",
+        "user_id": ""
       }
     },
     {
@@ -33,14 +36,11 @@
       "_type": "request",
       "parentId": "fld_sprint_0",
       "name": "Health Check",
-      "description": "Verifica o status da aplicação, banco de dados e Redis.",
+      "description": "Verifica o status da aplicacao, banco de dados e Redis.",
       "method": "GET",
       "url": "{{ _.base_url }}/health",
       "headers": [
-        {
-          "name": "Accept",
-          "value": "application/json"
-        }
+        { "name": "Accept", "value": "application/json" }
       ],
       "body": {},
       "authentication": {}
@@ -54,10 +54,7 @@
       "method": "GET",
       "url": "http://localhost:8080/up",
       "headers": [
-        {
-          "name": "Accept",
-          "value": "application/json"
-        }
+        { "name": "Accept", "value": "application/json" }
       ],
       "body": {},
       "authentication": {}
@@ -67,16 +64,470 @@
       "_type": "request",
       "parentId": "fld_sprint_0",
       "name": "404 — Resource Not Found",
-      "description": "Testa o exception handler para rotas inexistentes. Deve retornar JSON padronizado com code RESOURCE_NOT_FOUND.",
+      "description": "Testa o exception handler para rotas inexistentes.",
       "method": "GET",
       "url": "{{ _.base_url }}/rota-inexistente",
       "headers": [
-        {
-          "name": "Accept",
-          "value": "application/json"
-        }
+        { "name": "Accept", "value": "application/json" }
       ],
       "body": {},
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 1 — Auth"
+    },
+    {
+      "_id": "req_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Register",
+      "description": "Registra um novo usuario.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/register",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Secret@123\",\n  \"password_confirmation\": \"Secret@123\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "description": "Autentica um usuario. Retorna tokens ou desafio 2FA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/login",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Secret@123\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_2fa_verify",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "2FA Verify",
+      "description": "Verifica o codigo TOTP durante o login com 2FA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/2fa/verify",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"temp_token\": \"{{ _.temp_token }}\",\n  \"otp_code\": \"123456\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_refresh",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Refresh Token",
+      "description": "Rotaciona o refresh token e retorna novos tokens.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/refresh",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refresh_token\": \"{{ _.refresh_token }}\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_verify_email",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Verify Email",
+      "description": "Verifica o email do usuario via token.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/verify-email",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"TOKEN_FROM_EMAIL\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_forgot_password",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Forgot Password",
+      "description": "Solicita envio de email de reset de senha.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/forgot-password",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"john@example.com\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_reset_password",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Reset Password",
+      "description": "Reseta a senha usando token do email.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/reset-password",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"TOKEN_FROM_EMAIL\",\n  \"password\": \"NewSecret@123\",\n  \"password_confirmation\": \"NewSecret@123\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_logout",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Logout",
+      "description": "Faz logout do usuario (blacklist do token).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/logout",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"refresh_token\": \"{{ _.refresh_token }}\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_2fa_enable",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "2FA Enable",
+      "description": "Inicia o processo de habilitacao do 2FA. Retorna secret e QR code.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/2fa/enable",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_2fa_confirm",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "2FA Confirm",
+      "description": "Confirma a habilitacao do 2FA com o codigo TOTP.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/2fa/confirm",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"otp_code\": \"123456\",\n  \"secret\": \"SECRET_FROM_ENABLE\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_2fa_disable",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "2FA Disable",
+      "description": "Desabilita o 2FA do usuario.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/auth/2fa/disable",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"password\": \"Secret@123\"\n}"
+      },
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_profile",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 1 — Profile"
+    },
+    {
+      "_id": "req_profile_show",
+      "_type": "request",
+      "parentId": "fld_profile",
+      "name": "Get Profile",
+      "description": "Retorna os dados do usuario autenticado.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/profile",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_profile_update",
+      "_type": "request",
+      "parentId": "fld_profile",
+      "name": "Update Profile",
+      "description": "Atualiza nome, telefone e/ou timezone do usuario.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/profile",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"+5511999999999\",\n  \"timezone\": \"America/Sao_Paulo\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_profile_change_email",
+      "_type": "request",
+      "parentId": "fld_profile",
+      "name": "Change Email",
+      "description": "Solicita troca de email (envia verificacao para o novo email).",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/profile/email",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"newemail@example.com\",\n  \"password\": \"Secret@123\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_profile_change_password",
+      "_type": "request",
+      "parentId": "fld_profile",
+      "name": "Change Password",
+      "description": "Altera a senha do usuario.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/profile/password",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"current_password\": \"Secret@123\",\n  \"password\": \"NewSecret@456\",\n  \"password_confirmation\": \"NewSecret@456\"\n}"
+      },
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_organizations",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 1 — Organizations"
+    },
+    {
+      "_id": "req_org_create",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Create Organization",
+      "description": "Cria uma nova organizacao. O usuario autenticado se torna owner.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/organizations",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"My Agency\",\n  \"slug\": \"my-agency\",\n  \"timezone\": \"America/Sao_Paulo\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_org_list",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "List Organizations",
+      "description": "Lista todas as organizacoes do usuario autenticado.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/organizations",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_org_switch",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Switch Organization",
+      "description": "Troca a organizacao ativa e retorna novos tokens JWT.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/organizations/switch",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"organization_id\": \"{{ _.organization_id }}\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_org_update",
+      "_type": "request",
+      "parentId": "fld_organizations",
+      "name": "Update Organization",
+      "description": "Atualiza uma organizacao. Requer org.context e role admin+.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/organizations/{{ _.organization_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"My Agency Updated\",\n  \"timezone\": \"America/New_York\"\n}"
+      },
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_members",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 1 — Members"
+    },
+    {
+      "_id": "req_members_list",
+      "_type": "request",
+      "parentId": "fld_members",
+      "name": "List Members",
+      "description": "Lista os membros de uma organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/organizations/{{ _.organization_id }}/members",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_members_invite",
+      "_type": "request",
+      "parentId": "fld_members",
+      "name": "Invite Member",
+      "description": "Envia convite para um email entrar na organizacao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/organizations/{{ _.organization_id }}/members/invite",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"newmember@example.com\",\n  \"role\": \"member\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_members_accept_invite",
+      "_type": "request",
+      "parentId": "fld_members",
+      "name": "Accept Invite",
+      "description": "Aceita um convite de organizacao via token.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/invites/accept",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"token\": \"INVITE_TOKEN_FROM_EMAIL\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_members_remove",
+      "_type": "request",
+      "parentId": "fld_members",
+      "name": "Remove Member",
+      "description": "Remove um membro da organizacao. Requer role admin+.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/organizations/{{ _.organization_id }}/members/{{ _.user_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_members_change_role",
+      "_type": "request",
+      "parentId": "fld_members",
+      "name": "Change Member Role",
+      "description": "Altera o role de um membro na organizacao.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/organizations/{{ _.organization_id }}/members/{{ _.user_id }}/role",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"role\": \"admin\"\n}"
+      },
       "authentication": {}
     }
   ]

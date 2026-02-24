@@ -1,5 +1,8 @@
 <?php
 
+use App\Infrastructure\Identity\Middleware\Authenticate;
+use App\Infrastructure\Organization\Middleware\CheckRole;
+use App\Infrastructure\Organization\Middleware\ResolveOrganizationContext;
 use App\Infrastructure\Shared\Http\Middleware\ForceJsonResponse;
 use App\Infrastructure\Shared\Http\Middleware\SetCorrelationId;
 use Illuminate\Foundation\Application;
@@ -8,6 +11,11 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withProviders([
+        App\Infrastructure\Shared\Providers\SharedServiceProvider::class,
+        App\Infrastructure\Identity\Providers\IdentityServiceProvider::class,
+        App\Infrastructure\Organization\Providers\OrganizationServiceProvider::class,
+    ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
@@ -18,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(function () {
                     require __DIR__.'/../routes/api/v1/health.php';
                     require __DIR__.'/../routes/api/v1/auth.php';
+                    require __DIR__.'/../routes/api/v1/organizations.php';
                 });
         },
     )
@@ -26,8 +35,42 @@ return Application::configure(basePath: dirname(__DIR__))
             ForceJsonResponse::class,
             SetCorrelationId::class,
         ]);
+
+        $middleware->alias([
+            'auth.jwt' => Authenticate::class,
+            'org.context' => ResolveOrganizationContext::class,
+            'role' => CheckRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Application-layer authentication errors → 401
+        $exceptions->render(function (\App\Application\Identity\Exceptions\AuthenticationException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 401,
+            );
+        });
+
+        // Application-layer authorization errors → 403
+        $exceptions->render(function (\App\Application\Organization\Exceptions\AuthorizationException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 403,
+            );
+        });
+
+        // Application-layer general errors → 422
+        $exceptions->render(function (\App\Application\Shared\Exceptions\ApplicationException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 422,
+            );
+        });
+
+        // Domain-layer errors → 422
         $exceptions->render(function (\App\Domain\Shared\Exceptions\DomainException $e, Request $request) {
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: $e->errorCode,
@@ -36,6 +79,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
+        // Laravel authentication → 401
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, Request $request) {
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: 'AUTHENTICATION_ERROR',
@@ -44,6 +88,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
+        // Laravel authorization → 403
         $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) {
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: 'AUTHORIZATION_ERROR',
@@ -52,6 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
+        // Not found → 404
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: 'RESOURCE_NOT_FOUND',
@@ -60,6 +106,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
+        // Validation → 422
         $exceptions->render(function (\Illuminate\Validation\ValidationException $e, Request $request) {
             $errors = [];
             foreach ($e->errors() as $field => $messages) {

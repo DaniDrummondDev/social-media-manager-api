@@ -41,5 +41,8 @@ Thumbs.db
 # Logs
 *.log
 
+# JWT Keys
+/storage/jwt/
+
 # Docker volumes
 docker/volumes/
