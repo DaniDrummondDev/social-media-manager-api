@@ -292,7 +292,7 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 - [x] Chunked upload service (S3 Multipart Upload / tus protocol) — ver secao 2.5
 - [x] Jobs: `RefreshExpiringTokensJob`, `ScanMediaJob`, `GenerateThumbnailJob`, `CleanupAbandonedUploadsJob`
 - [x] Controllers: `SocialAccountController`, `MediaController`, `MediaUploadController`
-- [ ] Scheduler: token refresh (12h), health check (6h), cleanup uploads abandonados (1h)
+- [x] Scheduler: token refresh (12h), health check (6h), cleanup uploads abandonados (1h)
 
 ### 2.4 Testes
 

@@ -1,8 +1,15 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use App\Infrastructure\Media\Jobs\CleanupAbandonedUploadsJob;
+use App\Infrastructure\SocialAccount\Jobs\CheckAccountsHealthJob;
+use App\Infrastructure\SocialAccount\Jobs\RefreshExpiringTokensJob;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Token refresh — every 12 hours
+Schedule::job(new RefreshExpiringTokensJob)->everyTwelveHours();
+
+// Account health check — every 6 hours
+Schedule::job(new CheckAccountsHealthJob)->everySixHours();
+
+// Cleanup abandoned uploads — every hour
+Schedule::job(new CleanupAbandonedUploadsJob)->hourly();
