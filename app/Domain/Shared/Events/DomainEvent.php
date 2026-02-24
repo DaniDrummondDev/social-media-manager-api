@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Domain\Shared\Events;
 
+use App\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
-abstract class DomainEvent
+abstract readonly class DomainEvent
 {
     public readonly string $eventId;
 
@@ -17,7 +18,7 @@ abstract class DomainEvent
         public readonly string $organizationId,
         public readonly string $userId,
     ) {
-        $this->eventId = (string) \Illuminate\Support\Str::uuid();
+        $this->eventId = (string) Uuid::generate();
         $this->occurredAt = new DateTimeImmutable;
     }
 

@@ -179,27 +179,28 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 1.1 Domain Layer
 
-- [ ] `User` entity (id, name, email, password, status, 2FA)
-- [ ] `Organization` entity (id, name, slug, status)
-- [ ] `OrganizationMember` entity (user_id, org_id, role)
-- [ ] Value Objects: `Email`, `HashedPassword`, `TwoFactorSecret`, `OrganizationRole`
-- [ ] Domain Events: `UserRegistered`, `UserVerified`, `PasswordChanged`, `OrganizationCreated`, `MemberInvited`, `MemberRemoved`, `MemberRoleChanged`
-- [ ] Repository interfaces: `UserRepositoryInterface`, `OrganizationRepositoryInterface`, `OrganizationMemberRepositoryInterface`
-- [ ] Domain Services: `PasswordPolicyService`
+- [x] `User` entity (id, name, email, password, status, 2FA)
+- [x] `Organization` entity (id, name, slug, status)
+- [x] `OrganizationMember` entity (user_id, org_id, role)
+- [x] Value Objects: `Email`, `HashedPassword`, `TwoFactorSecret`, `OrganizationRole`
+- [x] Domain Events: `UserRegistered`, `UserVerified`, `PasswordChanged`, `OrganizationCreated`, `MemberInvited`, `MemberRemoved`, `MemberRoleChanged`
+- [x] Repository interfaces: `UserRepositoryInterface`, `OrganizationRepositoryInterface`, `OrganizationMemberRepositoryInterface`
+- [x] Domain Services: `PasswordPolicyService`
 
 ### 1.2 Application Layer
 
-- [ ] Use Cases Identity:
+- [x] Use Cases Identity:
   - `RegisterUserUseCase`
   - `VerifyEmailUseCase`
   - `LoginUseCase`
+  - `Verify2FALoginUseCase`
   - `RefreshTokenUseCase`
   - `LogoutUseCase`
   - `ForgotPasswordUseCase`
   - `ResetPasswordUseCase`
   - `Enable2FAUseCase`, `Confirm2FAUseCase`, `Disable2FAUseCase`
   - `UpdateProfileUseCase`, `ChangeEmailUseCase`, `ChangePasswordUseCase`
-- [ ] Use Cases Organization:
+- [x] Use Cases Organization:
   - `CreateOrganizationUseCase`
   - `UpdateOrganizationUseCase`
   - `InviteMemberUseCase`
@@ -208,7 +209,9 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
   - `ChangeMemberRoleUseCase`
   - `SwitchOrganizationUseCase`
   - `ListOrganizationsUseCase`
-- [ ] DTOs para input/output de cada use case
+- [x] DTOs para input/output de cada use case
+- [x] Application Contracts (EventDispatcher, HashService, AuthToken, RefreshTokenRepo, EmailVerification, PasswordReset, TwoFactor)
+- [x] Application Exceptions (Authentication, EmailAlreadyInUse, InvalidToken, AccountNotVerified, Authorization)
 
 ### 1.3 Infrastructure Layer
 
@@ -223,8 +226,9 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 1.4 Testes
 
-- [ ] Unit: User entity, Email VO, PasswordPolicy, OrganizationRole
-- [ ] Unit: Todos os Use Cases (com mocks de repository)
+- [x] Unit: User entity, Email VO, PasswordPolicy, OrganizationRole
+- [x] Unit: Todos os Use Cases (com mocks de repository)
+- [x] Architecture: 21 regras de arquitetura (camadas, DTOs, Use Cases, Contracts)
 - [ ] Integration: Eloquent repositories
 - [ ] Feature: Todos os endpoints de auth (register, login, refresh, logout, 2FA)
 - [ ] Feature: CRUD de organizacoes e membros

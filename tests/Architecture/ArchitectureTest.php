@@ -28,14 +28,18 @@ arch('domain does not depend on infrastructure')
     ->expect('App\Domain')
     ->not->toUse('App\Infrastructure');
 
-arch('domain does not depend on Eloquent')
+arch('domain does not depend on Illuminate')
     ->expect('App\Domain')
-    ->not->toUse('Illuminate\Database\Eloquent');
+    ->not->toUse('Illuminate');
 
-// Application Layer must not depend on Infrastructure
+// Application Layer must not depend on Infrastructure or Illuminate
 arch('application does not depend on infrastructure')
     ->expect('App\Application')
     ->not->toUse('App\Infrastructure');
+
+arch('application does not depend on Illuminate')
+    ->expect('App\Application')
+    ->not->toUse('Illuminate');
 
 // No controllers outside Infrastructure
 arch('no controllers in domain')
@@ -46,12 +50,55 @@ arch('no controllers in application')
     ->expect('App\Application')
     ->not->toHaveSuffix('Controller');
 
-// Value Objects are final and readonly
+// Value Objects (classes, not enums) are final and readonly
 arch('value objects are final readonly')
-    ->expect('App\Domain\Shared\ValueObjects')
+    ->expect([
+        'App\Domain\Shared\ValueObjects',
+        'App\Domain\Identity\ValueObjects\Email',
+        'App\Domain\Identity\ValueObjects\HashedPassword',
+        'App\Domain\Identity\ValueObjects\TwoFactorSecret',
+        'App\Domain\Organization\ValueObjects\OrganizationSlug',
+    ])
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();
+
+// Value Object enums are backed enums
+arch('value object enums are enums')
+    ->expect([
+        'App\Domain\Identity\ValueObjects\UserStatus',
+        'App\Domain\Organization\ValueObjects\OrganizationRole',
+        'App\Domain\Organization\ValueObjects\OrganizationStatus',
+    ])
+    ->toBeEnums();
+
+// Repository interfaces are interfaces
+arch('repository interfaces are interfaces')
+    ->expect([
+        'App\Domain\Identity\Repositories\UserRepositoryInterface',
+        'App\Domain\Organization\Repositories\OrganizationRepositoryInterface',
+        'App\Domain\Organization\Repositories\OrganizationMemberRepositoryInterface',
+        'App\Domain\Organization\Repositories\OrganizationInviteRepositoryInterface',
+    ])
+    ->toBeInterfaces();
+
+// Exceptions extend DomainException
+arch('domain exceptions extend DomainException')
+    ->expect([
+        'App\Domain\Identity\Exceptions',
+        'App\Domain\Organization\Exceptions',
+    ])
+    ->classes()
+    ->toExtend('App\Domain\Shared\Exceptions\DomainException');
+
+// Domain Events extend DomainEvent
+arch('domain events extend DomainEvent')
+    ->expect([
+        'App\Domain\Identity\Events',
+        'App\Domain\Organization\Events',
+    ])
+    ->classes()
+    ->toExtend('App\Domain\Shared\Events\DomainEvent');
 
 // Middleware classes are final
 arch('middleware is final')
@@ -77,6 +124,39 @@ arch('entities are final readonly')
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();
+
+// Application Use Cases are final
+arch('identity use cases are final')
+    ->expect('App\Application\Identity\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('organization use cases are final')
+    ->expect('App\Application\Organization\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+// Application DTOs are final and readonly
+arch('identity DTOs are final readonly')
+    ->expect('App\Application\Identity\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('organization DTOs are final readonly')
+    ->expect('App\Application\Organization\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Application contracts are interfaces
+arch('identity contracts are interfaces')
+    ->expect('App\Application\Identity\Contracts')
+    ->toBeInterfaces();
+
+arch('shared contracts are interfaces')
+    ->expect('App\Application\Shared\Contracts')
+    ->toBeInterfaces();
 
 // Jobs delegate to Use Cases — they must not contain domain logic
 arch('jobs do not use domain directly')
