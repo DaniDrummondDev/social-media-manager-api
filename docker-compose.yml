@@ -98,7 +98,7 @@ services:
   # pgbouncer — Connection Pooling (transaction mode)
   # ---------------------------------------------------------------------------
   pgbouncer:
-    image: edoburu/pgbouncer:1.23.1
+    image: edoburu/pgbouncer:latest
     container_name: smm-pgbouncer
     restart: unless-stopped
     ports:
