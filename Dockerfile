@@ -59,6 +59,12 @@ RUN pecl install redis \
 RUN apk del $PHPIZE_DEPS linux-headers \
     && rm -rf /tmp/pear /var/cache/apk/*
 
+# Health check dependencies
+RUN apk add --no-cache fcgi \
+    && wget -O /usr/local/bin/php-fpm-healthcheck \
+       https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck \
+    && chmod +x /usr/local/bin/php-fpm-healthcheck
+
 # Create user with host UID/GID to avoid permission issues
 RUN deluser --remove-home www-data 2>/dev/null || true \
     && addgroup -g ${GID} appuser \
