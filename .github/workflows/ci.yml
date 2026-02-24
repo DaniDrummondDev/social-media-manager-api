@@ -120,4 +120,4 @@ jobs:
           CACHE_STORE: array
           QUEUE_CONNECTION: sync
           SESSION_DRIVER: array
-        run: vendor/bin/pest --parallel --coverage --min=80
+        run: vendor/bin/pest

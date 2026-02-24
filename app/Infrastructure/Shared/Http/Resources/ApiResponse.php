@@ -11,7 +11,6 @@ final class ApiResponse
     /**
      * Success response following JSON:API simplified format.
      *
-     * @param  mixed  $data
      * @param  array<string, mixed>  $meta
      */
     public static function success(mixed $data, array $meta = [], int $status = 200): JsonResponse

@@ -9,6 +9,7 @@ use DateTimeImmutable;
 abstract class DomainEvent
 {
     public readonly string $eventId;
+
     public readonly DateTimeImmutable $occurredAt;
 
     public function __construct(
@@ -17,7 +18,7 @@ abstract class DomainEvent
         public readonly string $userId,
     ) {
         $this->eventId = (string) \Illuminate\Support\Str::uuid();
-        $this->occurredAt = new DateTimeImmutable();
+        $this->occurredAt = new DateTimeImmutable;
     }
 
     abstract public function eventName(): string;
