@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
+      - vendor_data:/var/www/html/vendor
     environment:
       - PHP_FPM_PM=dynamic
     depends_on:
@@ -164,7 +164,7 @@ services:
     command: php artisan horizon
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
+      - vendor_data:/var/www/html/vendor
     depends_on:
       app:
         condition: service_healthy
@@ -207,7 +207,7 @@ services:
     command: php artisan schedule:work
     volumes:
       - .:/var/www/html
-      - /var/www/html/vendor
+      - vendor_data:/var/www/html/vendor
     depends_on:
       app:
         condition: service_healthy
@@ -265,6 +265,8 @@ services:
 # Volumes
 # =============================================================================
 volumes:
+  vendor_data:
+    driver: local
   postgres_data:
     driver: local
   redis_data:

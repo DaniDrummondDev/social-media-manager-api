@@ -8,7 +8,6 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 
 RUN composer install \
-    --no-dev \
     --no-interaction \
     --no-scripts \
     --no-autoloader \
@@ -17,7 +16,7 @@ RUN composer install \
 
 COPY . .
 
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize
 
 ###############################################################################
 # Stage 2: PHP 8.4-FPM runtime
