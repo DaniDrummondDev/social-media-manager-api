@@ -10,11 +10,16 @@
 .env
 .env.backup
 .env.production
+.env.local
 Homestead.json
 Homestead.yaml
 auth.json
 npm-debug.log
 yarn-error.log
+/bootstrap/cache/*.php
+
+# Database
+/database/database.sqlite
 
 # IDE
 /.idea
@@ -31,6 +36,10 @@ Thumbs.db
 /phpunit.result.cache
 .phpunit.cache/
 .php-cs-fixer.cache
+/phpstan.neon.dist
 
 # Logs
 *.log
+
+# Docker volumes
+docker/volumes/

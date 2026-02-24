@@ -1,0 +1,7 @@
+parameters:
+    paths:
+        - app
+    level: 6
+    ignoreErrors:
+    excludePaths:
+        - app/Infrastructure/External
