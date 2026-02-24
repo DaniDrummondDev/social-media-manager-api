@@ -80,7 +80,7 @@ COPY --from=composer /app/vendor ./vendor
 COPY . .
 
 # Set permissions
-RUN chown -R appuser:appuser /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
+RUN chown -R appuser:appuser /var/www/html/vendor /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true
 
 USER appuser
 
