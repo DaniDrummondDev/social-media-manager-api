@@ -1,0 +1,83 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-02-23T00:00:00.000Z",
+  "__export_source": "insomnia.importers",
+  "resources": [
+    {
+      "_id": "wrk_social_media_manager",
+      "_type": "workspace",
+      "name": "Social Media Manager API",
+      "description": "API SaaS para agendamento, publicação e gestão de conteúdo em múltiplas redes sociais.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_social_media_manager",
+      "name": "Local",
+      "data": {
+        "base_url": "http://localhost:8080/api/v1",
+        "access_token": "",
+        "organization_id": ""
+      }
+    },
+    {
+      "_id": "fld_sprint_0",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 0 — Infrastructure"
+    },
+    {
+      "_id": "req_health_check",
+      "_type": "request",
+      "parentId": "fld_sprint_0",
+      "name": "Health Check",
+      "description": "Verifica o status da aplicação, banco de dados e Redis.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_laravel_up",
+      "_type": "request",
+      "parentId": "fld_sprint_0",
+      "name": "Laravel Up Check",
+      "description": "Health check nativo do Laravel (liveness probe).",
+      "method": "GET",
+      "url": "http://localhost:8080/up",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_not_found",
+      "_type": "request",
+      "parentId": "fld_sprint_0",
+      "name": "404 — Resource Not Found",
+      "description": "Testa o exception handler para rotas inexistentes. Deve retornar JSON padronizado com code RESOURCE_NOT_FOUND.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/rota-inexistente",
+      "headers": [
+        {
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "body": {},
+      "authentication": {}
+    }
+  ]
+}
