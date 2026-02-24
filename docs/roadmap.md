@@ -43,17 +43,25 @@ Sprint 8 ─────────→ Sprint 9            Sprint 10 ──→ 
 
 ### 0.1 Docker & Container
 
-- [ ] `Dockerfile` multi-stage (PHP 8.4-FPM + Nginx)
-- [ ] `docker-compose.yml` com servicos:
+- [x] `Dockerfile` multi-stage (PHP 8.4-FPM + dynamic user via UID/GID)
+- [x] `docker-compose.yml` com 9 servicos:
   - `app` — PHP 8.4-FPM (Laravel)
-  - `nginx` — Reverse proxy
-  - `postgres` — PostgreSQL 17 com extensao pgvector
-  - `redis` — Cache, filas, rate limiting, tokens
-  - `mailpit` — SMTP local para teste de emails
-  - `horizon` — Laravel Horizon (dashboard de filas)
-- [ ] `.env.example` com todas as variaveis documentadas
-- [ ] Volumes para persistencia de dados (postgres, redis)
-- [ ] Network interna entre containers
+  - `nginx` — Reverse proxy (:8080)
+  - `postgres` — PostgreSQL 17 com extensao pgvector (pgvector/pgvector:pg17)
+  - `pgbouncer` — Connection pooling (:6432, transaction mode, pool_size=20)
+  - `redis` — Cache (DB0), filas (DB1), rate limiting (DB2), sessions (DB3)
+  - `horizon` — Laravel Horizon (7 filas, 15 workers)
+  - `scheduler` — `php artisan schedule:work`
+  - `minio` — S3-compatible storage (:9000 API, :9001 console)
+  - `mailpit` — SMTP local para teste de emails (:8025 UI, :1025 SMTP)
+- [x] `.env.example` com ~60 variaveis documentadas por secao
+- [x] Volumes nomeados para persistencia (postgres_data, redis_data, minio_data)
+- [x] Network interna `social-media-net` (bridge)
+- [x] `docker/nginx/default.conf` com security headers e gzip
+- [x] `docker/php/php.ini` e `docker/php/php-fpm.conf`
+- [x] `docker/postgres/init.sql` (pgvector, uuid-ossp, pg_trgm)
+- [x] `docker/pgbouncer/pgbouncer.ini` e `userlist.txt`
+- [x] `.dockerignore`
 
 ### 0.2 setup.sh
 
@@ -97,57 +105,61 @@ curl -s http://localhost:8080/api/health | jq .
 
 ### 0.3 Laravel Project
 
-- [ ] `composer create-project laravel/laravel` com PHP 8.4
-- [ ] Configurar `composer.json` com autoload PSR-4 para namespaces DDD:
+- [x] `composer create-project laravel/laravel` com PHP 8.4
+- [x] Configurar `composer.json` com autoload PSR-4 para namespaces DDD:
   - `App\\Domain\\` → `app/Domain/`
   - `App\\Application\\` → `app/Application/`
   - `App\\Infrastructure\\` → `app/Infrastructure/`
-- [ ] Remover scaffolding default desnecessario (controllers, models, views)
-- [ ] Configurar `config/database.php` para PostgreSQL
-- [ ] Configurar `config/cache.php` e `config/queue.php` para Redis (databases 0-3)
+- [x] Remover scaffolding default desnecessario (controllers, models, views, sail)
+- [x] Configurar `config/database.php` para PostgreSQL (+ `pgsql_direct` para migrations)
+- [x] Configurar `config/cache.php`, `config/queue.php` e `config/session.php` para Redis (databases 0-3)
 - [ ] Instalar dependencias core:
-  - `php-open-source-saver/jwt-auth` (JWT RS256)
-  - `echolabsdev/prism` (Laravel AI SDK)
-  - `pestphp/pest` + `pestphp/pest-plugin-arch` (testes)
-  - `laravel/horizon` (filas)
-  - `pgvector/pgvector` (embeddings)
-  - `phpstan/phpstan` (analise estatica)
-  - `laravel/pint` (code style)
+  - [ ] `php-open-source-saver/jwt-auth` (JWT RS256)
+  - [ ] `echolabsdev/prism` (Laravel AI SDK)
+  - [x] `pestphp/pest` + `pestphp/pest-plugin-arch` (testes)
+  - [x] `laravel/horizon` (filas)
+  - [ ] `pgvector/pgvector` (embeddings)
+  - [x] `phpstan/phpstan` (analise estatica)
+  - [x] `laravel/pint` (code style — ja incluso no Laravel 12)
 
 ### 0.4 Folder Structure (DDD)
 
 Criar estrutura de diretorios conforme `folder-structure.md`:
 
-- [ ] `app/Domain/` — Shared kernel (DomainEvent, Uuid, DomainException)
-- [ ] `app/Application/` — Base vazia por contexto
-- [ ] `app/Infrastructure/Shared/` — Middleware, Resources, Encryption
-- [ ] `routes/api/v1/` — Arquivos de rota por contexto
-- [ ] `tests/Architecture/ArchitectureTest.php` — Testes iniciais de camada
+- [x] `app/Domain/` — 12 bounded contexts + Shared kernel
+- [x] `app/Application/` — 12 contextos com UseCases/, DTOs/, Listeners/
+- [x] `app/Infrastructure/` — 12 contextos com Models/, Repositories/, Controllers/, Providers/
+- [x] `app/Infrastructure/External/` — Instagram/, TikTok/, YouTube/, OpenAI/
+- [x] `routes/api/v1/` — Arquivos de rota por contexto
+- [x] `tests/` — Architecture/, Unit/, Integration/, Feature/ com subpastas por contexto
 
 ### 0.5 Base Infrastructure
 
-- [ ] `DomainEvent` abstract class (base para todos os eventos)
-- [ ] `Uuid` value object (shared kernel)
-- [ ] `DomainException` base exception
-- [ ] API response format padronizado (`data`, `meta`, `errors`)
-- [ ] Exception handler customizado (error codes padronizados)
-- [ ] Middleware base: `ForceJsonResponse`, `SetCorrelationId`
-- [ ] Health check endpoint (`GET /api/health`)
+- [x] `DomainEvent` abstract class (base para todos os eventos)
+- [x] `Uuid` value object (shared kernel)
+- [x] `DateRange` value object (shared kernel)
+- [x] `DomainException` base exception
+- [x] API response format padronizado (`ApiResponse` — `data`, `meta`, `errors`)
+- [x] Exception handler customizado (DomainException, Auth, Validation, NotFound)
+- [x] Middleware base: `ForceJsonResponse`, `SetCorrelationId`
+- [x] Health check endpoint (`GET /api/v1/health` — DB + Redis)
 - [ ] `config/social-media.php` — Configuracoes de providers
 
 ### 0.6 Testes de Arquitetura
 
-- [ ] Domain nao depende de Application ou Infrastructure
-- [ ] Application nao depende de Infrastructure
-- [ ] Controllers estao na Infrastructure
+- [x] Domain nao depende de Application ou Infrastructure (3 testes)
+- [x] Application nao depende de Infrastructure
+- [x] Controllers estao na Infrastructure (no controllers in Domain/Application)
+- [x] Value Objects sao `final` e `readonly`
+- [x] Middleware sao `final`
 - [ ] Entities sao `final` e `readonly`
 - [ ] Jobs nao contem logica de negocio
 
 ### 0.7 CI/CD (GitHub Actions)
 
-- [ ] Workflow: lint (Pint) + static analysis (PHPStan) + tests (Pest)
-- [ ] Cache de dependencias Composer
-- [ ] PostgreSQL e Redis como services no CI
+- [x] Workflow: lint (Pint) + static analysis (PHPStan) + tests (Pest)
+- [x] Cache de dependencias Composer
+- [x] PostgreSQL (pgvector/pgvector:pg17) e Redis como services no CI
 
 ### Entregaveis Sprint 0
 
