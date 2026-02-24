@@ -7,9 +7,12 @@
     "license": "proprietary",
     "require": {
         "php": "^8.4",
+        "echolabsdev/prism": "^0.99.19",
         "laravel/framework": "^12.0",
         "laravel/horizon": "^5.0",
-        "laravel/tinker": "^2.10.1"
+        "laravel/tinker": "^2.10.1",
+        "pgvector/pgvector": "^0.2.2",
+        "php-open-source-saver/jwt-auth": "^2.8"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

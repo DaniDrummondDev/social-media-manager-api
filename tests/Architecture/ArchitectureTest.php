@@ -58,3 +58,35 @@ arch('middleware is final')
     ->expect('App\Infrastructure\Shared\Http\Middleware')
     ->classes()
     ->toBeFinal();
+
+// Entities are final and readonly
+arch('entities are final readonly')
+    ->expect([
+        'App\Domain\Identity\Entities',
+        'App\Domain\Organization\Entities',
+        'App\Domain\SocialAccount\Entities',
+        'App\Domain\Campaign\Entities',
+        'App\Domain\ContentAI\Entities',
+        'App\Domain\Publishing\Entities',
+        'App\Domain\Analytics\Entities',
+        'App\Domain\Engagement\Entities',
+        'App\Domain\Media\Entities',
+        'App\Domain\Billing\Entities',
+        'App\Domain\PlatformAdmin\Entities',
+    ])
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Jobs delegate to Use Cases — they must not contain domain logic
+arch('jobs do not use domain directly')
+    ->expect([
+        'App\Infrastructure\Publishing\Jobs',
+        'App\Infrastructure\Analytics\Jobs',
+        'App\Infrastructure\Engagement\Jobs',
+        'App\Infrastructure\Media\Jobs',
+        'App\Infrastructure\Billing\Jobs',
+        'App\Infrastructure\PlatformAdmin\Jobs',
+        'App\Infrastructure\ContentAI\Jobs',
+    ])
+    ->not->toUse('App\Domain');

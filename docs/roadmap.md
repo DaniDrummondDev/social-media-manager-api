@@ -113,12 +113,12 @@ curl -s http://localhost:8080/api/health | jq .
 - [x] Remover scaffolding default desnecessario (controllers, models, views, sail)
 - [x] Configurar `config/database.php` para PostgreSQL (+ `pgsql_direct` para migrations)
 - [x] Configurar `config/cache.php`, `config/queue.php` e `config/session.php` para Redis (databases 0-3)
-- [ ] Instalar dependencias core:
-  - [ ] `php-open-source-saver/jwt-auth` (JWT RS256)
-  - [ ] `echolabsdev/prism` (Laravel AI SDK)
+- [x] Instalar dependencias core:
+  - [x] `php-open-source-saver/jwt-auth` ^2.8 (JWT RS256)
+  - [x] `echolabsdev/prism` ^0.99.19 (Laravel AI SDK)
   - [x] `pestphp/pest` + `pestphp/pest-plugin-arch` (testes)
   - [x] `laravel/horizon` (filas)
-  - [ ] `pgvector/pgvector` (embeddings)
+  - [x] `pgvector/pgvector` ^0.2.2 (embeddings)
   - [x] `phpstan/phpstan` (analise estatica)
   - [x] `laravel/pint` (code style — ja incluso no Laravel 12)
 
@@ -143,7 +143,7 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 - [x] Exception handler customizado (DomainException, Auth, Validation, NotFound)
 - [x] Middleware base: `ForceJsonResponse`, `SetCorrelationId`
 - [x] Health check endpoint (`GET /api/v1/health` — DB + Redis)
-- [ ] `config/social-media.php` — Configuracoes de providers
+- [x] `config/social-media.php` — Configuracoes de providers (3 providers, limites, circuit breaker, retry, encryption)
 
 ### 0.6 Testes de Arquitetura
 
@@ -152,8 +152,8 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 - [x] Controllers estao na Infrastructure (no controllers in Domain/Application)
 - [x] Value Objects sao `final` e `readonly`
 - [x] Middleware sao `final`
-- [ ] Entities sao `final` e `readonly`
-- [ ] Jobs nao contem logica de negocio
+- [x] Entities sao `final` e `readonly` (11 contextos)
+- [x] Jobs nao contem logica de negocio (7 contextos — `not->toUse('App\Domain')`)
 
 ### 0.7 CI/CD (GitHub Actions)
 
