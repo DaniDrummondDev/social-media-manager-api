@@ -253,12 +253,12 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 2.1 Domain Layer
 
-- [ ] `SocialAccount` entity
-- [ ] `Media` entity
-- [ ] Value Objects: `SocialProvider`, `EncryptedToken`, `OAuthCredentials`, `MediaType`, `MimeType`, `FileSize`, `Dimensions`, `Compatibility`
-- [ ] Domain Events: `SocialAccountConnected`, `SocialAccountDisconnected`, `TokenRefreshed`, `TokenExpired`, `MediaUploaded`, `MediaScanned`, `MediaDeleted`
-- [ ] Repository interfaces
-- [ ] Contracts: `SocialAuthenticatorInterface`, `SocialPublisherInterface`, `SocialAnalyticsInterface`, `SocialEngagementInterface`
+- [x] `SocialAccount` entity
+- [x] `Media` entity + `MediaUpload` entity (chunked upload sessions)
+- [x] Value Objects: `SocialProvider`, `EncryptedToken`, `OAuthCredentials`, `ConnectionStatus`, `MediaType`, `MimeType`, `FileSize`, `Dimensions`, `ScanStatus`, `UploadStatus`, `Compatibility`
+- [x] Domain Events: `SocialAccountConnected`, `SocialAccountDisconnected`, `TokenRefreshed`, `TokenExpired`, `MediaUploaded`, `MediaScanned`, `MediaDeleted`, `MediaRestored`
+- [x] Repository interfaces
+- [x] Contracts: `SocialAuthenticatorInterface`, `SocialPublisherInterface`, `SocialAnalyticsInterface`, `SocialEngagementInterface`
 
 ### 2.2 Application Layer
 

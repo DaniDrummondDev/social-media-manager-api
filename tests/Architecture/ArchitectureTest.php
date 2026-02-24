@@ -58,6 +58,12 @@ arch('value objects are final readonly')
         'App\Domain\Identity\ValueObjects\HashedPassword',
         'App\Domain\Identity\ValueObjects\TwoFactorSecret',
         'App\Domain\Organization\ValueObjects\OrganizationSlug',
+        'App\Domain\SocialAccount\ValueObjects\EncryptedToken',
+        'App\Domain\SocialAccount\ValueObjects\OAuthCredentials',
+        'App\Domain\Media\ValueObjects\MimeType',
+        'App\Domain\Media\ValueObjects\FileSize',
+        'App\Domain\Media\ValueObjects\Dimensions',
+        'App\Domain\Media\ValueObjects\Compatibility',
     ])
     ->classes()
     ->toBeFinal()
@@ -69,6 +75,11 @@ arch('value object enums are enums')
         'App\Domain\Identity\ValueObjects\UserStatus',
         'App\Domain\Organization\ValueObjects\OrganizationRole',
         'App\Domain\Organization\ValueObjects\OrganizationStatus',
+        'App\Domain\SocialAccount\ValueObjects\SocialProvider',
+        'App\Domain\SocialAccount\ValueObjects\ConnectionStatus',
+        'App\Domain\Media\ValueObjects\MediaType',
+        'App\Domain\Media\ValueObjects\ScanStatus',
+        'App\Domain\Media\ValueObjects\UploadStatus',
     ])
     ->toBeEnums();
 
@@ -79,7 +90,15 @@ arch('repository interfaces are interfaces')
         'App\Domain\Organization\Repositories\OrganizationRepositoryInterface',
         'App\Domain\Organization\Repositories\OrganizationMemberRepositoryInterface',
         'App\Domain\Organization\Repositories\OrganizationInviteRepositoryInterface',
+        'App\Domain\SocialAccount\Repositories\SocialAccountRepositoryInterface',
+        'App\Domain\Media\Repositories\MediaRepositoryInterface',
+        'App\Domain\Media\Repositories\MediaUploadRepositoryInterface',
     ])
+    ->toBeInterfaces();
+
+// Domain contracts (adapter interfaces) are interfaces
+arch('social account contracts are interfaces')
+    ->expect('App\Domain\SocialAccount\Contracts')
     ->toBeInterfaces();
 
 // Exceptions extend DomainException
@@ -87,6 +106,8 @@ arch('domain exceptions extend DomainException')
     ->expect([
         'App\Domain\Identity\Exceptions',
         'App\Domain\Organization\Exceptions',
+        'App\Domain\SocialAccount\Exceptions',
+        'App\Domain\Media\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -96,6 +117,8 @@ arch('domain events extend DomainEvent')
     ->expect([
         'App\Domain\Identity\Events',
         'App\Domain\Organization\Events',
+        'App\Domain\SocialAccount\Events',
+        'App\Domain\Media\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
