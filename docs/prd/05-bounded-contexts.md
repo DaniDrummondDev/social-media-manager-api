@@ -41,6 +41,12 @@
 │         └──▶│   Media          │    │ Social Listening │ (Fase 2)            │
 │             │   Management     │    │                  │                     │
 │             └──────────────────┘    └──────────────────┘                     │
+│                                                                              │
+│         ┌──────────────────────────────────────┐                             │
+│         │       Paid Advertising               │ (Fase 5)                    │
+│         │  Ad Accounts · Audiences · Boosts ·  │                             │
+│         │  Ad Metrics · AI Ad Learning         │                             │
+│         └──────────────────────────────────────┘                             │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -69,6 +75,11 @@
 | Content AI | AI Intelligence | **Conformist** | AI Intelligence consome dados de gerações para análise de padrões (Fase 2-3) |
 | AI Intelligence | Content AI | **Published Language** | Insights e contexto de audiência injetados em prompts de geração (Fase 3) |
 | AI Intelligence | Publishing | **Published Language** | Prediction scores e safety checks consultados pré-publicação (Fase 2-3) |
+| Publishing | Paid Advertising | **Customer-Supplier** | Paid Advertising consome posts publicados para criar boosts (Fase 5) |
+| Social Account | Paid Advertising | **Conformist** | Paid Advertising usa credenciais de ad accounts (OAuth separado) (Fase 5) |
+| Billing | Paid Advertising | **Customer-Supplier** | Billing fornece feature gates por plano para ads (Fase 5) |
+| Paid Advertising | AI Intelligence | **Published Language** | Ad metrics retroalimentam pipeline de IA via eventos (Fase 5) |
+| Paid Advertising | Client Financial Mgmt | **Customer-Supplier** | Gastos de ads alocáveis como custo por cliente (Fase 5) |
 
 ---
 
@@ -1082,3 +1093,143 @@ ContentGapAnalysis
 - `EmbeddingGenerated { entityType, entityId, model, tokensUsed, generatedAt }`
 - `CrmConversionAttributed { attributionId, organizationId, contentId, crmEntityType, attributionType, attributionValue }` *(CRM Intelligence N6)*
 - `CrmAIContextEnriched { organizationId, contextTypesUpdated, conversionCount, segmentsCount }` *(CRM Intelligence N6)*
+
+---
+
+## 5.13 Bounded Context: Paid Advertising (Fase 5)
+
+> **Nota:** Este contexto será implementado na Fase 5 (Sprints 17-18). Abrange a integração com Marketing APIs das plataformas de anúncios para impulsionar posts publicados com audience targeting granular. Envolve transferência de valores monetários reais — requer tratamento rigoroso de billing e compliance. Posts orgânicos **não suportam** audience targeting em nenhuma plataforma.
+
+### Responsabilidades
+- Conexão e gerenciamento de contas de anúncios (Meta Ads, TikTok Ads, Google Ads)
+- CRUD de audiências com targeting demográfico, geográfico e por interesses
+- Boost/promoção de posts publicados com budget e objetivo configurável
+- Monitoramento de status de anúncios e sincronização de métricas
+- Histórico e relatórios de gastos
+- Alimentação do pipeline de IA com dados de performance de ads (Sprint 18)
+
+### Agregados
+
+#### AdAccount (Aggregate Root)
+```
+AdAccount
+├── id: AdAccountId (UUID)
+├── organization_id: OrganizationId
+├── connected_by: UserId
+├── provider: AdProvider (Enum: meta, tiktok, google)
+├── provider_account_id: string
+├── account_name: string
+├── credentials: OAuthCredentials (Value Object — AES-256-GCM)
+├── status: AdAccountStatus (Enum: connected, expired, suspended, error)
+├── currency: string (ISO 4217)
+├── timezone: string
+├── metadata: array (dados extras do provider)
+├── connected_at: DateTimeImmutable
+├── disconnected_at: ?DateTimeImmutable
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### Audience (Aggregate Root)
+```
+Audience
+├── id: AudienceId (UUID)
+├── organization_id: OrganizationId
+├── name: string
+├── description: ?string
+├── targeting_spec: TargetingSpec (Value Object)
+│   ├── demographics: DemographicFilter (Value Object)
+│   │   ├── age_min: ?int
+│   │   ├── age_max: ?int
+│   │   └── genders: ?string[]
+│   ├── locations: LocationFilter (Value Object)
+│   │   ├── countries: ?string[]
+│   │   ├── regions: ?string[]
+│   │   └── cities: ?string[]
+│   ├── interests: InterestFilter (Value Object)
+│   │   └── interest_ids: string[] (resolvidos por plataforma)
+│   ├── behaviors: ?BehaviorFilter (Value Object)
+│   │   └── behavior_ids: string[]
+│   ├── custom_audiences: ?string[] (audience_ids de pixel/listas)
+│   └── lookalike: ?LookalikeConfig (Value Object)
+│       ├── source_audience_id: string
+│       ├── country: string
+│       └── similarity_percentage: int
+├── provider_audience_ids: array (IDs criados em cada plataforma)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### AdBoost (Aggregate Root)
+```
+AdBoost
+├── id: BoostId (UUID)
+├── organization_id: OrganizationId
+├── scheduled_post_id: ScheduledPostId
+├── ad_account_id: AdAccountId
+├── audience_id: AudienceId
+├── created_by: UserId
+├── provider: AdProvider
+├── objective: AdObjective (Enum: reach, engagement, traffic, conversions)
+├── budget: AdBudget (Value Object)
+│   ├── amount: int (centavos)
+│   ├── currency: string
+│   └── type: BudgetType (Enum: daily, total)
+├── duration_days: int
+├── start_date: DateTimeImmutable
+├── end_date: DateTimeImmutable
+├── status: AdStatus (Enum: draft, pending_review, active, paused, completed, rejected)
+├── external_campaign_id: ?string
+├── external_adset_id: ?string
+├── external_ad_id: ?string
+├── rejection_reason: ?string
+├── total_spend: int (centavos — atualizado por sync)
+├── created_at: DateTimeImmutable
+└── updated_at: DateTimeImmutable
+```
+
+#### AdMetricSnapshot (Entity)
+```
+AdMetricSnapshot
+├── id: SnapshotId (UUID)
+├── boost_id: BoostId
+├── period_date: DateOnly
+├── impressions: int
+├── reach: int
+├── clicks: int
+├── ctr: float (click-through rate)
+├── cpc: int (cost per click — centavos)
+├── cpm: int (cost per mille — centavos)
+├── spend: int (centavos)
+├── conversions: ?int
+├── roas: ?float (return on ad spend)
+├── synced_at: DateTimeImmutable
+└── created_at: DateTimeImmutable
+```
+
+### Value Objects
+- **AdAccountId**, **AudienceId**, **BoostId**, **SnapshotId** — UUID wrappers
+- **AdProvider** — Enum: meta, tiktok, google
+- **AdStatus** — Enum com transições: draft → pending_review → active → completed/rejected, active → paused → active
+- **AdObjective** — Enum: reach, engagement, traffic, conversions
+- **AdBudget** — Valor em centavos + moeda + tipo (daily/total)
+- **TargetingSpec** — Composição de filtros demográficos, geográficos e comportamentais
+- **DemographicFilter** — age_min, age_max, genders
+- **LocationFilter** — countries, regions, cities
+- **InterestFilter** — IDs de interesses (resolvidos por plataforma via search)
+- **BehaviorFilter** — IDs de comportamentos
+- **LookalikeConfig** — Configuração de audiência similar
+
+### Domain Events
+- `AdAccountConnected { adAccountId, organizationId, provider, connectedAt }`
+- `AdAccountDisconnected { adAccountId, organizationId, provider, disconnectedAt }`
+- `AudienceCreated { audienceId, organizationId, name, targetingSpec }`
+- `AudienceUpdated { audienceId, organizationId, changes }`
+- `BoostCreated { boostId, organizationId, scheduledPostId, audienceId, budget, objective }`
+- `BoostActivated { boostId, externalAdId, activatedAt }`
+- `BoostCompleted { boostId, totalSpend, completedAt }`
+- `BoostRejected { boostId, rejectionReason, rejectedAt }`
+- `BoostCancelled { boostId, cancelledBy, cancelledAt }`
+- `AdMetricsSynced { boostId, periodDate, impressions, reach, clicks, spend }`
+- `AdPerformanceAggregated { organizationId, insightsGenerated, aggregatedAt }` *(AI Learning — Sprint 18)*
+- `AdAIContextEnriched { organizationId, contextTypesUpdated }` *(AI Learning — Sprint 18)*

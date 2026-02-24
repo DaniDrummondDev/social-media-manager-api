@@ -8,7 +8,7 @@
 
 ## Visao Geral
 
-O roadmap esta dividido em **17 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)**, os Sprints 12-14 cobrem a **Fase 3 (v3.0)** e os Sprints 15-16 cobrem a **Fase 4 (v4.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
+O roadmap esta dividido em **19 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)**, os Sprints 12-14 cobrem a **Fase 3 (v3.0)**, os Sprints 15-16 cobrem a **Fase 4 (v4.0)** e os Sprints 17-18 cobrem a **Fase 5 (v5.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
 
 ```
                            Fase 1 (v1.0)
@@ -33,6 +33,11 @@ Sprint 8 ─────────→ Sprint 9            Sprint 10 ──→ 
             Sprint 15 ─────────────────→ Sprint 16
             (CRM Connectors              (CRM Fase 2 +
              Fase 1 — ADR-018)            CRM Intelligence N6)
+
+                           Fase 5 (v5.0)
+            Sprint 17 ─────────────────→ Sprint 18
+            (Paid Advertising             (AI Learning
+             Core — ADR-020)              from Ads Data)
 ```
 
 ---
@@ -1521,6 +1526,200 @@ Os sprints 15 e 16 implementam conectores nativos com os CRMs mais populares do 
 
 ---
 
+## Fase 5 — Paid Advertising / Trafego Pago (v5.0)
+
+Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via trafego pago nas plataformas de anuncios (Meta Ads, TikTok Ads, Google Ads), com audience targeting granular e aprendizado da IA a partir dos dados de performance de anuncios.
+
+> **Nota importante:** Este modulo envolve transferencia de valores monetarios reais para as plataformas de anuncios. A implementacao requer Business Verification, App Review e contas de anuncios verificadas em cada plataforma. Posts organicos **nao suportam** audience targeting — targeting e exclusivo de conteudo pago via Marketing APIs.
+
+---
+
+## Sprint 17 — Paid Advertising Core
+
+**Objetivo:** Conectar contas de anuncios, criar audiencias de targeting, impulsionar posts publicados e monitorar performance de anuncios.
+
+**Bounded Context:** Paid Advertising (novo)
+
+> **Referencia:** ADR-020 (a ser criado), RF-110 a RF-114, RF-116
+
+### 17.1 Domain Layer
+
+- [ ] `AdAccount` entity (id, organization_id, provider, credentials, status, metadata)
+- [ ] `Audience` entity (id, organization_id, name, targeting_spec, provider_audience_ids)
+- [ ] `AdBoost` entity (id, organization_id, scheduled_post_id, audience_id, budget, duration, objective, status, external_ids)
+- [ ] `AdMetricSnapshot` entity (id, boost_id, period, impressions, reach, clicks, spend, conversions)
+- [ ] Value Objects: `AdProvider` (enum: meta, tiktok, google), `AdStatus` (enum: draft, pending_review, active, paused, completed, rejected), `AdObjective` (enum: reach, engagement, traffic, conversions), `AdBudget`, `TargetingSpec`, `DemographicFilter`, `LocationFilter`, `InterestFilter`
+- [ ] Domain Events: `AdAccountConnected`, `AdAccountDisconnected`, `AudienceCreated`, `AudienceUpdated`, `BoostCreated`, `BoostActivated`, `BoostCompleted`, `BoostRejected`, `BoostCancelled`, `AdMetricsSynced`
+- [ ] Contracts: `AdPlatformInterface` (connect, createCampaign, createAdSet, createAd, getAdStatus, getMetrics, searchInterests, deleteAd)
+- [ ] Repository interfaces: `AdAccountRepositoryInterface`, `AudienceRepositoryInterface`, `AdBoostRepositoryInterface`, `AdMetricSnapshotRepositoryInterface`
+- [ ] Exceptions: `AdAccountNotFoundException`, `AudienceNotFoundException`, `BoostNotAllowedException`, `InsufficientBudgetException`, `AdPlatformException`
+
+### 17.2 Application Layer
+
+- [ ] Use Cases Ad Account:
+  - `ConnectAdAccountUseCase`
+  - `HandleAdAccountCallbackUseCase`
+  - `ListAdAccountsUseCase`
+  - `GetAdAccountStatusUseCase`
+  - `DisconnectAdAccountUseCase`
+  - `TestAdAccountConnectionUseCase`
+- [ ] Use Cases Audience:
+  - `CreateAudienceUseCase`
+  - `UpdateAudienceUseCase`
+  - `ListAudiencesUseCase`
+  - `GetAudienceUseCase`
+  - `DeleteAudienceUseCase`
+  - `SearchInterestsUseCase` (busca interesses por provider)
+- [ ] Use Cases Boost:
+  - `CreateBoostUseCase`
+  - `ListBoostsUseCase`
+  - `GetBoostUseCase`
+  - `CancelBoostUseCase`
+  - `GetBoostMetricsUseCase`
+- [ ] Use Cases Analytics/Reports:
+  - `GetAdAnalyticsOverviewUseCase`
+  - `GetSpendingHistoryUseCase`
+  - `ExportSpendingReportUseCase`
+- [ ] DTOs para input/output de cada use case
+- [ ] Listeners:
+  - `BoostCreated` → `CreateAdBoostJob`
+  - `AdMetricsSynced` → `AggregateAdPerformanceJob` (para Sprint 18)
+
+### 17.3 Infrastructure Layer
+
+- [ ] Migrations: `ad_accounts`, `audiences`, `ad_boosts`, `ad_metric_snapshots`
+- [ ] Eloquent Models + Repositories
+- [ ] **Meta Ads Adapter** (implementa `AdPlatformInterface`):
+  - SDK: `facebook/php-business-sdk`
+  - OAuth 2.0 (System User tokens para server-to-server)
+  - Cria Campaign → Ad Set (com targeting_spec) → Ad Creative (referencia post existente)
+  - Sincroniza metricas via Insights API
+  - Interest search via `/search?type=adinterest`
+  - Rate limiting: rolling 1-hour window per ad account
+- [ ] **TikTok Ads Adapter** (implementa `AdPlatformInterface`):
+  - SDK: `promopult/tiktok-marketing-api` ou HTTP direto
+  - OAuth 2.0 via TikTok Marketing API
+  - Cria Campaign → Ad Group (com targeting) → Ad Creative
+  - Sincroniza metricas via Reporting API
+  - Rate limiting: 1-minute sliding window
+- [ ] **Google Ads Adapter** (implementa `AdPlatformInterface`):
+  - SDK: `googleads/google-ads-php`
+  - OAuth 2.0 + developer token
+  - Cria Campaign → Ad Group (com CampaignCriterion/AdGroupCriterion) → Ad
+  - Sincroniza metricas via Google Ads Reporting
+  - Rate limiting: tiered developer token access
+- [ ] `AdPlatformFactory` — resolve adapter por provider
+- [ ] Jobs:
+  - `CreateAdBoostJob` (queue: high, retry: 3, backoff: 60s/300s/900s)
+  - `SyncAdStatusJob` (scheduler: a cada 30min para boosts ativos)
+  - `SyncAdMetricsJob` (scheduler: a cada 1h ativos, a cada 6h finalizados)
+  - `RefreshAdAccountTokenJob` (scheduler: antes da expiracao)
+  - `ExportSpendingReportJob` (queue: low)
+- [ ] Controllers: `AdAccountController`, `AudienceController`, `AdBoostController`, `AdAnalyticsController`
+- [ ] Feature gate middleware: Professional+ para Meta Ads, Agency para TikTok/Google Ads
+- [ ] Scheduler: sync status (30min), sync metricas (1h/6h), refresh tokens (12h)
+
+### 17.4 Testes
+
+- [ ] Unit: AdAccount entity, AdStatus transitions, AdBudget VO, TargetingSpec VO
+- [ ] Unit: Audience entity, DemographicFilter, LocationFilter, InterestFilter
+- [ ] Unit: AdBoost entity, status transitions, budget validation
+- [ ] Unit: Todos os Use Cases (com mocks de AdPlatformInterface)
+- [ ] Integration: Meta Ads adapter (HTTP mock)
+- [ ] Integration: TikTok Ads adapter (HTTP mock)
+- [ ] Integration: Google Ads adapter (HTTP mock)
+- [ ] Integration: AdPlatformFactory
+- [ ] Feature: Conexao de conta de anuncios (OAuth flow)
+- [ ] Feature: CRUD de audiencias com targeting spec
+- [ ] Feature: Criar e cancelar boost
+- [ ] Feature: Metricas de anuncios
+- [ ] Feature: Historico de gastos e exportacao
+- [ ] Feature: Feature gate (Professional vs Agency)
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 17
+
+- Conexao com contas de anuncios em 3 plataformas (Meta, TikTok, Google)
+- CRUD de audiencias com targeting granular (demografia, localizacao, interesses, comportamento)
+- Boost de posts publicados com budget e objetivo configuravel
+- Monitoramento de status do anuncio (pending_review → active → completed)
+- Dashboard de metricas de anuncios (impressions, reach, clicks, ctr, cpc, spend)
+- Comparativo organico vs pago
+- Historico e exportacao de gastos
+- Feature gates por plano integrados ao billing
+
+---
+
+## Sprint 18 — AI Learning from Ads Data
+
+**Objetivo:** Integrar dados de performance de anuncios ao pipeline de aprendizado da IA, permitindo que a IA aprenda quais audiencias, tons e horarios geram melhor performance paga.
+
+**Bounded Contexts:** AI Intelligence (extensao), Paid Advertising (extensao)
+
+> **Referencia:** ADR-017 (extensao), ADR-020, RF-115
+
+### 18.1 Domain Layer
+
+- [ ] `AdPerformanceInsight` entity (AI Intelligence BC)
+- [ ] Value Objects: `AdInsightType` (best_audiences, best_content_for_ads, organic_vs_paid_correlation)
+- [ ] Domain Events: `AdPerformanceAggregated`, `AdAIContextEnriched`, `AdTargetingSuggested`
+- [ ] Contracts: `AdIntelligenceProviderInterface`
+
+### 18.2 Application Layer
+
+- [ ] Use Cases:
+  - `AggregateAdPerformanceUseCase` — agrega metricas de ads por audiencia, conteudo, horario
+  - `EnrichAIContextFromAdsUseCase` — injeta dados de ads no ai_generation_context
+  - `GetAdTargetingSuggestionsUseCase` — sugere targeting baseado em performance historica
+  - `GetAdPerformanceInsightsUseCase` — retorna insights de ads para o usuario
+- [ ] Expansao dos Use Cases de geracao (Sprint 3) para injetar contexto de ads
+- [ ] DTOs para input/output
+
+### 18.3 Infrastructure Layer
+
+- [ ] Migration: `ad_performance_insights` table
+- [ ] Migration: `ALTER TABLE ai_generation_context ADD context_type 'ad_performance'`
+- [ ] Atualizar `RAGContextProvider` com ad performance boost logic
+- [ ] Atualizar `UpdateLearningContextJob` para incluir dados de ads
+- [ ] Jobs:
+  - `AggregateAdPerformanceJob` (semanal — agrupa metricas por audiencia/conteudo)
+  - `EnrichAIContextFromAdsJob` (pos-agregacao — atualiza ai_generation_context)
+  - `GenerateAdTargetingSuggestionsJob` (on-demand — ao criar novo boost)
+- [ ] Listeners:
+  - `AdMetricsSynced` → schedule aggregation
+  - `AdPerformanceAggregated` → enrich AI context
+  - `BoostCreated` → generate targeting suggestions
+- [ ] Controllers: `AdIntelligenceController`
+- [ ] Endpoints:
+  - `GET /api/v1/ads/intelligence/insights` — insights de performance de ads
+  - `GET /api/v1/ads/intelligence/targeting-suggestions` — sugestoes de targeting para novo boost
+- [ ] Feature gate: Exclusivo organizacoes com conta de anuncios conectada + Professional+
+
+### 18.4 Testes
+
+- [ ] Unit: AdPerformanceInsight entity, AdInsightType VO
+- [ ] Unit: Todos os Use Cases (com mocks)
+- [ ] Integration: Agregacao de metricas de ads
+- [ ] Integration: Injecao de contexto de ads nos prompts de geracao
+- [ ] Feature: Insights de ads (endpoint)
+- [ ] Feature: Sugestoes de targeting (endpoint)
+- [ ] Feature: Geracao enriquecida com contexto de ads (campo `ad_context_used`)
+- [ ] Feature: Feature gate (somente com ads account conectado)
+- [ ] Feature: Graceful degradation (sem dados de ads, skip silencioso)
+- [ ] Feature: Isolamento por organization_id
+
+### Entregaveis Sprint 18
+
+- Pipeline de agregacao de metricas de anuncios para IA
+- Insights de performance: quais audiencias, tons e horarios geram melhor resultado pago
+- Sugestoes de targeting ao criar novo boost (baseado em historico)
+- Conteudos com alta performance paga ganham boost no ranking RAG
+- Injecao de contexto de ads em geracao de conteudo (transparente ao usuario)
+- Correlacao organico vs pago: "conteudo que performa bem organicamente tambem performa pago?"
+- Feature gates integrados ao billing e estado da conta de anuncios
+
+---
+
 ## Matriz de Dependencias
 
 | Sprint | Depende de | Bounded Contexts | Fase |
@@ -1542,6 +1741,8 @@ Os sprints 15 e 16 implementam conectores nativos com os CRMs mais populares do 
 | 14 | 3, 5, 12, 13 | AI Intelligence (Learning Loop — ADR-017) | 3 |
 | 15 | 2, 5, 6 | Engagement & Automation (CRM Connectors Fase 1 — ADR-018) | 4 |
 | 16 | 14, 15 | Engagement & Automation (CRM Fase 2), AI Intelligence (CRM Intelligence N6 — ADR-017+018) | 4 |
+| 17 | 4, 5, 6 | Paid Advertising (Core — ADR-020) | 5 |
+| 18 | 14, 17 | AI Intelligence (Ad Learning — ADR-017+020) | 5 |
 
 > **Nota:** Sprint 6 (Billing) depende apenas do Sprint 1, podendo ser iniciado em paralelo com Sprints 3-5 se houver capacidade.
 
@@ -1554,6 +1755,10 @@ Os sprints 15 e 16 implementam conectores nativos com os CRMs mais populares do 
 > **Nota:** Sprint 15 (CRM Connectors Fase 1) depende do Sprint 2 (Social Account — OAuth patterns), Sprint 5 (Engagement & Automation — webhooks/comentarios) e Sprint 6 (Billing — feature gates). Pode rodar em paralelo com Sprints 12-14 se houver capacidade.
 
 > **Nota:** Sprint 16 (CRM Fase 2 + CRM Intelligence) depende do Sprint 15 (infraestrutura CRM) e Sprint 14 (Learning Loop) para conectar dados de conversao CRM ao pipeline de IA.
+
+> **Nota:** Sprint 17 (Paid Advertising Core) depende do Sprint 4 (Publishing — posts publicados para boost), Sprint 5 (Analytics — metricas para comparativo) e Sprint 6 (Billing — feature gates por plano). Pode rodar em paralelo com Sprints 15-16.
+
+> **Nota:** Sprint 18 (AI Learning from Ads) depende do Sprint 14 (Learning Loop — pipeline de aprendizado) e Sprint 17 (Paid Advertising — dados de ads).
 
 ---
 
@@ -1615,15 +1820,23 @@ Cada sprint so e considerado concluido quando:
 | 16 | 2 | 0 | ~4 | 2 | ~45 |
 | **Subtotal Fase 4** | **6** | **~11** | **~18** | **8** | **~115** |
 
+### Fase 5 (v5.0) — Sprints 17-18
+
+| Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--------|-----------|-----------|-----------|------|---------------|
+| 17 | 4 | ~15 | ~20 | 5 | ~70 |
+| 18 | 2 | ~4 | ~6 | 3 | ~40 |
+| **Subtotal Fase 5** | **6** | **~19** | **~26** | **8** | **~110** |
+
 | | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--|-----------|-----------|-----------|------|---------------|
-| **Total Geral** | **61** | **~179** | **~201** | **56** | **~920** |
+| **Total Geral** | **67** | **~198** | **~227** | **64** | **~1030** |
 
 ---
 
 ## Apos o Roadmap — Features Futuras
 
-Itens para considerar apos a v4.0:
+Itens para considerar apos a v5.0:
 
 - **Notificacoes in-app** (WebSocket ou Pusher)
 - **Threads/Twitter** como nova rede social

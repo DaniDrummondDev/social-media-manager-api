@@ -58,3 +58,11 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 | # | Título | Status |
 |---|--------|--------|
 | [ADR-018](adr-018-native-crm-connectors.md) | Native CRM Connectors Strategy | Accepted |
+
+### Futuro (Fase 5+)
+
+| # | Título | Status |
+|---|--------|--------|
+| ADR-020 | Paid Advertising Strategy — Marketing APIs & Audience Targeting | Planned |
+
+> **Nota:** ADR-020 será criado quando a implementação da Fase 5 (Sprints 17-18) iniciar. Cobrirá: Adapter Pattern para Marketing APIs (Meta Ads, TikTok Ads, Google Ads), estratégia de OAuth separado para contas de anúncios, normalização de targeting spec cross-platform, tratamento de billing/transferência monetária, e integração com o AI Learning Loop (ADR-017) para aprendizado a partir de dados de tráfego pago.

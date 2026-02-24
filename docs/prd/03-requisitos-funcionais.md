@@ -619,3 +619,110 @@
 - **Jobs:** `AttributeCrmConversionJob`, `EnrichAIContextFromCrmJob`
 - **Feature gate:** Exclusivo plano Agency com CRM conector ativo
 - Tabela: `crm_conversion_attributions` (AI Intelligence BC)
+
+---
+
+## 3.13 Módulo: Paid Advertising (Tráfego Pago)
+
+> **Fase:** 5 (Futuro — pós v4.0)\
+> **Status:** Planejado\
+> **Bounded Context:** Paid Advertising (novo)\
+> **Planos:** Professional e Agency (Creator em avaliação)\
+> **Referência:** ADR-020 (a ser criado)
+
+> **Nota importante:** Este módulo envolve transferência de valores monetários reais para as plataformas de anúncios (Meta Ads, TikTok Ads, Google Ads). A implementação requer integração com Marketing APIs específicas de cada plataforma, contas de anúncio verificadas e tratamento rigoroso de billing. Posts orgânicos **não suportam** audience targeting em nenhuma das 3 plataformas — targeting é exclusivo de conteúdo pago.
+
+### RF-110: Conectar conta de anúncios
+
+- **Endpoint:** `POST /api/v1/ads/accounts/{provider}/connect`
+- **Endpoint:** `GET /api/v1/ads/accounts/{provider}/callback`
+- Providers suportados: `meta` (Instagram/Facebook Ads), `tiktok` (TikTok Ads), `google` (Google Ads/YouTube)
+- OAuth separado das contas sociais orgânicas (escopos de Marketing API):
+  - Meta: `ads_management`, `ads_read`, `business_management`
+  - TikTok: TikTok Marketing API access
+  - Google: `https://www.googleapis.com/auth/adwords` + developer token
+- Tokens armazenados com AES-256-GCM (mesma estratégia ADR-012)
+- Máximo 1 conta de anúncios por provider por organização
+- Validação de Business Verification e App Review por plataforma
+- Feature gate: Professional+ (Meta apenas), Agency (todas as plataformas)
+
+### RF-111: Gerenciamento de contas de anúncios
+
+- **Endpoint:** `GET /api/v1/ads/accounts` — Lista contas conectadas
+- **Endpoint:** `GET /api/v1/ads/accounts/{id}/status` — Status e saldo
+- **Endpoint:** `DELETE /api/v1/ads/accounts/{id}` — Desconecta conta
+- **Endpoint:** `POST /api/v1/ads/accounts/{id}/test` — Testa conexão
+- Status: `connected`, `expired`, `suspended`, `error`
+- Exibe saldo/limite de gasto da conta de anúncios (quando disponível via API)
+
+### RF-112: Criar audiência/segmento de targeting
+
+- **Endpoint:** `POST /api/v1/ads/audiences`
+- **Endpoint:** `GET /api/v1/ads/audiences`
+- **Endpoint:** `GET /api/v1/ads/audiences/{id}`
+- **Endpoint:** `PUT /api/v1/ads/audiences/{id}`
+- **Endpoint:** `DELETE /api/v1/ads/audiences/{id}`
+- Campos: name, description, targeting_spec
+- Targeting spec (normalizado cross-platform):
+  - `demographics`: age_min, age_max, genders
+  - `locations`: countries[], regions[], cities[]
+  - `interests`: interest_ids[] (resolvidos por plataforma)
+  - `behaviors`: behavior_ids[] (resolvidos por plataforma)
+  - `custom_audiences`: audience_ids[] (pixel, listas, engagement)
+  - `lookalike`: source_audience_id, country, similarity_percentage
+- Cada audiência é traduzida para o formato nativo da plataforma no momento do boost
+- Pesquisa de interesses: `GET /api/v1/ads/interests/search?q={query}&provider={provider}`
+
+### RF-113: Boost de conteúdo publicado (promoção paga)
+
+- **Endpoint:** `POST /api/v1/ads/boosts`
+- **Endpoint:** `GET /api/v1/ads/boosts`
+- **Endpoint:** `GET /api/v1/ads/boosts/{id}`
+- **Endpoint:** `DELETE /api/v1/ads/boosts/{id}` (cancela promoção)
+- Input: scheduled_post_id (post já publicado), audience_id, budget, duration_days, objective
+- Objectives: `reach`, `engagement`, `traffic`, `conversions`
+- Budget: valor diário ou total, moeda da conta de anúncios
+- Validações:
+  - Post deve estar com status `published`
+  - Conta de anúncios da plataforma deve estar conectada e ativa
+  - Budget mínimo respeitando limites da plataforma
+  - Audiência compatível com a plataforma do post
+- Fluxo:
+  1. Cria campaign + ad set (com targeting) + ad creative (referenciando post existente) via Marketing API
+  2. Monitora status do anúncio (pending_review → active → completed/rejected)
+  3. Sincroniza métricas de performance do anúncio
+- **Job:** `CreateAdBoostJob` (queue: high, retry: 3)
+- **Job:** `SyncAdStatusJob` (scheduler: a cada 30min para boosts ativos)
+
+### RF-114: Métricas de anúncios
+
+- **Endpoint:** `GET /api/v1/ads/boosts/{id}/metrics`
+- **Endpoint:** `GET /api/v1/ads/analytics/overview`
+- Métricas por boost: impressions, reach, clicks, ctr, cpc, cpm, spend, conversions
+- Dashboard agregado: total_spend, total_reach, avg_ctr, avg_cpc, roas (se conversões rastreadas)
+- Breakdown por: período, plataforma, audiência, objetivo
+- Comparativo: performance orgânica vs paga do mesmo conteúdo
+- **Job:** `SyncAdMetricsJob` (scheduler: a cada 1h para boosts ativos, a cada 6h para finalizados)
+
+### RF-115: AI Learning com dados de tráfego pago (ADR-017 extensão)
+
+- Dados de performance de anúncios retroalimentam o pipeline de IA:
+  - **Audiências que convertem melhor** por tipo de conteúdo → contexto para geração
+  - **Tom/linguagem ideal** por segmento demográfico → refinamento de prompts
+  - **Melhores horários** por segmento → extensão do Best Time to Post (RF-080)
+  - **Sugestões de targeting** baseadas em performance histórica → recomendações ao criar boost
+- Dados agregados semanalmente e injetados em `ai_generation_context` com `context_type = 'ad_performance'`
+- Conteúdos com alta performance paga ganham boost no ranking RAG (similar a RF-103)
+- Response de geração inclui `ad_context_used` quando dados de ads influenciam a geração
+- Desativável via `PUT /api/v1/ai/settings` (`ad_learning_enabled: false`)
+- **Jobs:** `AggregateAdPerformanceJob` (semanal), `EnrichAIContextFromAdsJob` (pós-agregação)
+- Feature gate: Exclusivo para organizações com conta de anúncios conectada e plano Professional+
+
+### RF-116: Histórico e relatórios de gastos
+
+- **Endpoint:** `GET /api/v1/ads/spending`
+- **Endpoint:** `POST /api/v1/ads/spending/export`
+- Histórico de gastos por período, plataforma, campanha
+- Relatório exportável (PDF, CSV) para prestação de contas
+- Integração com Client Financial Management (Sprint 8): gastos de ads alocáveis como custo por cliente
+- Alerta de budget: notificação quando gasto atinge 80% e 100% do orçamento definido
