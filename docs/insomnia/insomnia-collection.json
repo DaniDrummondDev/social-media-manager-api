@@ -529,6 +529,595 @@
         "text": "{\n  \"role\": \"admin\"\n}"
       },
       "authentication": {}
+    },
+    {
+      "_id": "fld_social_accounts",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 2 — Social Accounts"
+    },
+    {
+      "_id": "req_oauth_initiate",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "Initiate OAuth",
+      "description": "Inicia fluxo OAuth para conectar conta social. Provider: instagram, tiktok, youtube.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/social-accounts/oauth/instagram",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_oauth_callback",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "OAuth Callback",
+      "description": "Processa callback OAuth com code e state.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/social-accounts/oauth/callback?code=AUTH_CODE&state=STATE_TOKEN",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_social_accounts_list",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "List Social Accounts",
+      "description": "Lista contas sociais da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/social-accounts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_social_accounts_disconnect",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "Disconnect Social Account",
+      "description": "Desconecta uma conta social.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_social_accounts_refresh",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "Refresh Token",
+      "description": "Renova o token de acesso de uma conta social.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID/refresh",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_social_accounts_health",
+      "_type": "request",
+      "parentId": "fld_social_accounts",
+      "name": "Check Account Health",
+      "description": "Verifica o status de saude de uma conta social (token, conexao).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID/health",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_media",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 2 — Media"
+    },
+    {
+      "_id": "req_media_upload",
+      "_type": "request",
+      "parentId": "fld_media",
+      "name": "Upload Small Media",
+      "description": "Upload simples de arquivo <= 10MB (imagem ou video curto).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/media",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "file", "type": "file", "fileName": "" },
+          { "name": "checksum", "value": "SHA256_HASH_64_CHARS", "type": "text" }
+        ]
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_media_list",
+      "_type": "request",
+      "parentId": "fld_media",
+      "name": "List Media",
+      "description": "Lista midias da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/media",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_media_delete",
+      "_type": "request",
+      "parentId": "fld_media",
+      "name": "Delete Media",
+      "description": "Remove midia (soft delete com periodo de carencia de 30 dias).",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/media/MEDIA_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_chunked_upload",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 2 — Chunked Upload"
+    },
+    {
+      "_id": "req_chunked_initiate",
+      "_type": "request",
+      "parentId": "fld_chunked_upload",
+      "name": "Initiate Chunked Upload",
+      "description": "Inicia sessao de upload chunked para arquivos > 10MB.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/media/uploads",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"file_name\": \"video.mp4\",\n  \"mime_type\": \"video/mp4\",\n  \"total_bytes\": 26214400,\n  \"chunk_size_bytes\": 5242880\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_chunked_upload_chunk",
+      "_type": "request",
+      "parentId": "fld_chunked_upload",
+      "name": "Upload Chunk",
+      "description": "Envia um chunk individual do upload.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"chunk_index\": 1,\n  \"data\": \"BASE64_ENCODED_CHUNK_DATA\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_chunked_status",
+      "_type": "request",
+      "parentId": "fld_chunked_upload",
+      "name": "Get Upload Status",
+      "description": "Retorna status e progresso do upload em andamento.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_chunked_complete",
+      "_type": "request",
+      "parentId": "fld_chunked_upload",
+      "name": "Complete Upload",
+      "description": "Finaliza upload chunked apos todos os chunks serem enviados.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID/complete",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"checksum\": \"SHA256_HASH_64_CHARS\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_chunked_abort",
+      "_type": "request",
+      "parentId": "fld_chunked_upload",
+      "name": "Abort Upload",
+      "description": "Cancela upload em andamento e limpa recursos no S3.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_campaigns",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 3 — Campaigns"
+    },
+    {
+      "_id": "req_create_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Create Campaign",
+      "description": "Cria uma nova campanha na organizacao ativa.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/campaigns",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Black Friday 2026\",\n  \"description\": \"Campanha de Black Friday\",\n  \"tags\": [\"black-friday\", \"promocao\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_list_campaigns",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "List Campaigns",
+      "description": "Lista todas as campanhas da organizacao ativa.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/campaigns",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_show_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Show Campaign",
+      "description": "Retorna detalhes de uma campanha especifica.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_update_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Update Campaign",
+      "description": "Atualiza uma campanha existente.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Black Friday 2026 Updated\",\n  \"status\": \"active\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_delete_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Delete Campaign",
+      "description": "Soft delete de uma campanha (com periodo de carencia de 30 dias).",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_duplicate_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Duplicate Campaign",
+      "description": "Duplica uma campanha com todos os seus conteudos.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/duplicate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Copy of Campaign\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_restore_campaign",
+      "_type": "request",
+      "parentId": "fld_campaigns",
+      "name": "Restore Campaign",
+      "description": "Restaura uma campanha que foi soft-deleted.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/restore",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_contents",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 3 — Contents"
+    },
+    {
+      "_id": "req_create_content",
+      "_type": "request",
+      "parentId": "fld_contents",
+      "name": "Create Content",
+      "description": "Cria um novo conteudo dentro de uma campanha.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/contents",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Mega promocao!\",\n  \"body\": \"Aproveite descontos incriveis\",\n  \"hashtags\": [\"promocao\", \"desconto\"],\n  \"network_overrides\": [\n    {\n      \"provider\": \"instagram\",\n      \"body\": \"Versao IG do conteudo\",\n      \"hashtags\": [\"ig\", \"promo\"]\n    }\n  ]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_list_contents",
+      "_type": "request",
+      "parentId": "fld_contents",
+      "name": "List Contents",
+      "description": "Lista todos os conteudos de uma campanha.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/contents",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_show_content",
+      "_type": "request",
+      "parentId": "fld_contents",
+      "name": "Show Content",
+      "description": "Retorna detalhes de um conteudo especifico.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_update_content",
+      "_type": "request",
+      "parentId": "fld_contents",
+      "name": "Update Content",
+      "description": "Atualiza um conteudo existente.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"title\": \"Titulo atualizado\",\n  \"hashtags\": [\"nova-tag\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_delete_content",
+      "_type": "request",
+      "parentId": "fld_contents",
+      "name": "Delete Content",
+      "description": "Soft delete de um conteudo.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_ai",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 3 — Content AI"
+    },
+    {
+      "_id": "req_generate_title",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Generate Title",
+      "description": "Gera sugestoes de titulo via IA para uma publicacao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai/generate-title",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"topic\": \"Promocao de Black Friday para loja de moda\",\n  \"social_network\": \"instagram\",\n  \"tone\": \"professional\",\n  \"language\": \"pt_BR\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_generate_description",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Generate Description",
+      "description": "Gera descricao de publicacao via IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai/generate-description",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"topic\": \"Promocao de Black Friday para loja de moda\",\n  \"keywords\": [\"desconto\", \"moda\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_generate_hashtags",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Generate Hashtags",
+      "description": "Gera hashtags relevantes via IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai/generate-hashtags",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"topic\": \"Promocao de Black Friday para loja de moda feminina\",\n  \"niche\": \"moda feminina\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_generate_full_content",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Generate Full Content",
+      "description": "Gera conteudo completo (titulo + descricao + hashtags) para multiplas redes.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai/generate-content",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"topic\": \"Lancamento da colecao de primavera para marca de moda\",\n  \"social_networks\": [\"instagram\", \"tiktok\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_get_ai_settings",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Get AI Settings",
+      "description": "Retorna configuracoes de IA da organizacao ativa.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai/settings",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_update_ai_settings",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "Update AI Settings",
+      "description": "Atualiza configuracoes de IA (tom de voz, idioma padrao).",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/ai/settings",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"default_tone\": \"casual\",\n  \"default_language\": \"en_US\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ai_history",
+      "_type": "request",
+      "parentId": "fld_ai",
+      "name": "AI History",
+      "description": "Lista historico de geracoes de conteudo por IA. Suporta filtro por tipo (?type=title).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai/history",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
     }
   ]
 }

@@ -37,5 +37,7 @@
         <!-- Test-only RSA keypair for JWT (non-sensitive, committed to repo) -->
         <env name="JWT_PRIVATE_KEY" value="tests/fixtures/jwt/private.pem"/>
         <env name="JWT_PUBLIC_KEY" value="tests/fixtures/jwt/public.pem"/>
+        <!-- Test-only 32-byte key for SocialTokenEncrypter (AES-256-GCM) -->
+        <env name="SOCIAL_TOKEN_ENCRYPTION_KEY" value="dGVzdC1zb2NpYWwtdG9rZW4tZW5jcnlwdGlvbi1rZXk="/>
     </php>
 </phpunit>

@@ -296,16 +296,16 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 2.4 Testes
 
-- [ ] Unit: EncryptedToken VO, SocialProvider enum, Media entity, FileSize/MimeType validation
-- [ ] Unit: ChunkValidation (offset, size, sequence), UploadSession lifecycle
-- [ ] Integration: SocialTokenEncrypter (encrypt/decrypt roundtrip)
-- [ ] Integration: Media storage (upload simples, chunked upload, delete)
-- [ ] Integration: S3 Multipart Upload (initiate, upload parts, complete, abort)
-- [ ] Feature: OAuth flow (mock de providers)
-- [ ] Feature: Upload simples (imagens e videos pequenos)
-- [ ] Feature: Upload chunked (videos grandes, resume apos falha)
-- [ ] Feature: Upload/list/delete de midia
-- [ ] Feature: Isolamento por organization_id
+- [x] Unit: EncryptedToken VO, SocialProvider enum, Media entity, FileSize/MimeType validation
+- [x] Unit: ChunkValidation (offset, size, sequence), UploadSession lifecycle
+- [x] Integration: SocialTokenEncrypter (encrypt/decrypt roundtrip)
+- [x] Integration: Media storage (upload simples, chunked upload, delete)
+- [x] Integration: S3 Multipart Upload (initiate, upload parts, complete, abort)
+- [x] Feature: OAuth flow (mock de providers)
+- [x] Feature: Upload simples (imagens e videos pequenos)
+- [x] Feature: Upload chunked (videos grandes, resume apos falha)
+- [x] Feature: Upload/list/delete de midia
+- [x] Feature: Isolamento por organization_id
 
 ### 2.5 Chunked Upload para Videos Grandes
 
@@ -472,21 +472,21 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 3.1 Domain Layer
 
-- [ ] `Campaign` entity, `Content` entity, `ContentNetworkOverride` entity
-- [ ] `AIGeneration` entity, `AISettings` entity
-- [ ] Value Objects: `CampaignStatus`, `ContentStatus`, `Hashtag`, `NetworkOverride`, `Tone`, `Language`, `AIUsage`
-- [ ] Domain Events: `CampaignCreated`, `ContentCreated`, `ContentUpdated`, `ContentDeleted`, `ContentGenerated`, `AISettingsUpdated`
-- [ ] Repository interfaces
+- [x] `Campaign` entity, `Content` entity, `ContentNetworkOverride` entity
+- [x] `AIGeneration` entity, `AISettings` entity
+- [x] Value Objects: `CampaignStatus`, `ContentStatus`, `Hashtag`, `NetworkOverride`, `Tone`, `Language`, `AIUsage`
+- [x] Domain Events: `CampaignCreated`, `ContentCreated`, `ContentUpdated`, `ContentDeleted`, `ContentGenerated`, `AISettingsUpdated`
+- [x] Repository interfaces
 
 ### 3.2 Application Layer
 
-- [ ] Use Cases Campaign:
+- [x] Use Cases Campaign:
   - `CreateCampaignUseCase`, `UpdateCampaignUseCase`, `DeleteCampaignUseCase`
   - `ListCampaignsUseCase`, `GetCampaignUseCase`, `DuplicateCampaignUseCase`
   - `CreateContentUseCase`, `UpdateContentUseCase`, `DeleteContentUseCase`
   - `ListContentsUseCase`, `GetContentUseCase`
   - `GetCampaignStatsUseCase`
-- [ ] Use Cases ContentAI:
+- [x] Use Cases ContentAI:
   - `GenerateTitleUseCase`, `GenerateDescriptionUseCase`
   - `GenerateHashtagsUseCase`, `GenerateFullContentUseCase`
   - `UpdateAISettingsUseCase`, `GetAISettingsUseCase`
@@ -494,21 +494,21 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 3.3 Infrastructure Layer
 
-- [ ] Migrations: `campaigns`, `contents`, `content_network_overrides`, `ai_settings`, `ai_generations`
-- [ ] Integracao com Prism (Laravel AI SDK) via `PrismAIService`
-- [ ] Prompts por tipo de geracao (title, description, hashtags, full)
-- [ ] Cost tracking por geracao (tokens input/output, modelo, custo estimado)
-- [ ] Controllers: `CampaignController`, `ContentController`, `AIController`
-- [ ] Jobs: `GenerateEmbeddingJob`
+- [x] Migrations: `campaigns`, `contents`, `content_network_overrides`, `ai_settings`, `ai_generations`
+- [x] Integracao com Prism (Laravel AI SDK) via `PrismAIService`
+- [x] Prompts por tipo de geracao (title, description, hashtags, full)
+- [x] Cost tracking por geracao (tokens input/output, modelo, custo estimado)
+- [x] Controllers: `CampaignController`, `ContentController`, `AIController`
+- [x] Jobs: `GenerateEmbeddingJob`
 
 ### 3.4 Testes
 
-- [ ] Unit: Campaign/Content entities, status transitions, Hashtag VO, CampaignName validation
-- [ ] Unit: Use Cases com mocks
-- [ ] Integration: AI service (mock de Prism)
-- [ ] Feature: CRUD campanhas e conteudos
-- [ ] Feature: Geracao de conteudo IA (mock)
-- [ ] Feature: Network overrides
+- [x] Unit: Campaign/Content entities, status transitions, Hashtag VO, CampaignName validation
+- [x] Unit: Use Cases com mocks
+- [x] Integration: AI service (mock de Prism)
+- [x] Feature: CRUD campanhas e conteudos
+- [x] Feature: Geracao de conteudo IA (mock)
+- [x] Feature: Network overrides
 
 ### Entregaveis Sprint 3
 
