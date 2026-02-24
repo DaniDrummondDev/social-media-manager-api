@@ -159,6 +159,16 @@ arch('organization use cases are final')
     ->classes()
     ->toBeFinal();
 
+arch('socialaccount use cases are final')
+    ->expect('App\Application\SocialAccount\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('media use cases are final')
+    ->expect('App\Application\Media\UseCases')
+    ->classes()
+    ->toBeFinal();
+
 // Application DTOs are final and readonly
 arch('identity DTOs are final readonly')
     ->expect('App\Application\Identity\DTOs')
@@ -172,6 +182,18 @@ arch('organization DTOs are final readonly')
     ->toBeFinal()
     ->toBeReadonly();
 
+arch('socialaccount DTOs are final readonly')
+    ->expect('App\Application\SocialAccount\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('media DTOs are final readonly')
+    ->expect('App\Application\Media\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
 // Application contracts are interfaces
 arch('identity contracts are interfaces')
     ->expect('App\Application\Identity\Contracts')
@@ -181,13 +203,77 @@ arch('shared contracts are interfaces')
     ->expect('App\Application\Shared\Contracts')
     ->toBeInterfaces();
 
+arch('socialaccount app contracts are interfaces')
+    ->expect('App\Application\SocialAccount\Contracts')
+    ->toBeInterfaces();
+
+arch('media app contracts are interfaces')
+    ->expect('App\Application\Media\Contracts')
+    ->toBeInterfaces();
+
+// Application exceptions extend ApplicationException
+arch('socialaccount app exceptions extend ApplicationException')
+    ->expect('App\Application\SocialAccount\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('media app exceptions extend ApplicationException')
+    ->expect('App\Application\Media\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+// Infrastructure Models are final
+arch('socialaccount models are final')
+    ->expect('App\Infrastructure\SocialAccount\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('media models are final')
+    ->expect('App\Infrastructure\Media\Models')
+    ->classes()
+    ->toBeFinal();
+
+// Infrastructure Controllers are final
+arch('socialaccount controllers are final')
+    ->expect('App\Infrastructure\SocialAccount\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('media controllers are final')
+    ->expect('App\Infrastructure\Media\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+// Infrastructure Providers are final
+arch('socialaccount providers are final')
+    ->expect('App\Infrastructure\SocialAccount\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('media providers are final')
+    ->expect('App\Infrastructure\Media\Providers')
+    ->classes()
+    ->toBeFinal();
+
+// Infrastructure Resources are final readonly
+arch('socialaccount resources are final readonly')
+    ->expect('App\Infrastructure\SocialAccount\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('media resources are final readonly')
+    ->expect('App\Infrastructure\Media\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
 // Jobs delegate to Use Cases — they must not contain domain logic
 arch('jobs do not use domain directly')
     ->expect([
         'App\Infrastructure\Publishing\Jobs',
         'App\Infrastructure\Analytics\Jobs',
         'App\Infrastructure\Engagement\Jobs',
-        'App\Infrastructure\Media\Jobs',
         'App\Infrastructure\Billing\Jobs',
         'App\Infrastructure\PlatformAdmin\Jobs',
         'App\Infrastructure\ContentAI\Jobs',

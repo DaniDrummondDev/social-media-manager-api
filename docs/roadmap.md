@@ -262,14 +262,14 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 2.2 Application Layer
 
-- [ ] Use Cases SocialAccount:
+- [x] Use Cases SocialAccount:
   - `InitiateOAuthUseCase`
   - `HandleOAuthCallbackUseCase`
   - `ListSocialAccountsUseCase`
   - `DisconnectSocialAccountUseCase`
-  - `RefreshTokenUseCase`
+  - `RefreshSocialTokenUseCase`
   - `CheckAccountHealthUseCase`
-- [ ] Use Cases Media:
+- [x] Use Cases Media:
   - `InitiateUploadUseCase` (cria sessao de upload, retorna upload_id)
   - `UploadChunkUseCase` (recebe chunk individual com offset)
   - `CompleteUploadUseCase` (finaliza upload, inicia pos-processamento)
@@ -283,15 +283,15 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 
 ### 2.3 Infrastructure Layer
 
-- [ ] Migrations: `social_accounts`, `media`, `media_uploads` (sessoes de upload em andamento)
-- [ ] `SocialTokenEncrypter` (AES-256-GCM com chave dedicada `SOCIAL_TOKEN_KEY`)
-- [ ] Adapters (implementacao inicial — pode usar stubs):
+- [x] Migrations: `social_accounts`, `media`, `media_uploads` (sessoes de upload em andamento)
+- [x] `SocialTokenEncrypter` (AES-256-GCM com chave dedicada `SOCIAL_TOKEN_KEY`)
+- [x] Adapters (implementacao inicial — pode usar stubs):
   - `InstagramAuthenticator`, `TikTokAuthenticator`, `YouTubeAuthenticator`
-- [ ] `SocialAccountAdapterFactory` (resolve adapter por provider)
-- [ ] Media storage service (S3-compatible / local em dev)
-- [ ] Chunked upload service (S3 Multipart Upload / tus protocol) — ver secao 2.5
-- [ ] Jobs: `RefreshExpiringTokensJob`, `ScanMediaJob`, `GenerateThumbnailJob`, `CleanupAbandonedUploadsJob`
-- [ ] Controllers: `SocialAccountController`, `MediaController`, `MediaUploadController`
+- [x] `SocialAccountAdapterFactory` (resolve adapter por provider)
+- [x] Media storage service (S3-compatible / local em dev)
+- [x] Chunked upload service (S3 Multipart Upload / tus protocol) — ver secao 2.5
+- [x] Jobs: `RefreshExpiringTokensJob`, `ScanMediaJob`, `GenerateThumbnailJob`, `CleanupAbandonedUploadsJob`
+- [x] Controllers: `SocialAccountController`, `MediaController`, `MediaUploadController`
 - [ ] Scheduler: token refresh (12h), health check (6h), cleanup uploads abandonados (1h)
 
 ### 2.4 Testes

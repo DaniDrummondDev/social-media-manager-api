@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Shared\Providers\SharedServiceProvider::class,
         App\Infrastructure\Identity\Providers\IdentityServiceProvider::class,
         App\Infrastructure\Organization\Providers\OrganizationServiceProvider::class,
+        App\Infrastructure\SocialAccount\Providers\SocialAccountServiceProvider::class,
+        App\Infrastructure\Media\Providers\MediaServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -27,6 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/health.php';
                     require __DIR__.'/../routes/api/v1/auth.php';
                     require __DIR__.'/../routes/api/v1/organizations.php';
+                    require __DIR__.'/../routes/api/v1/social-accounts.php';
+                    require __DIR__.'/../routes/api/v1/media.php';
                 });
         },
     )
