@@ -73,7 +73,7 @@ it('accepts invite and creates member', function () {
     $this->inviteRepository->shouldReceive('findByToken')->once()->andReturn($this->invite);
     $this->userRepository->shouldReceive('findById')->once()->andReturn($this->user);
     $this->memberRepository->shouldReceive('findByOrgAndUser')->once()->andReturn(null);
-    $this->inviteRepository->shouldReceive('create')->once();
+    $this->inviteRepository->shouldReceive('update')->once();
     $this->memberRepository->shouldReceive('create')->once();
     $this->eventDispatcher->shouldReceive('dispatch')->once();
 

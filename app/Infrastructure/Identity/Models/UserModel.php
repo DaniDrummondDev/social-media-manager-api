@@ -36,7 +36,6 @@ final class UserModel extends Model
             'email_verified_at' => 'datetime',
             'two_factor_enabled' => 'boolean',
             'last_login_at' => 'datetime',
-            'password' => 'hashed',
         ];
     }
 }

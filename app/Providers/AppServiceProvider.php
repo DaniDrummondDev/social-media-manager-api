@@ -11,7 +11,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        if (config('database.default') !== 'sqlite') {
+            $this->app->register(\Pgvector\Laravel\PgvectorServiceProvider::class);
+        }
     }
 
     /**

@@ -229,10 +229,10 @@ Criar estrutura de diretorios conforme `folder-structure.md`:
 - [x] Unit: User entity, Email VO, PasswordPolicy, OrganizationRole
 - [x] Unit: Todos os Use Cases (com mocks de repository)
 - [x] Architecture: 21 regras de arquitetura (camadas, DTOs, Use Cases, Contracts)
-- [ ] Integration: Eloquent repositories
-- [ ] Feature: Todos os endpoints de auth (register, login, refresh, logout, 2FA)
-- [ ] Feature: CRUD de organizacoes e membros
-- [ ] Feature: Isolamento cross-organization (acesso negado = 404)
+- [x] Integration: Eloquent repositories
+- [x] Feature: Todos os endpoints de auth (register, login, refresh, logout, 2FA)
+- [x] Feature: CRUD de organizacoes e membros
+- [x] Feature: Isolamento cross-organization (acesso negado = 403)
 
 ### Entregaveis Sprint 1
 

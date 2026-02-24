@@ -56,7 +56,7 @@ final class AcceptInviteUseCase
             invitedBy: $invite->invitedBy,
         );
 
-        $this->inviteRepository->create($accepted);
+        $this->inviteRepository->update($accepted);
         $this->memberRepository->create($member);
         $this->eventDispatcher->dispatch(...$member->domainEvents);
 

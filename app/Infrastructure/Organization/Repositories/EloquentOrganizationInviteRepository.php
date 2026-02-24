@@ -23,6 +23,13 @@ final class EloquentOrganizationInviteRepository implements OrganizationInviteRe
         $this->model->newQuery()->create($this->toArray($invite));
     }
 
+    public function update(OrganizationInvite $invite): void
+    {
+        $this->model->newQuery()
+            ->where('id', (string) $invite->id)
+            ->update($this->toArray($invite));
+    }
+
     public function findByToken(string $token): ?OrganizationInvite
     {
         /** @var OrganizationInviteModel|null $record */

@@ -12,6 +12,8 @@ interface OrganizationInviteRepositoryInterface
 {
     public function create(OrganizationInvite $invite): void;
 
+    public function update(OrganizationInvite $invite): void;
+
     public function findByToken(string $token): ?OrganizationInvite;
 
     public function findPendingByOrgAndEmail(Uuid $organizationId, Email $email): ?OrganizationInvite;
