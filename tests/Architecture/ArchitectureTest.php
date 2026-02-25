@@ -102,6 +102,7 @@ arch('value object enums are enums')
         'App\Domain\Billing\ValueObjects\InvoiceStatus',
         'App\Domain\Billing\ValueObjects\UsageResourceType',
         'App\Domain\Billing\ValueObjects\CancelFeedback',
+        'App\Domain\PlatformAdmin\ValueObjects\PlatformRole',
     ])
     ->toBeEnums();
 
@@ -133,6 +134,10 @@ arch('repository interfaces are interfaces')
         'App\Domain\Billing\Repositories\UsageRecordRepositoryInterface',
         'App\Domain\Billing\Repositories\InvoiceRepositoryInterface',
         'App\Domain\Billing\Repositories\StripeWebhookEventRepositoryInterface',
+        'App\Domain\PlatformAdmin\Repositories\PlatformAdminRepositoryInterface',
+        'App\Domain\PlatformAdmin\Repositories\SystemConfigRepositoryInterface',
+        'App\Domain\PlatformAdmin\Repositories\AdminAuditEntryRepositoryInterface',
+        'App\Domain\PlatformAdmin\Repositories\PlatformMetricsCacheRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -143,6 +148,10 @@ arch('social account contracts are interfaces')
 
 arch('billing contracts are interfaces')
     ->expect('App\Domain\Billing\Contracts')
+    ->toBeInterfaces();
+
+arch('platform admin domain contracts are interfaces')
+    ->expect('App\Domain\PlatformAdmin\Contracts')
     ->toBeInterfaces();
 
 // Exceptions extend DomainException
@@ -157,6 +166,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Analytics\Exceptions',
         'App\Domain\Engagement\Exceptions',
         'App\Domain\Billing\Exceptions',
+        'App\Domain\PlatformAdmin\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -172,6 +182,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\Analytics\Events',
         'App\Domain\Engagement\Events',
         'App\Domain\Billing\Events',
+        'App\Domain\PlatformAdmin\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -529,3 +540,45 @@ arch('jobs do not use domain directly')
         'App\Infrastructure\ContentAI\Jobs',
     ])
     ->not->toUse('App\Domain');
+
+// Platform Admin
+arch('platform admin use cases are final')
+    ->expect('App\Application\PlatformAdmin\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('platform admin DTOs are final readonly')
+    ->expect('App\Application\PlatformAdmin\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('platform admin app contracts are interfaces')
+    ->expect('App\Application\PlatformAdmin\Contracts')
+    ->toBeInterfaces();
+
+arch('platform admin app exceptions extend ApplicationException')
+    ->expect('App\Application\PlatformAdmin\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('platform admin models are final')
+    ->expect('App\Infrastructure\PlatformAdmin\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('platform admin controllers are final')
+    ->expect('App\Infrastructure\PlatformAdmin\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('platform admin providers are final')
+    ->expect('App\Infrastructure\PlatformAdmin\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('platform admin resources are final readonly')
+    ->expect('App\Infrastructure\PlatformAdmin\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();

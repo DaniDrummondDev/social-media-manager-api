@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Analytics\Providers\AnalyticsServiceProvider::class,
         App\Infrastructure\Engagement\Providers\EngagementServiceProvider::class,
         App\Infrastructure\Billing\Providers\BillingServiceProvider::class,
+        App\Infrastructure\PlatformAdmin\Providers\PlatformAdminServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -43,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/analytics.php';
                     require __DIR__.'/../routes/api/v1/engagement.php';
                     require __DIR__.'/../routes/api/v1/billing.php';
+                    require __DIR__.'/../routes/api/v1/admin.php';
                 });
         },
     )
@@ -57,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'org.context' => ResolveOrganizationContext::class,
             'role' => CheckRole::class,
             'plan.limit' => \App\Infrastructure\Billing\Middleware\CheckPlanLimit::class,
+            'admin' => \App\Infrastructure\PlatformAdmin\Middleware\PlatformAdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -71,6 +74,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Application-layer authorization errors → 403
         $exceptions->render(function (\App\Application\Organization\Exceptions\AuthorizationException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 403,
+            );
+        });
+
+        // Insufficient admin privilege → 403
+        $exceptions->render(function (\App\Application\PlatformAdmin\Exceptions\InsufficientAdminPrivilegeException $e, Request $request) {
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: $e->errorCode,
                 message: $e->getMessage(),

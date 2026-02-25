@@ -14,6 +14,10 @@ final class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         // Limpar dados anteriores (ordem respeita foreign keys)
+        DB::table('admin_audit_entries')->truncate();
+        DB::table('platform_metrics_cache')->truncate();
+        DB::table('system_configs')->truncate();
+        DB::table('platform_admins')->truncate();
         DB::table('stripe_webhook_events')->truncate();
         DB::table('invoices')->truncate();
         DB::table('usage_records')->truncate();
@@ -722,6 +726,10 @@ final class DevelopmentSeeder extends Seeder
             ]);
         }
 
+        // ── 17. Platform Admin + System Configs ────────────────────
+        $this->call(PlatformAdminSeeder::class);
+        $this->call(SystemConfigSeeder::class);
+
         // ── Output ──────────────────────────────────────────────────
         $this->command->newLine();
         $this->command->info('══════════════════════════════════════════');
@@ -764,6 +772,10 @@ final class DevelopmentSeeder extends Seeder
         $this->command->line('    Plans:            4 records (via PlanSeeder)');
         $this->command->line("    Subscription:     <fg=yellow>{$subscriptionId}</> (Free plan)");
         $this->command->line('    Usage Records:    3 records');
+        $this->command->newLine();
+        $this->command->line('  Platform Admin:');
+        $this->command->line('    Super Admin:      admin@demo.com (via PlatformAdminSeeder)');
+        $this->command->line('    System Configs:   6 records (via SystemConfigSeeder)');
         $this->command->newLine();
         $this->command->info('  Fluxo no Insomnia:');
         $this->command->line('  1. POST /auth/login com email/password acima');

@@ -24,7 +24,12 @@ final readonly class BlacklistWord
         bool $isRegex = false,
     ): self {
         if ($isRegex) {
-            $test = @preg_match("/{$word}/i", '');
+            set_error_handler(static fn () => true);
+            try {
+                $test = preg_match("/{$word}/i", '');
+            } finally {
+                restore_error_handler();
+            }
             if ($test === false) {
                 throw new InvalidBlacklistRegexException(
                     "Expressão regular inválida: '{$word}'.",

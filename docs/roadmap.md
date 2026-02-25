@@ -702,13 +702,13 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 7.1 Domain Layer
 
-- [ ] `PlatformAdmin`, `SystemConfig`, `AdminAuditEntry` entities
-- [ ] Value Objects: `PlatformRole`
-- [ ] Domain Events: `OrganizationSuspended`, `OrganizationUnsuspended`, `UserBanned`, `UserUnbanned`, `PlanCreated`, `PlanUpdated`, `SystemConfigUpdated`, `MaintenanceModeEnabled`
+- [x] `PlatformAdmin`, `SystemConfig`, `AdminAuditEntry` entities
+- [x] Value Objects: `PlatformRole`
+- [x] Domain Events: `OrganizationSuspended`, `OrganizationUnsuspended`, `UserBanned`, `UserUnbanned`, `PlanCreated`, `PlanUpdated`, `SystemConfigUpdated`, `MaintenanceModeEnabled`
 
 ### 7.2 Application Layer
 
-- [ ] Use Cases:
+- [x] Use Cases:
   - `GetDashboardUseCase` (metricas globais: MRR, ARR, churn, uso)
   - `ListOrganizationsAdminUseCase`, `SuspendOrganizationUseCase`, `UnsuspendOrganizationUseCase`, `DeleteOrganizationUseCase`
   - `ListUsersAdminUseCase`, `BanUserUseCase`, `UnbanUserUseCase`, `ForceVerifyUseCase`
@@ -717,23 +717,23 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 7.3 Infrastructure Layer
 
-- [ ] Migrations: `platform_admins`, `system_configs`, `admin_audit_entries`
-- [ ] Seeds: super_admin default, system configs default
-- [ ] Middleware: `PlatformAdminMiddleware` (valida `platform_role` no JWT)
-- [ ] Jobs: `PauseOrgScheduledPostsJob`, `InvalidateUserSessionsJob`, `CleanupSuspendedOrgsJob`
-- [ ] Controllers: `AdminDashboardController`, `AdminOrganizationController`, `AdminUserController`, `AdminPlanController`, `AdminConfigController`
-- [ ] Scheduler: cleanup de orgs suspensas > 30 dias
+- [x] Migrations: `platform_admins`, `system_configs`, `admin_audit_entries`
+- [x] Seeds: super_admin default, system configs default
+- [x] Middleware: `PlatformAdminMiddleware` (valida `platform_role` no JWT)
+- [x] Jobs: `PauseOrgScheduledPostsJob`, `InvalidateUserSessionsJob`, `CleanupSuspendedOrgsJob`
+- [x] Controllers: `AdminDashboardController`, `AdminOrganizationController`, `AdminUserController`, `AdminPlanController`, `AdminConfigController`
+- [x] Scheduler: cleanup de orgs suspensas > 30 dias
 
 ### 7.4 Testes
 
-- [ ] Unit: PlatformRole, SystemConfig, Dashboard metrics calculation
-- [ ] Feature: Dashboard admin (metricas globais)
-- [ ] Feature: Suspender/reativar organizacao
-- [ ] Feature: Banir/desbanir user (invalida sessoes)
-- [ ] Feature: CRUD de planos
-- [ ] Feature: Alterar system config (maintenance mode, registration)
-- [ ] Feature: Audit trail de acoes admin
-- [ ] Feature: User regular acessando /admin/* retorna 403
+- [x] Unit: PlatformRole, SystemConfig, Dashboard metrics calculation
+- [x] Feature: Dashboard admin (metricas globais)
+- [x] Feature: Suspender/reativar organizacao
+- [x] Feature: Banir/desbanir user (invalida sessoes)
+- [x] Feature: CRUD de planos
+- [x] Feature: Alterar system config (maintenance mode, registration)
+- [x] Feature: Audit trail de acoes admin
+- [x] Feature: User regular acessando /admin/* retorna 403
 
 ### Entregaveis Sprint 7
 

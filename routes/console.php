@@ -35,3 +35,9 @@ Schedule::job(new \App\Infrastructure\Billing\Jobs\CheckExpiredSubscriptionsJob)
 
 // Sync usage records — daily at 04:00
 Schedule::job(new \App\Infrastructure\Billing\Jobs\SyncUsageRecordsJob)->dailyAt('04:00');
+
+// Cleanup suspended organizations — daily at 05:00
+Schedule::job(new \App\Infrastructure\PlatformAdmin\Jobs\CleanupSuspendedOrgsJob)->dailyAt('05:00');
+
+// Compute dashboard metrics — every 5 minutes
+Schedule::job(new \App\Infrastructure\PlatformAdmin\Jobs\ComputeDashboardMetricsJob)->everyFiveMinutes();
