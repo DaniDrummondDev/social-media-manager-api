@@ -62,8 +62,8 @@ final class AuthController
         $output = $useCase->execute(new LoginInput(
             email: $request->validated('email'),
             password: $request->validated('password'),
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
+            ipAddress: $request->ip() ?? '0.0.0.0',
+            userAgent: $request->userAgent() ?? 'Unknown',
         ));
 
         if ($output instanceof TwoFactorChallengeOutput) {
@@ -78,8 +78,8 @@ final class AuthController
         $output = $useCase->execute(new Verify2FAInput(
             tempToken: $request->validated('temp_token'),
             otpCode: $request->validated('otp_code'),
-            ipAddress: $request->ip(),
-            userAgent: $request->userAgent(),
+            ipAddress: $request->ip() ?? '0.0.0.0',
+            userAgent: $request->userAgent() ?? 'Unknown',
         ));
 
         return ApiResponse::success(AuthTokensResource::fromOutput($output)->toArray());
