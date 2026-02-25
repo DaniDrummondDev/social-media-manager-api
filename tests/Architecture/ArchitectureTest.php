@@ -72,6 +72,9 @@ arch('value objects are final readonly')
         'App\Domain\Billing\ValueObjects\Money',
         'App\Domain\Billing\ValueObjects\PlanLimits',
         'App\Domain\Billing\ValueObjects\PlanFeatures',
+        'App\Domain\ClientFinance\ValueObjects\TaxId',
+        'App\Domain\ClientFinance\ValueObjects\Address',
+        'App\Domain\ClientFinance\ValueObjects\YearMonth',
     ])
     ->classes()
     ->toBeFinal()
@@ -103,6 +106,13 @@ arch('value object enums are enums')
         'App\Domain\Billing\ValueObjects\UsageResourceType',
         'App\Domain\Billing\ValueObjects\CancelFeedback',
         'App\Domain\PlatformAdmin\ValueObjects\PlatformRole',
+        'App\Domain\ClientFinance\ValueObjects\Currency',
+        'App\Domain\ClientFinance\ValueObjects\ClientStatus',
+        'App\Domain\ClientFinance\ValueObjects\ContractType',
+        'App\Domain\ClientFinance\ValueObjects\ContractStatus',
+        'App\Domain\ClientFinance\ValueObjects\InvoiceStatus',
+        'App\Domain\ClientFinance\ValueObjects\PaymentMethod',
+        'App\Domain\ClientFinance\ValueObjects\ResourceType',
     ])
     ->toBeEnums();
 
@@ -138,6 +148,10 @@ arch('repository interfaces are interfaces')
         'App\Domain\PlatformAdmin\Repositories\SystemConfigRepositoryInterface',
         'App\Domain\PlatformAdmin\Repositories\AdminAuditEntryRepositoryInterface',
         'App\Domain\PlatformAdmin\Repositories\PlatformMetricsCacheRepositoryInterface',
+        'App\Domain\ClientFinance\Repositories\ClientRepositoryInterface',
+        'App\Domain\ClientFinance\Repositories\ClientContractRepositoryInterface',
+        'App\Domain\ClientFinance\Repositories\ClientInvoiceRepositoryInterface',
+        'App\Domain\ClientFinance\Repositories\CostAllocationRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -167,6 +181,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Engagement\Exceptions',
         'App\Domain\Billing\Exceptions',
         'App\Domain\PlatformAdmin\Exceptions',
+        'App\Domain\ClientFinance\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -183,6 +198,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\Engagement\Events',
         'App\Domain\Billing\Events',
         'App\Domain\PlatformAdmin\Events',
+        'App\Domain\ClientFinance\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -207,6 +223,7 @@ arch('entities are final readonly')
         'App\Domain\Media\Entities',
         'App\Domain\Billing\Entities',
         'App\Domain\PlatformAdmin\Entities',
+        'App\Domain\ClientFinance\Entities',
     ])
     ->classes()
     ->toBeFinal()
@@ -538,6 +555,7 @@ arch('jobs do not use domain directly')
         'App\Infrastructure\Billing\Jobs',
         'App\Infrastructure\PlatformAdmin\Jobs',
         'App\Infrastructure\ContentAI\Jobs',
+        'App\Infrastructure\ClientFinance\Jobs',
     ])
     ->not->toUse('App\Domain');
 
@@ -582,3 +600,52 @@ arch('platform admin resources are final readonly')
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();
+
+// Client Finance
+arch('client finance domain services are final readonly')
+    ->expect('App\Domain\ClientFinance\Services')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('client finance use cases are final')
+    ->expect('App\Application\ClientFinance\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('client finance DTOs are final readonly')
+    ->expect('App\Application\ClientFinance\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('client finance app exceptions extend ApplicationException')
+    ->expect('App\Application\ClientFinance\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('client finance models are final')
+    ->expect('App\Infrastructure\ClientFinance\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('client finance controllers are final')
+    ->expect('App\Infrastructure\ClientFinance\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('client finance providers are final')
+    ->expect('App\Infrastructure\ClientFinance\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('client finance resources are final readonly')
+    ->expect('App\Infrastructure\ClientFinance\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('client finance requests are final')
+    ->expect('App\Infrastructure\ClientFinance\Requests')
+    ->classes()
+    ->toBeFinal();

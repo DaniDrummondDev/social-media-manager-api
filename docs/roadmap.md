@@ -765,30 +765,30 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 8.1 Domain Layer
 
-- [ ] `Client` entity (id, organization_id, name, email, company_name, tax_id, status)
-- [ ] `ClientContract` entity (id, client_id, type, value, period, social_accounts vinculadas)
-- [ ] `ClientInvoice` entity (id, client_id, contract_id, items, totals, status, due_date)
-- [ ] `CostAllocation` entity (id, client_id, resource_type, resource_id, cost)
-- [ ] Value Objects: `ClientId`, `TaxId` (CPF/CNPJ), `Address`, `Currency`, `YearMonth`, `ContractType`, `InvoiceStatus`, `ContractStatus`
-- [ ] Domain Events: `ClientCreated`, `ClientArchived`, `ContractCreated`, `ContractCompleted`, `InvoiceGenerated`, `InvoiceSent`, `InvoiceMarkedPaid`, `InvoiceOverdue`, `CostAllocated`
-- [ ] Repository interfaces: `ClientRepositoryInterface`, `ClientContractRepositoryInterface`, `ClientInvoiceRepositoryInterface`, `CostAllocationRepositoryInterface`
-- [ ] Domain Service: `InvoiceCalculationService` (calcula totais com base nos items e tipo de contrato)
+- [x] `Client` entity (id, organization_id, name, email, company_name, tax_id, status)
+- [x] `ClientContract` entity (id, client_id, type, value, period, social_accounts vinculadas)
+- [x] `ClientInvoice` entity (id, client_id, contract_id, items, totals, status, due_date)
+- [x] `CostAllocation` entity (id, client_id, resource_type, resource_id, cost)
+- [x] Value Objects: `ClientId`, `TaxId` (CPF/CNPJ), `Address`, `Currency`, `YearMonth`, `ContractType`, `InvoiceStatus`, `ContractStatus`
+- [x] Domain Events: `ClientCreated`, `ClientArchived`, `ContractCreated`, `ContractCompleted`, `InvoiceGenerated`, `InvoiceSent`, `InvoiceMarkedPaid`, `InvoiceOverdue`, `CostAllocated`
+- [x] Repository interfaces: `ClientRepositoryInterface`, `ClientContractRepositoryInterface`, `ClientInvoiceRepositoryInterface`, `CostAllocationRepositoryInterface`
+- [x] Domain Service: `InvoiceCalculationService` (calcula totais com base nos items e tipo de contrato)
 
 ### 8.2 Application Layer
 
-- [ ] Use Cases Client:
+- [x] Use Cases Client:
   - `CreateClientUseCase`
   - `UpdateClientUseCase`
   - `ListClientsUseCase`
   - `GetClientUseCase`
   - `ArchiveClientUseCase`
-- [ ] Use Cases Contract:
+- [x] Use Cases Contract:
   - `CreateContractUseCase`
   - `UpdateContractUseCase`
   - `ListContractsUseCase`
   - `PauseContractUseCase`
   - `CompleteContractUseCase`
-- [ ] Use Cases Invoice:
+- [x] Use Cases Invoice:
   - `GenerateInvoiceUseCase` (manual, com items customizados)
   - `GenerateMonthlyInvoicesUseCase` (batch, baseado em contratos ativos)
   - `ListInvoicesUseCase`
@@ -796,38 +796,38 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
   - `SendInvoiceUseCase` (envia por email)
   - `MarkInvoicePaidUseCase`
   - `CancelInvoiceUseCase`
-- [ ] Use Cases Cost:
+- [x] Use Cases Cost:
   - `AllocateCostUseCase`
   - `GetCostBreakdownUseCase` (custos por cliente, periodo)
   - `GetProfitabilityReportUseCase` (receita vs custos por cliente)
-- [ ] Use Cases Report:
+- [x] Use Cases Report:
   - `GetFinancialDashboardUseCase` (receita total, inadimplencia, top clientes)
   - `ExportFinancialReportUseCase` (PDF, CSV)
-- [ ] DTOs para input/output de cada use case
+- [x] DTOs para input/output de cada use case
 
 ### 8.3 Infrastructure Layer
 
-- [ ] Migrations: `clients`, `client_contracts`, `client_invoices`, `client_invoice_items`, `cost_allocations`
-- [ ] Eloquent Models + Repositories
-- [ ] `InvoicePdfGenerator` service (gera PDF da fatura)
-- [ ] Email notifications: fatura enviada, fatura vencida, lembrete de pagamento
-- [ ] Jobs: `GenerateMonthlyInvoicesJob`, `CheckOverdueInvoicesJob`, `ExportFinancialReportJob`, `SendInvoiceReminderJob`
-- [ ] Controllers: `ClientController`, `ClientContractController`, `ClientInvoiceController`, `FinancialReportController`
-- [ ] Scheduler: verificar faturas vencidas (diario), gerar faturas mensais (dia 1 de cada mes)
+- [x] Migrations: `clients`, `client_contracts`, `client_invoices`, `client_invoice_items`, `cost_allocations`
+- [x] Eloquent Models + Repositories
+- [x] `InvoicePdfGenerator` service (gera PDF da fatura)
+- [x] Email notifications: fatura enviada, fatura vencida, lembrete de pagamento
+- [x] Jobs: `GenerateMonthlyInvoicesJob`, `CheckOverdueInvoicesJob`, `ExportFinancialReportJob`, `SendInvoiceReminderJob`
+- [x] Controllers: `ClientController`, `ClientContractController`, `ClientInvoiceController`, `FinancialReportController`
+- [x] Scheduler: verificar faturas vencidas (diario), gerar faturas mensais (dia 1 de cada mes)
 
 ### 8.4 Testes
 
-- [ ] Unit: Client entity, TaxId VO (CPF/CNPJ validation), Address VO, Currency, InvoiceCalculationService
-- [ ] Unit: Todos os Use Cases (com mocks de repository)
-- [ ] Unit: InvoiceStatus transitions, ContractStatus transitions
-- [ ] Integration: Eloquent repositories
-- [ ] Integration: InvoicePdfGenerator
-- [ ] Feature: CRUD de clientes
-- [ ] Feature: CRUD de contratos
-- [ ] Feature: Geracao e envio de faturas
-- [ ] Feature: Alocacao de custos e relatorios de lucratividade
-- [ ] Feature: Dashboard financeiro
-- [ ] Feature: Isolamento por organization_id
+- [x] Unit: Client entity, TaxId VO (CPF/CNPJ validation), Address VO, Currency, InvoiceCalculationService
+- [x] Unit: Todos os Use Cases (com mocks de repository)
+- [x] Unit: InvoiceStatus transitions, ContractStatus transitions
+- [x] Integration: Eloquent repositories
+- [x] Integration: InvoicePdfGenerator
+- [x] Feature: CRUD de clientes
+- [x] Feature: CRUD de contratos
+- [x] Feature: Geracao e envio de faturas
+- [x] Feature: Alocacao de custos e relatorios de lucratividade
+- [x] Feature: Dashboard financeiro
+- [x] Feature: Isolamento por organization_id
 
 ### Entregaveis Sprint 8
 

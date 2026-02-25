@@ -41,3 +41,12 @@ Schedule::job(new \App\Infrastructure\PlatformAdmin\Jobs\CleanupSuspendedOrgsJob
 
 // Compute dashboard metrics — every 5 minutes
 Schedule::job(new \App\Infrastructure\PlatformAdmin\Jobs\ComputeDashboardMetricsJob)->everyFiveMinutes();
+
+// Check overdue client invoices — daily at 06:00
+Schedule::job(new \App\Infrastructure\ClientFinance\Jobs\CheckOverdueInvoicesJob)->dailyAt('06:00');
+
+// Generate monthly client invoices — 1st of month at 07:00
+Schedule::job(new \App\Infrastructure\ClientFinance\Jobs\GenerateMonthlyInvoicesJob)->monthlyOn(1, '07:00');
+
+// Send invoice reminders — daily at 08:00
+Schedule::job(new \App\Infrastructure\ClientFinance\Jobs\SendInvoiceReminderJob)->dailyAt('08:00');

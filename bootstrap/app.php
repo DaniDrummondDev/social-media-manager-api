@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Engagement\Providers\EngagementServiceProvider::class,
         App\Infrastructure\Billing\Providers\BillingServiceProvider::class,
         App\Infrastructure\PlatformAdmin\Providers\PlatformAdminServiceProvider::class,
+        App\Infrastructure\ClientFinance\Providers\ClientFinanceServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -45,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/engagement.php';
                     require __DIR__.'/../routes/api/v1/billing.php';
                     require __DIR__.'/../routes/api/v1/admin.php';
+                    require __DIR__.'/../routes/api/v1/client-finance.php';
                 });
         },
     )
