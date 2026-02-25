@@ -22,7 +22,15 @@
         "refresh_token": "",
         "temp_token": "",
         "organization_id": "",
-        "user_id": ""
+        "user_id": "",
+        "campaign_id": "",
+        "content_id": "",
+        "content_id_ready": "",
+        "social_account_id": "",
+        "scheduled_post_id": "",
+        "media_id": "",
+        "upload_id": "",
+        "export_id": ""
       }
     },
     {
@@ -94,7 +102,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Secret@123\",\n  \"password_confirmation\": \"Secret@123\"\n}"
+        "text": "{\n  \"name\": \"Demo Admin\",\n  \"email\": \"admin@demo.com\",\n  \"password\": \"Secret@123\",\n  \"password_confirmation\": \"Secret@123\"\n}"
       },
       "authentication": {}
     },
@@ -112,7 +120,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"Secret@123\"\n}"
+        "text": "{\n  \"email\": \"admin@demo.com\",\n  \"password\": \"Secret@123\"\n}"
       },
       "authentication": {}
     },
@@ -184,7 +192,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"email\": \"john@example.com\"\n}"
+        "text": "{\n  \"email\": \"admin@demo.com\"\n}"
       },
       "authentication": {}
     },
@@ -315,7 +323,7 @@
       ],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"John Updated\",\n  \"phone\": \"+5511999999999\",\n  \"timezone\": \"America/Sao_Paulo\"\n}"
+        "text": "{\n  \"name\": \"Demo Admin Updated\",\n  \"phone\": \"+5511999999999\",\n  \"timezone\": \"America/Sao_Paulo\"\n}"
       },
       "authentication": {}
     },
@@ -588,7 +596,7 @@
       "name": "Disconnect Social Account",
       "description": "Desconecta uma conta social.",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID",
+      "url": "{{ _.base_url }}/social-accounts/{{ _.social_account_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -603,7 +611,7 @@
       "name": "Refresh Token",
       "description": "Renova o token de acesso de uma conta social.",
       "method": "POST",
-      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID/refresh",
+      "url": "{{ _.base_url }}/social-accounts/{{ _.social_account_id }}/refresh",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -618,7 +626,7 @@
       "name": "Check Account Health",
       "description": "Verifica o status de saude de uma conta social (token, conexao).",
       "method": "GET",
-      "url": "{{ _.base_url }}/social-accounts/ACCOUNT_ID/health",
+      "url": "{{ _.base_url }}/social-accounts/{{ _.social_account_id }}/health",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -675,7 +683,7 @@
       "name": "Delete Media",
       "description": "Remove midia (soft delete com periodo de carencia de 30 dias).",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/media/MEDIA_ID",
+      "url": "{{ _.base_url }}/media/{{ _.media_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -715,7 +723,7 @@
       "name": "Upload Chunk",
       "description": "Envia um chunk individual do upload.",
       "method": "PATCH",
-      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "url": "{{ _.base_url }}/media/uploads/{{ _.upload_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -734,7 +742,7 @@
       "name": "Get Upload Status",
       "description": "Retorna status e progresso do upload em andamento.",
       "method": "GET",
-      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "url": "{{ _.base_url }}/media/uploads/{{ _.upload_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -749,7 +757,7 @@
       "name": "Complete Upload",
       "description": "Finaliza upload chunked apos todos os chunks serem enviados.",
       "method": "POST",
-      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID/complete",
+      "url": "{{ _.base_url }}/media/uploads/{{ _.upload_id }}/complete",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -768,7 +776,7 @@
       "name": "Abort Upload",
       "description": "Cancela upload em andamento e limpa recursos no S3.",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/media/uploads/UPLOAD_ID",
+      "url": "{{ _.base_url }}/media/uploads/{{ _.upload_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -823,7 +831,7 @@
       "name": "Show Campaign",
       "description": "Retorna detalhes de uma campanha especifica.",
       "method": "GET",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -838,7 +846,7 @@
       "name": "Update Campaign",
       "description": "Atualiza uma campanha existente.",
       "method": "PUT",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -857,7 +865,7 @@
       "name": "Delete Campaign",
       "description": "Soft delete de uma campanha (com periodo de carencia de 30 dias).",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -872,7 +880,7 @@
       "name": "Duplicate Campaign",
       "description": "Duplica uma campanha com todos os seus conteudos.",
       "method": "POST",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/duplicate",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}/duplicate",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -891,7 +899,7 @@
       "name": "Restore Campaign",
       "description": "Restaura uma campanha que foi soft-deleted.",
       "method": "POST",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/restore",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}/restore",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -912,7 +920,7 @@
       "name": "Create Content",
       "description": "Cria um novo conteudo dentro de uma campanha.",
       "method": "POST",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/contents",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}/contents",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -931,7 +939,7 @@
       "name": "List Contents",
       "description": "Lista todos os conteudos de uma campanha.",
       "method": "GET",
-      "url": "{{ _.base_url }}/campaigns/CAMPAIGN_ID/contents",
+      "url": "{{ _.base_url }}/campaigns/{{ _.campaign_id }}/contents",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -946,7 +954,7 @@
       "name": "Show Content",
       "description": "Retorna detalhes de um conteudo especifico.",
       "method": "GET",
-      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -961,7 +969,7 @@
       "name": "Update Content",
       "description": "Atualiza um conteudo existente.",
       "method": "PUT",
-      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Content-Type", "value": "application/json" },
@@ -980,7 +988,7 @@
       "name": "Delete Content",
       "description": "Soft delete de um conteudo.",
       "method": "DELETE",
-      "url": "{{ _.base_url }}/contents/CONTENT_ID",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
@@ -1112,6 +1120,246 @@
       "description": "Lista historico de geracoes de conteudo por IA. Suporta filtro por tipo (?type=title).",
       "method": "GET",
       "url": "{{ _.base_url }}/ai/history",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_publishing",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 4 — Publishing"
+    },
+    {
+      "_id": "req_schedule_post",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Schedule Post",
+      "description": "Agenda um conteudo para publicacao em uma ou mais contas sociais.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id_ready }}/schedule",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"scheduled_at\": \"2026-03-01T15:00:00Z\",\n  \"social_account_ids\": [\"{{ _.social_account_id }}\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_publish_now",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Publish Now",
+      "description": "Publica um conteudo imediatamente em uma ou mais contas sociais.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id_ready }}/publish-now",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"social_account_ids\": [\"{{ _.social_account_id }}\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_list_scheduled_posts",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "List Scheduled Posts",
+      "description": "Lista posts agendados da organizacao. Filtros: status, provider, campaign_id, from, to.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/scheduled-posts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_show_scheduled_post",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Show Scheduled Post",
+      "description": "Retorna detalhes de um post agendado.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/scheduled-posts/{{ _.scheduled_post_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_calendar",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Calendar",
+      "description": "Retorna calendario de publicacoes agendadas. Params: month, year ou start_date, end_date.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/scheduled-posts/calendar?month=3&year=2026",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_reschedule_post",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Reschedule Post",
+      "description": "Reagenda um post pendente para nova data/hora.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/scheduled-posts/{{ _.scheduled_post_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"scheduled_at\": \"2026-03-02T10:00:00Z\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_cancel_scheduled_post",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Cancel Scheduled Post",
+      "description": "Cancela um agendamento pendente.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/scheduled-posts/{{ _.scheduled_post_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_retry_post",
+      "_type": "request",
+      "parentId": "fld_publishing",
+      "name": "Retry Post",
+      "description": "Reenvia um post com falha para processamento.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/scheduled-posts/{{ _.scheduled_post_id }}/retry",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_analytics",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 5 — Analytics"
+    },
+    {
+      "_id": "req_analytics_overview",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Overview",
+      "description": "Dashboard consolidado com metricas agregadas, comparacao com periodo anterior, trend diario e top conteudos.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/analytics/overview?period=30d",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_analytics_network",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Network Analytics (Instagram)",
+      "description": "Analytics por rede social: metricas de conta, conteudo, comparacao, top 5, best posting times e followers trend.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/analytics/networks/instagram?period=30d",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_analytics_content",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Content Analytics",
+      "description": "Analytics de um conteudo especifico: metricas por rede e evolucao (snapshots 24h, 48h, 7d).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/analytics/contents/{{ _.content_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_analytics_export",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Export Report",
+      "description": "Solicita exportacao assincrona de relatorio (PDF ou CSV). Retorna 202 com status processing.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/analytics/exports",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"type\": \"overview\",\n  \"format\": \"pdf\",\n  \"period\": \"30d\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_analytics_list_exports",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "List Exports",
+      "description": "Lista todas as exportacoes do usuario na organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/analytics/exports",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_analytics_show_export",
+      "_type": "request",
+      "parentId": "fld_analytics",
+      "name": "Show Export",
+      "description": "Retorna detalhes de uma exportacao especifica (status, download URL, etc).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/analytics/exports/{{ _.export_id }}",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }

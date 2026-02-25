@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Media\Providers\MediaServiceProvider::class,
         App\Infrastructure\Campaign\Providers\CampaignServiceProvider::class,
         App\Infrastructure\ContentAI\Providers\ContentAIServiceProvider::class,
+        App\Infrastructure\Publishing\Providers\PublishingServiceProvider::class,
+        App\Infrastructure\Analytics\Providers\AnalyticsServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -35,6 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/media.php';
                     require __DIR__.'/../routes/api/v1/campaigns.php';
                     require __DIR__.'/../routes/api/v1/ai.php';
+                    require __DIR__.'/../routes/api/v1/publishing.php';
+                    require __DIR__.'/../routes/api/v1/analytics.php';
                 });
         },
     )

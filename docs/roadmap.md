@@ -534,14 +534,14 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 4.1 Domain Layer
 
-- [ ] `ScheduledPost` entity
-- [ ] Value Objects: `PublishingStatus`, `ScheduleTime`, `PublishError`
-- [ ] Domain Events: `PostScheduled`, `PostDispatched`, `PostPublished`, `PostFailed`, `PostCancelled`
-- [ ] Repository interface
+- [x] `ScheduledPost` entity
+- [x] Value Objects: `PublishingStatus`, `ScheduleTime`, `PublishError`
+- [x] Domain Events: `PostScheduled`, `PostDispatched`, `PostPublished`, `PostFailed`, `PostCancelled`
+- [x] Repository interface
 
 ### 4.2 Application Layer
 
-- [ ] Use Cases:
+- [x] Use Cases:
   - `SchedulePostUseCase`, `PublishNowUseCase`
   - `CancelScheduleUseCase`, `RescheduleUseCase`
   - `ListScheduledPostsUseCase`, `GetCalendarUseCase`
@@ -549,24 +549,24 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 4.3 Infrastructure Layer
 
-- [ ] Migration: `scheduled_posts`
-- [ ] Adapters de publicacao (implementacao real):
+- [x] Migration: `scheduled_posts`
+- [x] Adapters de publicacao (stubs — implementacao real nas integracoes):
   - `InstagramPublisher`, `TikTokPublisher`, `YouTubePublisher`
-- [ ] Jobs: `ProcessScheduledPostJob`, `RetryPublishJob`
-- [ ] Circuit breaker por provider (Redis-based)
-- [ ] Scheduler: verificar posts pendentes (a cada minuto)
-- [ ] Idempotencia via `idempotency_key` no scheduled_post
-- [ ] Controllers: `PublishingController`, `ScheduledPostController`
+- [x] Jobs: `ProcessScheduledPostJob`, `DispatchScheduledPostsJob`
+- [x] Circuit breaker por provider (Redis-based via Cache)
+- [x] Scheduler: verificar posts pendentes (a cada minuto)
+- [x] Idempotencia via `idempotency_key` no scheduled_post
+- [x] Controllers: `PublishingController`, `ScheduledPostController`
 
 ### 4.4 Testes
 
-- [ ] Unit: ScheduledPost entity, status transitions, ScheduleTime validation
-- [ ] Unit: Use Cases (schedule, publish, retry logic)
-- [ ] Integration: Publisher adapters (mock de APIs externas)
-- [ ] Feature: Agendar, cancelar, reagendar
-- [ ] Feature: Publicacao imediata
-- [ ] Feature: Retry com backoff
-- [ ] Feature: Calendario de publicacoes
+- [x] Unit: ScheduledPost entity, status transitions, ScheduleTime validation
+- [x] Unit: Use Cases (schedule, publish, retry logic)
+- [x] Integration: Publisher adapters (factory, stubs, circuit breaker)
+- [x] Feature: Agendar, cancelar, reagendar
+- [x] Feature: Publicacao imediata
+- [x] Feature: Retry com backoff
+- [x] Feature: Calendario de publicacoes
 
 ### Entregaveis Sprint 4
 
@@ -587,14 +587,14 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 5.1 Analytics
 
-- [ ] Domain: `ContentMetric`, `ContentMetricSnapshot`, `AccountMetric`, `ReportExport`
-- [ ] Value Objects: `MetricPeriod`, `ExportFormat`
-- [ ] Use Cases: `GetOverviewUseCase`, `GetNetworkAnalyticsUseCase`, `GetContentAnalyticsUseCase`, `ExportReportUseCase`, `SyncMetricsUseCase`
-- [ ] Migrations: `content_metrics`, `content_metric_snapshots` (particionada por mes), `account_metrics` (particionada), `report_exports`
-- [ ] Adapters: `InstagramAnalytics`, `TikTokAnalytics`, `YouTubeAnalytics`
-- [ ] Jobs: `SyncPostMetricsJob`, `SyncAccountMetricsJob`, `GenerateReportJob`
-- [ ] Controllers: `AnalyticsController`
-- [ ] Scheduler: sync metricas (1h para recentes, 6h para antigos)
+- [x] Domain: `ContentMetric`, `ContentMetricSnapshot`, `AccountMetric`, `ReportExport`
+- [x] Value Objects: `MetricPeriod`, `ExportFormat`, `ReportType`, `ExportStatus`
+- [x] Use Cases: `GetOverviewUseCase`, `GetNetworkAnalyticsUseCase`, `GetContentAnalyticsUseCase`, `ExportReportUseCase`, `GenerateReportUseCase`, `SyncPostMetricsUseCase`, `SyncAccountMetricsUseCase`, `GetExportUseCase`, `ListExportsUseCase`
+- [x] Migrations: `content_metrics`, `content_metric_snapshots` (particionada por mes), `account_metrics` (particionada), `report_exports`
+- [x] Adapters: `InstagramAnalytics`, `TikTokAnalytics`, `YouTubeAnalytics` (stubs)
+- [x] Jobs: `SyncPostMetricsJob`, `SyncAccountMetricsJob`, `SyncSingleAccountMetricsJob`, `GenerateReportJob`
+- [x] Controllers: `AnalyticsController` (6 actions: overview, network, content, export, showExport, listExports)
+- [x] Scheduler: sync metricas de conta a cada 6h
 
 ### 5.2 Engagement
 
@@ -610,9 +610,11 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 5.3 Testes
 
-- [ ] Unit: MetricPeriod, Sentiment, AutomationEngine (regras, prioridade, stop-on-match)
-- [ ] Integration: Analytics adapters, webhook delivery (HMAC-SHA256)
-- [ ] Feature: Dashboard analytics, exportacao
+- [x] Unit: MetricPeriod, ExportStatus, ContentMetric, ContentMetricSnapshot, AccountMetric, ReportExport, GetOverviewUseCase, ExportReportUseCase, SyncPostMetricsUseCase
+- [x] Integration: EloquentContentMetricRepository, EloquentReportExportRepository
+- [x] Feature: Dashboard analytics (overview, network, content), exportacao (create, list, show)
+- [ ] Unit: Sentiment, AutomationEngine (regras, prioridade, stop-on-match)
+- [ ] Integration: webhook delivery (HMAC-SHA256)
 - [ ] Feature: CRUD comentarios, reply, sugestao IA
 - [ ] Feature: CRUD automacao, motor de execucao
 - [ ] Feature: Webhooks (criacao, delivery, retry)

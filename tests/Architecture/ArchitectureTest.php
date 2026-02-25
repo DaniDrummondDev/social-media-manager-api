@@ -64,6 +64,9 @@ arch('value objects are final readonly')
         'App\Domain\Media\ValueObjects\FileSize',
         'App\Domain\Media\ValueObjects\Dimensions',
         'App\Domain\Media\ValueObjects\Compatibility',
+        'App\Domain\Publishing\ValueObjects\ScheduleTime',
+        'App\Domain\Publishing\ValueObjects\PublishError',
+        'App\Domain\Analytics\ValueObjects\MetricPeriod',
     ])
     ->classes()
     ->toBeFinal()
@@ -80,6 +83,12 @@ arch('value object enums are enums')
         'App\Domain\Media\ValueObjects\MediaType',
         'App\Domain\Media\ValueObjects\ScanStatus',
         'App\Domain\Media\ValueObjects\UploadStatus',
+        'App\Domain\Campaign\ValueObjects\ContentStatus',
+        'App\Domain\Campaign\ValueObjects\CampaignStatus',
+        'App\Domain\Publishing\ValueObjects\PublishingStatus',
+        'App\Domain\Analytics\ValueObjects\ExportFormat',
+        'App\Domain\Analytics\ValueObjects\ReportType',
+        'App\Domain\Analytics\ValueObjects\ExportStatus',
     ])
     ->toBeEnums();
 
@@ -93,6 +102,13 @@ arch('repository interfaces are interfaces')
         'App\Domain\SocialAccount\Repositories\SocialAccountRepositoryInterface',
         'App\Domain\Media\Repositories\MediaRepositoryInterface',
         'App\Domain\Media\Repositories\MediaUploadRepositoryInterface',
+        'App\Domain\Campaign\Contracts\ContentRepositoryInterface',
+        'App\Domain\Campaign\Contracts\CampaignRepositoryInterface',
+        'App\Domain\Publishing\Contracts\ScheduledPostRepositoryInterface',
+        'App\Domain\Analytics\Repositories\ContentMetricRepositoryInterface',
+        'App\Domain\Analytics\Repositories\ContentMetricSnapshotRepositoryInterface',
+        'App\Domain\Analytics\Repositories\AccountMetricRepositoryInterface',
+        'App\Domain\Analytics\Repositories\ReportExportRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -108,6 +124,9 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Organization\Exceptions',
         'App\Domain\SocialAccount\Exceptions',
         'App\Domain\Media\Exceptions',
+        'App\Domain\Campaign\Exceptions',
+        'App\Domain\Publishing\Exceptions',
+        'App\Domain\Analytics\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -119,6 +138,8 @@ arch('domain events extend DomainEvent')
         'App\Domain\Organization\Events',
         'App\Domain\SocialAccount\Events',
         'App\Domain\Media\Events',
+        'App\Domain\Publishing\Events',
+        'App\Domain\Analytics\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -264,6 +285,123 @@ arch('socialaccount resources are final readonly')
 
 arch('media resources are final readonly')
     ->expect('App\Infrastructure\Media\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Publishing
+arch('publishing use cases are final')
+    ->expect('App\Application\Publishing\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('publishing DTOs are final readonly')
+    ->expect('App\Application\Publishing\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('publishing app contracts are interfaces')
+    ->expect('App\Application\Publishing\Contracts')
+    ->toBeInterfaces();
+
+arch('publishing app exceptions extend ApplicationException')
+    ->expect('App\Application\Publishing\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('publishing models are final')
+    ->expect('App\Infrastructure\Publishing\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('publishing controllers are final')
+    ->expect('App\Infrastructure\Publishing\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('publishing providers are final')
+    ->expect('App\Infrastructure\Publishing\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('publishing resources are final readonly')
+    ->expect('App\Infrastructure\Publishing\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Campaign
+arch('campaign use cases are final')
+    ->expect('App\Application\Campaign\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('campaign DTOs are final readonly')
+    ->expect('App\Application\Campaign\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('campaign models are final')
+    ->expect('App\Infrastructure\Campaign\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('campaign controllers are final')
+    ->expect('App\Infrastructure\Campaign\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('campaign providers are final')
+    ->expect('App\Infrastructure\Campaign\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('campaign resources are final readonly')
+    ->expect('App\Infrastructure\Campaign\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Analytics
+arch('analytics use cases are final')
+    ->expect('App\Application\Analytics\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('analytics DTOs are final readonly')
+    ->expect('App\Application\Analytics\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('analytics app contracts are interfaces')
+    ->expect('App\Application\Analytics\Contracts')
+    ->toBeInterfaces();
+
+arch('analytics app exceptions extend ApplicationException')
+    ->expect('App\Application\Analytics\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('analytics models are final')
+    ->expect('App\Infrastructure\Analytics\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('analytics controllers are final')
+    ->expect('App\Infrastructure\Analytics\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('analytics providers are final')
+    ->expect('App\Infrastructure\Analytics\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('analytics resources are final readonly')
+    ->expect('App\Infrastructure\Analytics\Resources')
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();
