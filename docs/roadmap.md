@@ -644,14 +644,14 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 6.1 Domain Layer
 
-- [ ] `Plan`, `Subscription`, `UsageRecord`, `Invoice` entities
-- [ ] Value Objects: `BillingCycle`, `SubscriptionStatus`, `PlanLimits`, `Money`
-- [ ] Domain Events: `SubscriptionCreated`, `SubscriptionUpgraded`, `SubscriptionCanceled`, `SubscriptionExpired`, `PaymentFailed`, `PaymentSucceeded`, `PlanLimitReached`
-- [ ] `PaymentGatewayInterface` contract
+- [x] `Plan`, `Subscription`, `UsageRecord`, `Invoice` entities
+- [x] Value Objects: `BillingCycle`, `SubscriptionStatus`, `PlanLimits`, `Money`
+- [x] Domain Events: `SubscriptionCreated`, `SubscriptionUpgraded`, `SubscriptionCanceled`, `SubscriptionExpired`, `PaymentFailed`, `PaymentSucceeded`, `PlanLimitReached`
+- [x] `PaymentGatewayInterface` contract
 
 ### 6.2 Application Layer
 
-- [ ] Use Cases:
+- [x] Use Cases:
   - `GetSubscriptionUseCase`, `GetUsageUseCase`, `ListInvoicesUseCase`
   - `CreateCheckoutSessionUseCase`, `CreatePortalSessionUseCase`
   - `ProcessStripeWebhookUseCase`
@@ -661,25 +661,25 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 6.3 Infrastructure Layer
 
-- [ ] Migrations: `plans`, `subscriptions`, `usage_records`, `invoices`
-- [ ] Seeds: planos default (Free, Creator, Professional, Agency)
-- [ ] `StripePaymentGateway` (implementa `PaymentGatewayInterface`)
-- [ ] Middleware: `CheckPlanLimit` (verifica limites antes de acoes)
-- [ ] Jobs: `ProcessStripeWebhookJob`, `CheckExpiredSubscriptionsJob`, `DowngradeToFreePlanJob`, `SyncUsageRecordsJob`
-- [ ] Controllers: `BillingController`, `PlanController`
-- [ ] Webhook endpoint: `POST /api/v1/webhooks/stripe` (signature validation)
-- [ ] Scheduler: verificar subscriptions expiradas (diario)
+- [x] Migrations: `plans`, `subscriptions`, `usage_records`, `invoices`
+- [x] Seeds: planos default (Free, Creator, Professional, Agency)
+- [x] `StripePaymentGateway` (implementa `PaymentGatewayInterface`)
+- [x] Middleware: `CheckPlanLimit` (verifica limites antes de acoes)
+- [x] Jobs: `ProcessStripeWebhookJob`, `CheckExpiredSubscriptionsJob`, `DowngradeToFreePlanJob`, `SyncUsageRecordsJob`
+- [x] Controllers: `BillingController`, `PlanController`
+- [x] Webhook endpoint: `POST /api/v1/webhooks/stripe` (signature validation)
+- [x] Scheduler: verificar subscriptions expiradas (diario)
 
 ### 6.4 Testes
 
-- [ ] Unit: Subscription status transitions, PlanLimits, Money VO
-- [ ] Unit: Use Cases (checkout, webhook processing, limit check)
-- [ ] Integration: Stripe API (mock via Stripe test mode)
-- [ ] Feature: Listar planos, ver subscription, ver uso
-- [ ] Feature: Checkout flow (upgrade)
-- [ ] Feature: Webhook processing (subscription events, payment events)
-- [ ] Feature: Enforcement de limites (402 quando atingido)
-- [ ] Feature: Downgrade automatico apos expiracao
+- [x] Unit: Subscription status transitions, PlanLimits, Money VO
+- [x] Unit: Use Cases (checkout, webhook processing, limit check)
+- [x] Integration: Stripe API (mock via Stripe test mode)
+- [x] Feature: Listar planos, ver subscription, ver uso
+- [x] Feature: Checkout flow (upgrade)
+- [x] Feature: Webhook processing (subscription events, payment events)
+- [x] Feature: Enforcement de limites (402 quando atingido)
+- [x] Feature: Downgrade automatico apos expiracao
 
 ### Entregaveis Sprint 6
 

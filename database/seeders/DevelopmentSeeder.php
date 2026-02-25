@@ -14,6 +14,10 @@ final class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         // Limpar dados anteriores (ordem respeita foreign keys)
+        DB::table('stripe_webhook_events')->truncate();
+        DB::table('invoices')->truncate();
+        DB::table('usage_records')->truncate();
+        DB::table('subscriptions')->truncate();
         DB::table('webhook_deliveries')->truncate();
         DB::table('webhook_endpoints')->truncate();
         DB::table('automation_executions')->truncate();
@@ -678,6 +682,46 @@ final class DevelopmentSeeder extends Seeder
             'updated_at' => now()->toDateTimeString(),
         ]);
 
+        // ── 16. Billing — Plans + Subscription + Usage ──────────────
+        $this->call(PlanSeeder::class);
+
+        $subscriptionId = (string) Str::uuid();
+        DB::table('subscriptions')->insert([
+            'id' => $subscriptionId,
+            'organization_id' => $orgId,
+            'plan_id' => PlanSeeder::FREE_PLAN_ID,
+            'status' => 'active',
+            'billing_cycle' => 'monthly',
+            'current_period_start' => now()->startOfMonth()->toDateTimeString(),
+            'current_period_end' => now()->endOfMonth()->toDateTimeString(),
+            'trial_ends_at' => null,
+            'canceled_at' => null,
+            'cancel_at_period_end' => false,
+            'cancel_reason' => null,
+            'cancel_feedback' => null,
+            'external_subscription_id' => null,
+            'external_customer_id' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        $usageResources = [
+            'members' => 1,
+            'social_accounts' => 3,
+            'campaigns' => 2,
+        ];
+        foreach ($usageResources as $resource => $qty) {
+            DB::table('usage_records')->insert([
+                'id' => (string) Str::uuid(),
+                'organization_id' => $orgId,
+                'resource_type' => $resource,
+                'quantity' => $qty,
+                'period_start' => now()->startOfMonth()->toDateString(),
+                'period_end' => now()->endOfMonth()->toDateString(),
+                'recorded_at' => now()->toDateTimeString(),
+            ]);
+        }
+
         // ── Output ──────────────────────────────────────────────────
         $this->command->newLine();
         $this->command->info('══════════════════════════════════════════');
@@ -715,6 +759,11 @@ final class DevelopmentSeeder extends Seeder
         $this->command->line('    Automation Rules: 2 records');
         $this->command->line('    Blacklist Words:  3 records');
         $this->command->line("    Webhook:          <fg=yellow>{$webhookId}</>");
+        $this->command->newLine();
+        $this->command->line('  Billing:');
+        $this->command->line('    Plans:            4 records (via PlanSeeder)');
+        $this->command->line("    Subscription:     <fg=yellow>{$subscriptionId}</> (Free plan)");
+        $this->command->line('    Usage Records:    3 records');
         $this->command->newLine();
         $this->command->info('  Fluxo no Insomnia:');
         $this->command->line('  1. POST /auth/login com email/password acima');

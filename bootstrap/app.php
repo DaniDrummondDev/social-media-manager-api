@@ -22,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Publishing\Providers\PublishingServiceProvider::class,
         App\Infrastructure\Analytics\Providers\AnalyticsServiceProvider::class,
         App\Infrastructure\Engagement\Providers\EngagementServiceProvider::class,
+        App\Infrastructure\Billing\Providers\BillingServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/publishing.php';
                     require __DIR__.'/../routes/api/v1/analytics.php';
                     require __DIR__.'/../routes/api/v1/engagement.php';
+                    require __DIR__.'/../routes/api/v1/billing.php';
                 });
         },
     )
@@ -54,6 +56,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth.jwt' => Authenticate::class,
             'org.context' => ResolveOrganizationContext::class,
             'role' => CheckRole::class,
+            'plan.limit' => \App\Infrastructure\Billing\Middleware\CheckPlanLimit::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -72,6 +75,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 code: $e->errorCode,
                 message: $e->getMessage(),
                 status: 403,
+            );
+        });
+
+        // Plan limit exceeded → 402
+        $exceptions->render(function (\App\Application\Billing\Exceptions\PlanLimitExceededException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 402,
             );
         });
 

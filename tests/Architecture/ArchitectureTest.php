@@ -69,6 +69,9 @@ arch('value objects are final readonly')
         'App\Domain\Analytics\ValueObjects\MetricPeriod',
         'App\Domain\Engagement\ValueObjects\RuleCondition',
         'App\Domain\Engagement\ValueObjects\WebhookSecret',
+        'App\Domain\Billing\ValueObjects\Money',
+        'App\Domain\Billing\ValueObjects\PlanLimits',
+        'App\Domain\Billing\ValueObjects\PlanFeatures',
     ])
     ->classes()
     ->toBeFinal()
@@ -94,6 +97,11 @@ arch('value object enums are enums')
         'App\Domain\Engagement\ValueObjects\Sentiment',
         'App\Domain\Engagement\ValueObjects\ActionType',
         'App\Domain\Engagement\ValueObjects\ConditionOperator',
+        'App\Domain\Billing\ValueObjects\BillingCycle',
+        'App\Domain\Billing\ValueObjects\SubscriptionStatus',
+        'App\Domain\Billing\ValueObjects\InvoiceStatus',
+        'App\Domain\Billing\ValueObjects\UsageResourceType',
+        'App\Domain\Billing\ValueObjects\CancelFeedback',
     ])
     ->toBeEnums();
 
@@ -120,12 +128,21 @@ arch('repository interfaces are interfaces')
         'App\Domain\Engagement\Repositories\BlacklistWordRepositoryInterface',
         'App\Domain\Engagement\Repositories\WebhookEndpointRepositoryInterface',
         'App\Domain\Engagement\Repositories\WebhookDeliveryRepositoryInterface',
+        'App\Domain\Billing\Repositories\PlanRepositoryInterface',
+        'App\Domain\Billing\Repositories\SubscriptionRepositoryInterface',
+        'App\Domain\Billing\Repositories\UsageRecordRepositoryInterface',
+        'App\Domain\Billing\Repositories\InvoiceRepositoryInterface',
+        'App\Domain\Billing\Repositories\StripeWebhookEventRepositoryInterface',
     ])
     ->toBeInterfaces();
 
 // Domain contracts (adapter interfaces) are interfaces
 arch('social account contracts are interfaces')
     ->expect('App\Domain\SocialAccount\Contracts')
+    ->toBeInterfaces();
+
+arch('billing contracts are interfaces')
+    ->expect('App\Domain\Billing\Contracts')
     ->toBeInterfaces();
 
 // Exceptions extend DomainException
@@ -139,6 +156,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Publishing\Exceptions',
         'App\Domain\Analytics\Exceptions',
         'App\Domain\Engagement\Exceptions',
+        'App\Domain\Billing\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -153,6 +171,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\Publishing\Events',
         'App\Domain\Analytics\Events',
         'App\Domain\Engagement\Events',
+        'App\Domain\Billing\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -457,6 +476,44 @@ arch('engagement providers are final')
 
 arch('engagement resources are final readonly')
     ->expect('App\Infrastructure\Engagement\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Billing
+arch('billing use cases are final')
+    ->expect('App\Application\Billing\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('billing DTOs are final readonly')
+    ->expect('App\Application\Billing\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('billing app exceptions extend ApplicationException')
+    ->expect('App\Application\Billing\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('billing models are final')
+    ->expect('App\Infrastructure\Billing\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('billing controllers are final')
+    ->expect('App\Infrastructure\Billing\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('billing providers are final')
+    ->expect('App\Infrastructure\Billing\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('billing resources are final readonly')
+    ->expect('App\Infrastructure\Billing\Resources')
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();

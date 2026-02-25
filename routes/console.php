@@ -29,3 +29,9 @@ Schedule::job(new CaptureCommentsJob)->everyThirtyMinutes();
 
 // Retry failed webhook deliveries — every 5 minutes
 Schedule::job(new RetryWebhookDeliveriesJob)->everyFiveMinutes();
+
+// Check expired subscriptions — daily at 03:00
+Schedule::job(new \App\Infrastructure\Billing\Jobs\CheckExpiredSubscriptionsJob)->dailyAt('03:00');
+
+// Sync usage records — daily at 04:00
+Schedule::job(new \App\Infrastructure\Billing\Jobs\SyncUsageRecordsJob)->dailyAt('04:00');

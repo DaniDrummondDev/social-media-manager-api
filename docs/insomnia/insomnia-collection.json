@@ -34,7 +34,9 @@
         "comment_id": "",
         "automation_rule_id": "",
         "blacklist_word_id": "",
-        "webhook_id": ""
+        "webhook_id": "",
+        "plan_slug": "creator",
+        "stripe_webhook_secret": ""
       }
     },
     {
@@ -1703,6 +1705,164 @@
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
       ],
       "body": {},
+      "authentication": {}
+    },
+
+    {
+      "_id": "fld_billing",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 6 — Billing & Subscription"
+    },
+    {
+      "_id": "req_plans_list",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "List Plans",
+      "description": "Lista todos os planos disponiveis. Nao requer autenticacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/plans",
+      "headers": [
+        { "name": "Accept", "value": "application/json" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_subscription",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Get Current Subscription",
+      "description": "Retorna a assinatura atual da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/billing/subscription",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_usage",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Get Usage Data",
+      "description": "Retorna os dados de uso da organizacao (publicacoes, geracoes IA, storage, membros).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/billing/usage",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_invoices",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "List Invoices",
+      "description": "Lista as faturas da organizacao com filtros opcionais.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/billing/invoices?status=paid&from=2026-01-01&to=2026-12-31&limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_checkout",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Create Checkout Session",
+      "description": "Cria uma sessao de checkout no Stripe para assinar ou trocar de plano.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/billing/checkout",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"plan_slug\": \"{{ _.plan_slug }}\",\n  \"billing_cycle\": \"monthly\",\n  \"success_url\": \"https://app.example.com/billing/success\",\n  \"cancel_url\": \"https://app.example.com/billing/cancel\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_portal",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Create Customer Portal Session",
+      "description": "Cria uma sessao do Customer Portal do Stripe para gerenciar assinatura.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/billing/portal",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"return_url\": \"https://app.example.com/billing\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_cancel",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Cancel Subscription",
+      "description": "Cancela a assinatura da organizacao ao final do periodo atual.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/billing/cancel",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"reason\": \"Too expensive\",\n  \"feedback\": \"too_expensive\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_billing_reactivate",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Reactivate Subscription",
+      "description": "Reativa uma assinatura previamente cancelada (antes do periodo expirar).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/billing/reactivate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_stripe_webhook",
+      "_type": "request",
+      "parentId": "fld_billing",
+      "name": "Stripe Webhook",
+      "description": "Endpoint para receber eventos do Stripe. Requer header Stripe-Signature.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/webhooks/stripe",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Stripe-Signature", "value": "{{ _.stripe_webhook_secret }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"id\": \"evt_test_123\",\n  \"object\": \"event\",\n  \"type\": \"checkout.session.completed\",\n  \"data\": {\n    \"object\": {\n      \"id\": \"cs_test_123\",\n      \"customer\": \"cus_test_123\",\n      \"subscription\": \"sub_test_123\",\n      \"metadata\": {\n        \"organization_id\": \"{{ _.organization_id }}\"\n      }\n    }\n  }\n}"
+      },
       "authentication": {}
     }
   ]
