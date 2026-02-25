@@ -14,6 +14,11 @@ final class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         // Limpar dados anteriores (ordem respeita foreign keys)
+        DB::table('cost_allocations')->truncate();
+        DB::table('client_invoice_items')->truncate();
+        DB::table('client_invoices')->truncate();
+        DB::table('client_contracts')->truncate();
+        DB::table('clients')->truncate();
         DB::table('admin_audit_entries')->truncate();
         DB::table('platform_metrics_cache')->truncate();
         DB::table('system_configs')->truncate();
@@ -726,7 +731,194 @@ final class DevelopmentSeeder extends Seeder
             ]);
         }
 
-        // ── 17. Platform Admin + System Configs ────────────────────
+        // ── 17. Client Finance ──────────────────────────────────────
+        $clientAcmeId = (string) Str::uuid();
+        $clientStarId = (string) Str::uuid();
+
+        DB::table('clients')->insert([
+            'id' => $clientAcmeId,
+            'organization_id' => $orgId,
+            'name' => 'Acme Corporation',
+            'email' => 'contato@acme.com.br',
+            'phone' => '+5511999888777',
+            'company_name' => 'Acme Corporation LTDA',
+            'tax_id' => '11222333000181',
+            'billing_address' => json_encode([
+                'street' => 'Av. Paulista, 1000',
+                'city' => 'Sao Paulo',
+                'state' => 'SP',
+                'zip' => '01310-100',
+                'country' => 'BR',
+            ]),
+            'notes' => 'Cliente premium, foco em Instagram e TikTok.',
+            'status' => 'active',
+            'deleted_at' => null,
+            'purge_at' => null,
+            'created_at' => now()->subMonths(3)->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        DB::table('clients')->insert([
+            'id' => $clientStarId,
+            'organization_id' => $orgId,
+            'name' => 'Star Digital',
+            'email' => 'financeiro@stardigital.com',
+            'phone' => '+5521988776655',
+            'company_name' => 'Star Digital Marketing ME',
+            'tax_id' => '52998224725',
+            'billing_address' => null,
+            'notes' => null,
+            'status' => 'active',
+            'deleted_at' => null,
+            'purge_at' => null,
+            'created_at' => now()->subMonths(1)->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        $contractAcmeId = (string) Str::uuid();
+        $contractStarId = (string) Str::uuid();
+
+        DB::table('client_contracts')->insert([
+            'id' => $contractAcmeId,
+            'organization_id' => $orgId,
+            'client_id' => $clientAcmeId,
+            'name' => 'Gestao Mensal Redes Sociais',
+            'type' => 'fixed_monthly',
+            'value_cents' => 500000,
+            'currency' => 'BRL',
+            'status' => 'active',
+            'starts_at' => now()->subMonths(3)->startOfMonth()->toDateString(),
+            'ends_at' => now()->addMonths(9)->endOfMonth()->toDateString(),
+            'social_account_ids' => json_encode([$igAccountId, $ttAccountId]),
+            'created_at' => now()->subMonths(3)->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        DB::table('client_contracts')->insert([
+            'id' => $contractStarId,
+            'organization_id' => $orgId,
+            'client_id' => $clientStarId,
+            'name' => 'Pacote Campanha YouTube',
+            'type' => 'per_campaign',
+            'value_cents' => 250000,
+            'currency' => 'BRL',
+            'status' => 'active',
+            'starts_at' => now()->subMonths(1)->startOfMonth()->toDateString(),
+            'ends_at' => now()->addMonths(5)->endOfMonth()->toDateString(),
+            'social_account_ids' => json_encode([$ytAccountId]),
+            'created_at' => now()->subMonths(1)->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        // Faturas — mes anterior (paga) e mes atual (enviada)
+        $invoicePaidId = (string) Str::uuid();
+        $invoiceSentId = (string) Str::uuid();
+        $lastMonth = now()->subMonth();
+        $currentMonth = now();
+
+        DB::table('client_invoices')->insert([
+            'id' => $invoicePaidId,
+            'organization_id' => $orgId,
+            'client_id' => $clientAcmeId,
+            'contract_id' => $contractAcmeId,
+            'reference_month' => $lastMonth->format('Y-m'),
+            'status' => 'paid',
+            'subtotal_cents' => 500000,
+            'discount_cents' => 0,
+            'total_cents' => 500000,
+            'currency' => 'BRL',
+            'payment_method' => 'pix',
+            'notes' => null,
+            'sent_at' => $lastMonth->copy()->day(5)->toDateTimeString(),
+            'paid_at' => $lastMonth->copy()->day(10)->toDateTimeString(),
+            'due_date' => $lastMonth->copy()->day(15)->toDateString(),
+            'created_at' => $lastMonth->copy()->day(1)->toDateTimeString(),
+            'updated_at' => $lastMonth->copy()->day(10)->toDateTimeString(),
+        ]);
+
+        DB::table('client_invoice_items')->insert([
+            'id' => (string) Str::uuid(),
+            'client_invoice_id' => $invoicePaidId,
+            'description' => 'Gestao Mensal Redes Sociais — '.$lastMonth->format('M/Y'),
+            'quantity' => 1,
+            'unit_price_cents' => 500000,
+            'total_cents' => 500000,
+            'position' => 0,
+        ]);
+
+        DB::table('client_invoices')->insert([
+            'id' => $invoiceSentId,
+            'organization_id' => $orgId,
+            'client_id' => $clientAcmeId,
+            'contract_id' => $contractAcmeId,
+            'reference_month' => $currentMonth->format('Y-m'),
+            'status' => 'sent',
+            'subtotal_cents' => 500000,
+            'discount_cents' => 0,
+            'total_cents' => 500000,
+            'currency' => 'BRL',
+            'payment_method' => null,
+            'notes' => null,
+            'sent_at' => $currentMonth->copy()->day(5)->toDateTimeString(),
+            'paid_at' => null,
+            'due_date' => $currentMonth->copy()->day(15)->toDateString(),
+            'created_at' => $currentMonth->copy()->day(1)->toDateTimeString(),
+            'updated_at' => $currentMonth->copy()->day(5)->toDateTimeString(),
+        ]);
+
+        DB::table('client_invoice_items')->insert([
+            'id' => (string) Str::uuid(),
+            'client_invoice_id' => $invoiceSentId,
+            'description' => 'Gestao Mensal Redes Sociais — '.$currentMonth->format('M/Y'),
+            'quantity' => 1,
+            'unit_price_cents' => 500000,
+            'total_cents' => 500000,
+            'position' => 0,
+        ]);
+
+        // Alocacoes de custo
+        $costAllocationIds = [];
+        $costAllocationsData = [
+            [
+                'client_id' => $clientAcmeId,
+                'resource_type' => 'campaign',
+                'resource_id' => $campaignBfId,
+                'description' => 'Campanha Black Friday — producao de conteudo',
+                'cost_cents' => 15000,
+            ],
+            [
+                'client_id' => $clientAcmeId,
+                'resource_type' => 'ai_generation',
+                'resource_id' => null,
+                'description' => 'Geracoes IA — captions e hashtags',
+                'cost_cents' => 3500,
+            ],
+            [
+                'client_id' => $clientStarId,
+                'resource_type' => 'campaign',
+                'resource_id' => $campaignVeraoId,
+                'description' => 'Campanha Verao — producao de video',
+                'cost_cents' => 45000,
+            ],
+        ];
+
+        foreach ($costAllocationsData as $cost) {
+            $costId = (string) Str::uuid();
+            $costAllocationIds[] = $costId;
+            DB::table('cost_allocations')->insert([
+                'id' => $costId,
+                'client_id' => $cost['client_id'],
+                'organization_id' => $orgId,
+                'resource_type' => $cost['resource_type'],
+                'resource_id' => $cost['resource_id'],
+                'description' => $cost['description'],
+                'cost_cents' => $cost['cost_cents'],
+                'currency' => 'BRL',
+                'allocated_at' => now()->subDays(random_int(1, 15))->toDateTimeString(),
+            ]);
+        }
+
+        // ── 18. Platform Admin + System Configs ────────────────────
         $this->call(PlatformAdminSeeder::class);
         $this->call(SystemConfigSeeder::class);
 
@@ -772,6 +964,15 @@ final class DevelopmentSeeder extends Seeder
         $this->command->line('    Plans:            4 records (via PlanSeeder)');
         $this->command->line("    Subscription:     <fg=yellow>{$subscriptionId}</> (Free plan)");
         $this->command->line('    Usage Records:    3 records');
+        $this->command->newLine();
+        $this->command->line('  Client Finance:');
+        $this->command->line("    Client (Acme):    <fg=yellow>{$clientAcmeId}</>");
+        $this->command->line("    Client (Star):    <fg=yellow>{$clientStarId}</>");
+        $this->command->line("    Contract (Acme):  <fg=yellow>{$contractAcmeId}</>");
+        $this->command->line("    Contract (Star):  <fg=yellow>{$contractStarId}</>");
+        $this->command->line("    Invoice (paid):   <fg=yellow>{$invoicePaidId}</>");
+        $this->command->line("    Invoice (sent):   <fg=yellow>{$invoiceSentId}</>");
+        $this->command->line('    Cost Allocations: 3 records');
         $this->command->newLine();
         $this->command->line('  Platform Admin:');
         $this->command->line('    Super Admin:      admin@demo.com (via PlatformAdminSeeder)');
