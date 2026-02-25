@@ -2,37 +2,9 @@
 
 declare(strict_types=1);
 
-use App\Application\Identity\Contracts\AuthTokenServiceInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
-
-function createRegularUserToken(): array
-{
-    $userId = (string) \Illuminate\Support\Str::uuid();
-    $orgId = (string) \Illuminate\Support\Str::uuid();
-
-    DB::table('users')->insert([
-        'id' => $userId, 'name' => 'Regular User', 'email' => "user-{$userId}@test.com",
-        'password' => 'hashed', 'status' => 'active', 'created_at' => now(), 'updated_at' => now(),
-    ]);
-
-    DB::table('organizations')->insert([
-        'id' => $orgId, 'name' => 'User Org', 'slug' => "user-org-{$orgId}",
-        'status' => 'active', 'created_at' => now(), 'updated_at' => now(),
-    ]);
-
-    DB::table('organization_members')->insert([
-        'id' => (string) \Illuminate\Support\Str::uuid(), 'organization_id' => $orgId,
-        'user_id' => $userId, 'role' => 'owner', 'created_at' => now(), 'updated_at' => now(),
-    ]);
-
-    $tokenService = app(AuthTokenServiceInterface::class);
-    $result = $tokenService->generateAccessToken($userId, $orgId, "user-{$userId}@test.com", 'owner');
-
-    return ['token' => $result['token'], 'userId' => $userId, 'orgId' => $orgId];
-}
 
 it('returns 403 for regular user on dashboard endpoint', function () {
     $auth = createRegularUserToken();

@@ -16,4 +16,24 @@ final readonly class AuditEntryOutput
         public string $ipAddress,
         public string $createdAt,
     ) {}
+
+    /**
+     * @param  \App\Domain\PlatformAdmin\Entities\AdminAuditEntry  $entry
+     * @param  array<string, mixed>|null  $adminInfo
+     */
+    public static function fromEntity(
+        \App\Domain\PlatformAdmin\Entities\AdminAuditEntry $entry,
+        ?array $adminInfo = null,
+    ): self {
+        return new self(
+            id: (string) $entry->id,
+            action: $entry->action,
+            admin: $adminInfo,
+            resourceType: $entry->resourceType,
+            resourceId: $entry->resourceId,
+            context: $entry->context,
+            ipAddress: $entry->ipAddress,
+            createdAt: $entry->createdAt->format('Y-m-d\TH:i:s\Z'),
+        );
+    }
 }

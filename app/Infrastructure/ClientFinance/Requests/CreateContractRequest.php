@@ -14,7 +14,6 @@ final class CreateContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'client_id' => ['required', 'string', 'uuid'],
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:fixed_monthly,per_campaign,per_post,hourly'],
             'value_cents' => ['required', 'integer', 'min:1'],

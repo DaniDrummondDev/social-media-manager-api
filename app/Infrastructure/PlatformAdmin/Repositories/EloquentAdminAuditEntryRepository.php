@@ -54,14 +54,11 @@ final class EloquentAdminAuditEntryRepository implements AdminAuditEntryReposito
         }
 
         if ($cursor !== null) {
-            $decodedCursor = base64_decode($cursor, true);
-            if ($decodedCursor !== false) {
-                $query->where('created_at', '<', $decodedCursor);
-            }
+            $query->where('id', '<', $cursor);
         }
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, AdminAuditEntryModel> $records */
-        $records = $query->orderByDesc('created_at')
+        $records = $query->orderByDesc('id')
             ->limit($perPage + 1)
             ->get();
 
@@ -76,8 +73,7 @@ final class EloquentAdminAuditEntryRepository implements AdminAuditEntryReposito
         $nextCursor = null;
         if ($hasMore && $records->isNotEmpty()) {
             $lastRecord = $records->last();
-            $lastCreatedAt = $lastRecord->getAttribute('created_at');
-            $nextCursor = base64_encode($lastCreatedAt->toISOString());
+            $nextCursor = (string) $lastRecord->getAttribute('id');
         }
 
         return [

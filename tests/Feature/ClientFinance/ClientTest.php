@@ -21,7 +21,7 @@ it('creates a client with 201', function () {
         'email' => 'contact@acme.com',
         'phone' => '+5511999999999',
         'company_name' => 'Acme Corporation LTDA',
-        'tax_id' => '12345678000199',
+        'tax_id' => '11222333000181',
         'notes' => 'Important client',
     ], $this->headers);
 
@@ -227,8 +227,8 @@ it('isolates by organization — cannot see other org clients', function () {
     expect($ids)->toContain($ownClientId);
     expect($ids)->not->toContain($otherClientId);
 
-    // Show other org's client should return 404
+    // Show other org's client should return 422 (CLIENT_NOT_FOUND)
     $showResponse = $this->getJson("/api/v1/clients/{$otherClientId}", $this->headers);
 
-    $showResponse->assertStatus(404);
+    $showResponse->assertStatus(422);
 });

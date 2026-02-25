@@ -75,7 +75,7 @@ final class ComputeDashboardMetricsJob implements ShouldQueue
         $mrr = (int) DB::table('subscriptions')
             ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
             ->where('subscriptions.status', 'active')
-            ->sum('plans.price_monthly_amount_cents');
+            ->sum('plans.price_monthly_cents');
 
         $this->storeCache('dashboard_subscriptions', [
             'mrr_cents' => $mrr,

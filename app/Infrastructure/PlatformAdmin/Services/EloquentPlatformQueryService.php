@@ -218,8 +218,8 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         if (isset($filters['search'])) {
             $search = '%' . $filters['search'] . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('organizations.name', 'ILIKE', $search)
-                    ->orWhere('organizations.slug', 'ILIKE', $search);
+                $q->where('organizations.name', 'LIKE', $search)
+                    ->orWhere('organizations.slug', 'LIKE', $search);
             });
         }
 
@@ -232,13 +232,10 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         }
 
         if ($cursor !== null) {
-            $decodedCursor = base64_decode($cursor, true);
-            if ($decodedCursor !== false) {
-                $query->where('organizations.created_at', '<', $decodedCursor);
-            }
+            $query->where('organizations.id', '<', $cursor);
         }
 
-        $records = $query->orderByDesc('organizations.created_at')
+        $records = $query->orderByDesc('organizations.id')
             ->limit($perPage + 1)
             ->get();
 
@@ -268,7 +265,7 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         $nextCursor = null;
         if ($hasMore && $records->isNotEmpty()) {
             $lastRecord = $records->last();
-            $nextCursor = base64_encode((string) $lastRecord->created_at);
+            $nextCursor = (string) $lastRecord->id;
         }
 
         return [
@@ -297,7 +294,7 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
                 'users.name',
                 'users.email',
                 'organization_members.role',
-                'organization_members.created_at as joined_at',
+                'organization_members.joined_at',
             ])
             ->get()
             ->toArray();
@@ -373,8 +370,8 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         if (isset($filters['search'])) {
             $search = '%' . $filters['search'] . '%';
             $query->where(function ($q) use ($search) {
-                $q->where('users.name', 'ILIKE', $search)
-                    ->orWhere('users.email', 'ILIKE', $search);
+                $q->where('users.name', 'LIKE', $search)
+                    ->orWhere('users.email', 'LIKE', $search);
             });
         }
 
@@ -387,13 +384,10 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         }
 
         if ($cursor !== null) {
-            $decodedCursor = base64_decode($cursor, true);
-            if ($decodedCursor !== false) {
-                $query->where('users.created_at', '<', $decodedCursor);
-            }
+            $query->where('users.id', '<', $cursor);
         }
 
-        $records = $query->orderByDesc('users.created_at')
+        $records = $query->orderByDesc('users.id')
             ->limit($perPage + 1)
             ->get();
 
@@ -423,7 +417,7 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         $nextCursor = null;
         if ($hasMore && $records->isNotEmpty()) {
             $lastRecord = $records->last();
-            $nextCursor = base64_encode((string) $lastRecord->created_at);
+            $nextCursor = (string) $lastRecord->id;
         }
 
         return [
@@ -469,7 +463,7 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
                 'organizations.slug',
                 'organizations.status',
                 'organization_members.role',
-                'organization_members.created_at as joined_at',
+                'organization_members.joined_at',
             ])
             ->get()
             ->toArray();
@@ -517,13 +511,10 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         }
 
         if ($cursor !== null) {
-            $decodedCursor = base64_decode($cursor, true);
-            if ($decodedCursor !== false) {
-                $query->where('subscriptions.created_at', '<', $decodedCursor);
-            }
+            $query->where('organizations.id', '<', $cursor);
         }
 
-        $records = $query->orderByDesc('subscriptions.created_at')
+        $records = $query->orderByDesc('organizations.id')
             ->limit($perPage + 1)
             ->get();
 
@@ -546,7 +537,7 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
         $nextCursor = null;
         if ($hasMore && $records->isNotEmpty()) {
             $lastRecord = $records->last();
-            $nextCursor = base64_encode((string) $lastRecord->created_at);
+            $nextCursor = (string) $lastRecord->id;
         }
 
         return [
@@ -735,6 +726,14 @@ final class EloquentPlatformQueryService implements PlatformQueryServiceInterfac
     public function createPlan(array $data): string
     {
         $id = Str::uuid()->toString();
+
+        if (isset($data['limits']) && is_array($data['limits'])) {
+            $data['limits'] = json_encode($data['limits']);
+        }
+
+        if (isset($data['features']) && is_array($data['features'])) {
+            $data['features'] = json_encode($data['features']);
+        }
 
         DB::table('plans')->insert(array_merge($data, [
             'id' => $id,

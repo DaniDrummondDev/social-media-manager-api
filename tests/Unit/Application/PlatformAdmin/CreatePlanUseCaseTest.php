@@ -32,8 +32,8 @@ it('creates a plan successfully as super admin', function () {
     $queryService->shouldReceive('createPlan')
         ->with(Mockery::on(fn (array $data) => $data['name'] === 'Enterprise'
             && $data['slug'] === 'enterprise'
-            && $data['price_monthly_amount_cents'] === 29900
-            && $data['price_yearly_amount_cents'] === 299000
+            && $data['price_monthly_cents'] === 29900
+            && $data['price_yearly_cents'] === 299000
             && $data['currency'] === 'BRL'))
         ->once()
         ->andReturn($newPlanId);
