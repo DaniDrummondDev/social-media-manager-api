@@ -598,26 +598,30 @@ Isto e, o video **nunca precisa estar inteiro em memoria do servidor**. O fluxo 
 
 ### 5.2 Engagement
 
-- [ ] Domain: `Comment`, `AutomationRule`, `AutomationExecution`, `BlacklistWord`, `WebhookEndpoint`, `WebhookDelivery`
-- [ ] Value Objects: `Sentiment`, `ActionType`, `ConditionOperator`, `WebhookSecret`
-- [ ] Use Cases: `ListCommentsUseCase`, `ReplyCommentUseCase`, `SuggestReplyUseCase`, CRUD de `AutomationRule`, CRUD de `WebhookEndpoint`
-- [ ] `AutomationEngine` domain service (avalia regras, executa acoes)
-- [ ] Migrations: `comments`, `automation_rules`, `automation_executions`, `blacklist_words`, `webhook_endpoints`, `webhook_deliveries`
-- [ ] Adapters: `InstagramEngagement`, `TikTokEngagement`, `YouTubeEngagement`
-- [ ] Jobs: `CaptureCommentsJob`, `DeliverWebhookJob`
-- [ ] Controllers: `CommentController`, `AutomationRuleController`, `WebhookController`
-- [ ] Scheduler: captura comentarios (30min)
+- [x] Domain: `Comment`, `AutomationRule`, `AutomationExecution`, `BlacklistWord`, `WebhookEndpoint`, `WebhookDelivery`
+- [x] Value Objects: `Sentiment`, `ActionType`, `ConditionOperator`, `RuleCondition`, `WebhookSecret`
+- [x] Domain Service: `AutomationEngine` (avalia regras por prioridade, AND conditions, blacklist, daily limit, network filters)
+- [x] Domain Events: `CommentCaptured`, `CommentReplied`, `AutomationTriggered`, `AutomationExecuted`, `WebhookEndpointCreated`, `WebhookDelivered`
+- [x] Use Cases (22): `ListCommentsUseCase`, `MarkCommentAsReadUseCase`, `ReplyCommentUseCase`, `SuggestReplyUseCase`, `CaptureCommentsUseCase`, CRUD `AutomationRule`, `EvaluateAutomationUseCase`, `ExecuteAutomationUseCase`, `ListExecutionsUseCase`, CRUD `BlacklistWord`, CRUD `WebhookEndpoint`, `TestWebhookUseCase`, `DeliverWebhookUseCase`, `ListDeliveriesUseCase`
+- [x] Contracts: `SocialEngagementFactoryInterface`, `AiSuggestionInterface`, `WebhookHttpClientInterface`
+- [x] Migrations (7): `comments`, `automation_rules`, `automation_rule_conditions`, `automation_executions`, `automation_blacklist_words`, `webhook_endpoints`, `webhook_deliveries`
+- [x] Adapters: `InstagramEngagement`, `TikTokEngagement`, `YouTubeEngagement` (stubs)
+- [x] Services: `SocialEngagementFactory`, `StubAiSuggestion`, `LaravelWebhookHttpClient`, `WebhookSigner`
+- [x] Jobs (5): `CaptureCommentsJob`, `CaptureSingleAccountCommentsJob`, `ExecuteAutomationJob`, `DeliverWebhookJob`, `RetryWebhookDeliveriesJob`
+- [x] Listeners: `EvaluateAutomationOnCommentCaptured`, `DispatchWebhooksOnCommentCaptured`, `DispatchWebhooksOnCommentReplied`
+- [x] Controllers: `CommentController`, `AutomationRuleController`, `BlacklistController`, `WebhookController`
+- [x] Routes: 18 endpoints (comments, automation-rules, automation-blacklist, webhooks)
+- [x] Scheduler: captura comentarios (30min), retry webhook deliveries (5min)
 
 ### 5.3 Testes
 
 - [x] Unit: MetricPeriod, ExportStatus, ContentMetric, ContentMetricSnapshot, AccountMetric, ReportExport, GetOverviewUseCase, ExportReportUseCase, SyncPostMetricsUseCase
 - [x] Integration: EloquentContentMetricRepository, EloquentReportExportRepository
 - [x] Feature: Dashboard analytics (overview, network, content), exportacao (create, list, show)
-- [ ] Unit: Sentiment, AutomationEngine (regras, prioridade, stop-on-match)
-- [ ] Integration: webhook delivery (HMAC-SHA256)
-- [ ] Feature: CRUD comentarios, reply, sugestao IA
-- [ ] Feature: CRUD automacao, motor de execucao
-- [ ] Feature: Webhooks (criacao, delivery, retry)
+- [x] Unit Domain: RuleCondition, WebhookSecret, Comment, AutomationRule, BlacklistWord, WebhookEndpoint, WebhookDelivery, AutomationEngine
+- [x] Unit Application: ReplyCommentUseCase, EvaluateAutomationUseCase, CreateWebhookUseCase, DeliverWebhookUseCase
+- [x] Integration: EloquentCommentRepository, EloquentAutomationRuleRepository, EloquentWebhookEndpointRepository
+- [x] Feature: Comments (list, filter, mark-read), AutomationRules (CRUD, executions, priority conflict), Blacklist (CRUD), Webhooks (CRUD, deliveries)
 
 ### Entregaveis Sprint 5
 

@@ -14,6 +14,13 @@ final class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         // Limpar dados anteriores (ordem respeita foreign keys)
+        DB::table('webhook_deliveries')->truncate();
+        DB::table('webhook_endpoints')->truncate();
+        DB::table('automation_executions')->truncate();
+        DB::table('automation_rule_conditions')->truncate();
+        DB::table('automation_rules')->truncate();
+        DB::table('automation_blacklist_words')->truncate();
+        DB::table('comments')->truncate();
         DB::table('report_exports')->truncate();
         DB::table('content_metric_snapshots')->truncate();
         DB::table('content_metrics')->truncate();
@@ -496,6 +503,181 @@ final class DevelopmentSeeder extends Seeder
             'updated_at' => now()->toDateTimeString(),
         ]);
 
+        // ── 12. Comments (4) ──────────────────────────────────────────
+        $commentIds = [];
+        $commentsData = [
+            [
+                'external_comment_id' => 'ig-comment-001',
+                'content_id' => $contentColecaoId,
+                'social_account_id' => $ytAccountId,
+                'provider' => 'youtube',
+                'author_name' => 'Maria Silva',
+                'text' => 'Amei a colecao! Quando chega nas lojas?',
+                'sentiment' => 'positive',
+                'sentiment_score' => 0.92,
+                'is_from_owner' => false,
+            ],
+            [
+                'external_comment_id' => 'ig-comment-002',
+                'content_id' => $contentMegaPromoId,
+                'social_account_id' => $igAccountId,
+                'provider' => 'instagram',
+                'author_name' => 'Joao Santos',
+                'text' => 'Desconto real ou so marketing?',
+                'sentiment' => 'negative',
+                'sentiment_score' => 0.3,
+                'is_from_owner' => false,
+            ],
+            [
+                'external_comment_id' => 'ig-comment-003',
+                'content_id' => $contentMegaPromoId,
+                'social_account_id' => $igAccountId,
+                'provider' => 'instagram',
+                'author_name' => 'Ana Oliveira',
+                'text' => 'Comprei no ano passado e adorei! Recomendo!',
+                'sentiment' => 'positive',
+                'sentiment_score' => 0.88,
+                'is_from_owner' => false,
+            ],
+            [
+                'external_comment_id' => 'ig-comment-004',
+                'content_id' => $contentColecaoId,
+                'social_account_id' => $ytAccountId,
+                'provider' => 'youtube',
+                'author_name' => 'Demo YouTube',
+                'text' => 'Obrigado pelo feedback! Em breve nas lojas.',
+                'sentiment' => 'positive',
+                'sentiment_score' => 0.85,
+                'is_from_owner' => true,
+            ],
+        ];
+
+        foreach ($commentsData as $comment) {
+            $commentId = (string) Str::uuid();
+            $commentIds[] = $commentId;
+            DB::table('comments')->insert([
+                'id' => $commentId,
+                'organization_id' => $orgId,
+                'content_id' => $comment['content_id'],
+                'social_account_id' => $comment['social_account_id'],
+                'provider' => $comment['provider'],
+                'external_comment_id' => $comment['external_comment_id'],
+                'author_name' => $comment['author_name'],
+                'author_external_id' => null,
+                'author_profile_url' => null,
+                'text' => $comment['text'],
+                'sentiment' => $comment['sentiment'],
+                'sentiment_score' => $comment['sentiment_score'],
+                'is_read' => false,
+                'is_from_owner' => $comment['is_from_owner'],
+                'replied_at' => null,
+                'replied_by' => null,
+                'replied_by_automation' => false,
+                'reply_text' => null,
+                'reply_external_id' => null,
+                'commented_at' => now()->subHours(random_int(1, 48))->toDateTimeString(),
+                'captured_at' => now()->toDateTimeString(),
+                'created_at' => now()->toDateTimeString(),
+                'updated_at' => now()->toDateTimeString(),
+            ]);
+        }
+
+        // ── 13. Automation Rules (2) ─────────────────────────────────
+        $ruleWelcomeId = (string) Str::uuid();
+        $ruleNegativeId = (string) Str::uuid();
+
+        DB::table('automation_rules')->insert([
+            'id' => $ruleWelcomeId,
+            'organization_id' => $orgId,
+            'name' => 'Resposta Automatica - Agradecimento',
+            'priority' => 1,
+            'action_type' => 'reply_fixed',
+            'response_template' => 'Obrigado pelo seu comentario! Ficamos felizes com o feedback. 😊',
+            'webhook_id' => null,
+            'delay_seconds' => 120,
+            'daily_limit' => 50,
+            'is_active' => true,
+            'applies_to_networks' => null,
+            'applies_to_campaigns' => null,
+            'deleted_at' => null,
+            'purge_at' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        DB::table('automation_rule_conditions')->insert([
+            'id' => (string) Str::uuid(),
+            'automation_rule_id' => $ruleWelcomeId,
+            'field' => 'sentiment',
+            'operator' => 'equals',
+            'value' => 'positive',
+            'is_case_sensitive' => false,
+            'position' => 0,
+        ]);
+
+        DB::table('automation_rules')->insert([
+            'id' => $ruleNegativeId,
+            'organization_id' => $orgId,
+            'name' => 'Alerta - Comentario Negativo',
+            'priority' => 2,
+            'action_type' => 'send_webhook',
+            'response_template' => null,
+            'webhook_id' => null,
+            'delay_seconds' => 60,
+            'daily_limit' => 100,
+            'is_active' => true,
+            'applies_to_networks' => null,
+            'applies_to_campaigns' => null,
+            'deleted_at' => null,
+            'purge_at' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        DB::table('automation_rule_conditions')->insert([
+            'id' => (string) Str::uuid(),
+            'automation_rule_id' => $ruleNegativeId,
+            'field' => 'sentiment',
+            'operator' => 'equals',
+            'value' => 'negative',
+            'is_case_sensitive' => false,
+            'position' => 0,
+        ]);
+
+        // ── 14. Blacklist Words (3) ───────────────────────────────────
+        $blacklistWords = ['spam', 'scam', '/\b(compre|clique)\s+agora\b/i'];
+        foreach ($blacklistWords as $word) {
+            DB::table('automation_blacklist_words')->insert([
+                'id' => (string) Str::uuid(),
+                'organization_id' => $orgId,
+                'word' => $word,
+                'is_regex' => str_starts_with($word, '/'),
+                'created_at' => now()->toDateTimeString(),
+            ]);
+        }
+
+        // ── 15. Webhook Endpoints (1) ─────────────────────────────────
+        $webhookId = (string) Str::uuid();
+        $webhookSecret = 'whsec_'.bin2hex(random_bytes(32));
+
+        DB::table('webhook_endpoints')->insert([
+            'id' => $webhookId,
+            'organization_id' => $orgId,
+            'name' => 'CRM Integration',
+            'url' => 'https://httpbin.org/post',
+            'secret' => $webhookSecret,
+            'events' => json_encode(['comment.created', 'comment.replied']),
+            'headers' => null,
+            'is_active' => true,
+            'last_delivery_at' => null,
+            'last_delivery_status' => null,
+            'failure_count' => 0,
+            'deleted_at' => null,
+            'purge_at' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
         // ── Output ──────────────────────────────────────────────────
         $this->command->newLine();
         $this->command->info('══════════════════════════════════════════');
@@ -527,6 +709,12 @@ final class DevelopmentSeeder extends Seeder
         $this->command->line('    Account Metrics: 21 records (7 days x 3 accounts)');
         $this->command->line("    Report Export (ready):      <fg=yellow>{$exportReadyId}</>");
         $this->command->line("    Report Export (processing): <fg=yellow>{$exportProcessingId}</>");
+        $this->command->newLine();
+        $this->command->line('  Engagement:');
+        $this->command->line('    Comments:         4 records');
+        $this->command->line('    Automation Rules: 2 records');
+        $this->command->line('    Blacklist Words:  3 records');
+        $this->command->line("    Webhook:          <fg=yellow>{$webhookId}</>");
         $this->command->newLine();
         $this->command->info('  Fluxo no Insomnia:');
         $this->command->line('  1. POST /auth/login com email/password acima');

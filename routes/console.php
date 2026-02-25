@@ -1,6 +1,8 @@
 <?php
 
 use App\Infrastructure\Analytics\Jobs\SyncAccountMetricsJob;
+use App\Infrastructure\Engagement\Jobs\CaptureCommentsJob;
+use App\Infrastructure\Engagement\Jobs\RetryWebhookDeliveriesJob;
 use App\Infrastructure\Media\Jobs\CleanupAbandonedUploadsJob;
 use App\Infrastructure\Publishing\Jobs\DispatchScheduledPostsJob;
 use App\Infrastructure\SocialAccount\Jobs\CheckAccountsHealthJob;
@@ -21,3 +23,9 @@ Schedule::job(new DispatchScheduledPostsJob)->everyMinute();
 
 // Sync account metrics — every 6 hours
 Schedule::job(new SyncAccountMetricsJob)->everySixHours();
+
+// Capture comments from social networks — every 30 minutes
+Schedule::job(new CaptureCommentsJob)->everyThirtyMinutes();
+
+// Retry failed webhook deliveries — every 5 minutes
+Schedule::job(new RetryWebhookDeliveriesJob)->everyFiveMinutes();

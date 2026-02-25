@@ -30,7 +30,11 @@
         "scheduled_post_id": "",
         "media_id": "",
         "upload_id": "",
-        "export_id": ""
+        "export_id": "",
+        "comment_id": "",
+        "automation_rule_id": "",
+        "blacklist_word_id": "",
+        "webhook_id": ""
       }
     },
     {
@@ -1360,6 +1364,340 @@
       "description": "Retorna detalhes de uma exportacao especifica (status, download URL, etc).",
       "method": "GET",
       "url": "{{ _.base_url }}/analytics/exports/{{ _.export_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_engagement",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 5.2 — Engagement"
+    },
+    {
+      "_id": "req_comments_list",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Comments",
+      "description": "Lista comentarios da organizacao com filtros opcionais.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/comments?limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_comments_list_positive",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Comments (positive)",
+      "description": "Lista comentarios com sentimento positivo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/comments?sentiment=positive&limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_comments_mark_read",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Mark Comment as Read",
+      "description": "Marca um comentario como lido.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/comments/{{ _.comment_id }}/read",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_comments_mark_many_read",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Mark Many Comments as Read",
+      "description": "Marca multiplos comentarios como lidos.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/comments/read",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"ids\": [\"{{ _.comment_id }}\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_comments_reply",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Reply to Comment",
+      "description": "Responde a um comentario na rede social.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/comments/{{ _.comment_id }}/reply",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"text\": \"Obrigado pelo feedback!\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_comments_suggest_reply",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Suggest Reply",
+      "description": "Gera sugestoes de resposta via IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/comments/{{ _.comment_id }}/suggest-reply",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_automation_create",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Create Automation Rule",
+      "description": "Cria uma nova regra de automacao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/automation-rules",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Welcome Reply\",\n  \"priority\": 10,\n  \"conditions\": [\n    {\n      \"field\": \"keyword\",\n      \"operator\": \"contains\",\n      \"value\": \"hello\"\n    }\n  ],\n  \"action_type\": \"reply_fixed\",\n  \"response_template\": \"Welcome! Thanks for your comment.\",\n  \"delay_seconds\": 120,\n  \"daily_limit\": 50\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_automation_list",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Automation Rules",
+      "description": "Lista todas as regras de automacao da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/automation-rules",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_automation_update",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Update Automation Rule",
+      "description": "Atualiza uma regra de automacao existente.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/automation-rules/{{ _.automation_rule_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Updated Rule Name\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_automation_delete",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Delete Automation Rule",
+      "description": "Remove uma regra de automacao (soft delete).",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/automation-rules/{{ _.automation_rule_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_automation_executions",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Executions",
+      "description": "Lista execucoes de uma regra de automacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/automation-rules/{{ _.automation_rule_id }}/executions",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_blacklist_list",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Blacklist Words",
+      "description": "Lista palavras da blacklist da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/automation-blacklist",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_blacklist_create",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Create Blacklist Word",
+      "description": "Adiciona uma palavra a blacklist.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/automation-blacklist",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"word\": \"spam\",\n  \"is_regex\": false\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_blacklist_delete",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Delete Blacklist Word",
+      "description": "Remove uma palavra da blacklist.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/automation-blacklist/{{ _.blacklist_word_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_create",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Create Webhook",
+      "description": "Cria um novo webhook endpoint. Retorna o secret na primeira criacao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/webhooks",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"CRM Integration\",\n  \"url\": \"https://httpbin.org/post\",\n  \"events\": [\"comment.created\", \"comment.replied\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_list",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Webhooks",
+      "description": "Lista todos os webhooks da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/webhooks",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_update",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Update Webhook",
+      "description": "Atualiza um webhook existente.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/webhooks/{{ _.webhook_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Updated Webhook Name\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_delete",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Delete Webhook",
+      "description": "Remove um webhook (soft delete).",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/webhooks/{{ _.webhook_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_test",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "Test Webhook",
+      "description": "Envia uma delivery de teste para o webhook.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/webhooks/{{ _.webhook_id }}/test",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_webhook_deliveries",
+      "_type": "request",
+      "parentId": "fld_engagement",
+      "name": "List Webhook Deliveries",
+      "description": "Lista as deliveries de um webhook.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/webhooks/{{ _.webhook_id }}/deliveries",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }

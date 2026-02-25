@@ -67,6 +67,8 @@ arch('value objects are final readonly')
         'App\Domain\Publishing\ValueObjects\ScheduleTime',
         'App\Domain\Publishing\ValueObjects\PublishError',
         'App\Domain\Analytics\ValueObjects\MetricPeriod',
+        'App\Domain\Engagement\ValueObjects\RuleCondition',
+        'App\Domain\Engagement\ValueObjects\WebhookSecret',
     ])
     ->classes()
     ->toBeFinal()
@@ -89,6 +91,9 @@ arch('value object enums are enums')
         'App\Domain\Analytics\ValueObjects\ExportFormat',
         'App\Domain\Analytics\ValueObjects\ReportType',
         'App\Domain\Analytics\ValueObjects\ExportStatus',
+        'App\Domain\Engagement\ValueObjects\Sentiment',
+        'App\Domain\Engagement\ValueObjects\ActionType',
+        'App\Domain\Engagement\ValueObjects\ConditionOperator',
     ])
     ->toBeEnums();
 
@@ -109,6 +114,12 @@ arch('repository interfaces are interfaces')
         'App\Domain\Analytics\Repositories\ContentMetricSnapshotRepositoryInterface',
         'App\Domain\Analytics\Repositories\AccountMetricRepositoryInterface',
         'App\Domain\Analytics\Repositories\ReportExportRepositoryInterface',
+        'App\Domain\Engagement\Repositories\CommentRepositoryInterface',
+        'App\Domain\Engagement\Repositories\AutomationRuleRepositoryInterface',
+        'App\Domain\Engagement\Repositories\AutomationExecutionRepositoryInterface',
+        'App\Domain\Engagement\Repositories\BlacklistWordRepositoryInterface',
+        'App\Domain\Engagement\Repositories\WebhookEndpointRepositoryInterface',
+        'App\Domain\Engagement\Repositories\WebhookDeliveryRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -127,6 +138,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Campaign\Exceptions',
         'App\Domain\Publishing\Exceptions',
         'App\Domain\Analytics\Exceptions',
+        'App\Domain\Engagement\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -140,6 +152,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\Media\Events',
         'App\Domain\Publishing\Events',
         'App\Domain\Analytics\Events',
+        'App\Domain\Engagement\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -402,6 +415,48 @@ arch('analytics providers are final')
 
 arch('analytics resources are final readonly')
     ->expect('App\Infrastructure\Analytics\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+// Engagement
+arch('engagement use cases are final')
+    ->expect('App\Application\Engagement\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('engagement DTOs are final readonly')
+    ->expect('App\Application\Engagement\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('engagement app contracts are interfaces')
+    ->expect('App\Application\Engagement\Contracts')
+    ->toBeInterfaces();
+
+arch('engagement app exceptions extend ApplicationException')
+    ->expect('App\Application\Engagement\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('engagement models are final')
+    ->expect('App\Infrastructure\Engagement\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('engagement controllers are final')
+    ->expect('App\Infrastructure\Engagement\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('engagement providers are final')
+    ->expect('App\Infrastructure\Engagement\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('engagement resources are final readonly')
+    ->expect('App\Infrastructure\Engagement\Resources')
     ->classes()
     ->toBeFinal()
     ->toBeReadonly();

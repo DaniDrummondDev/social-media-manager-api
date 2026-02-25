@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\ContentAI\Providers\ContentAIServiceProvider::class,
         App\Infrastructure\Publishing\Providers\PublishingServiceProvider::class,
         App\Infrastructure\Analytics\Providers\AnalyticsServiceProvider::class,
+        App\Infrastructure\Engagement\Providers\EngagementServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -39,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/ai.php';
                     require __DIR__.'/../routes/api/v1/publishing.php';
                     require __DIR__.'/../routes/api/v1/analytics.php';
+                    require __DIR__.'/../routes/api/v1/engagement.php';
                 });
         },
     )
