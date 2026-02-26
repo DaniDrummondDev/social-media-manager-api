@@ -4,7 +4,7 @@ use App\Infrastructure\Campaign\Controllers\CampaignController;
 use App\Infrastructure\Campaign\Controllers\ContentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     // Campaigns
     Route::post('campaigns', [CampaignController::class, 'store']);
     Route::get('campaigns', [CampaignController::class, 'index']);

@@ -25,6 +25,8 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\Billing\Providers\BillingServiceProvider::class,
         App\Infrastructure\PlatformAdmin\Providers\PlatformAdminServiceProvider::class,
         App\Infrastructure\ClientFinance\Providers\ClientFinanceServiceProvider::class,
+        App\Infrastructure\SocialListening\Providers\SocialListeningServiceProvider::class,
+        App\Infrastructure\AIIntelligence\Providers\AIIntelligenceServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -47,6 +49,8 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/billing.php';
                     require __DIR__.'/../routes/api/v1/admin.php';
                     require __DIR__.'/../routes/api/v1/client-finance.php';
+                    require __DIR__.'/../routes/api/v1/social-listening.php';
+                    require __DIR__.'/../routes/api/v1/ai-intelligence.php';
                 });
         },
     )
@@ -59,6 +63,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.jwt' => Authenticate::class,
             'org.context' => ResolveOrganizationContext::class,
+            'tenant.rls' => \App\Infrastructure\Shared\Http\Middleware\SetTenantContext::class,
             'role' => CheckRole::class,
             'plan.limit' => \App\Infrastructure\Billing\Middleware\CheckPlanLimit::class,
             'admin' => \App\Infrastructure\PlatformAdmin\Middleware\PlatformAdminMiddleware::class,

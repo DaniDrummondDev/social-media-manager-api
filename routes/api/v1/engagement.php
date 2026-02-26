@@ -6,7 +6,7 @@ use App\Infrastructure\Engagement\Controllers\CommentController;
 use App\Infrastructure\Engagement\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     // Comments
     Route::get('comments', [CommentController::class, 'index']);
     Route::put('comments/{id}/read', [CommentController::class, 'markAsRead']);

@@ -93,6 +93,29 @@ final class PrismTextGeneratorService implements TextGeneratorInterface
         return $this->callAI($systemPrompt, $userPrompt, 'full_content');
     }
 
+    /**
+     * @param  string[]  $targetNetworks
+     */
+    public function adaptContent(
+        string $contentId,
+        string $organizationId,
+        string $sourceNetwork,
+        array $targetNetworks,
+        bool $preserveTone,
+    ): TextGenerationResult {
+        // TODO: Implement in Sprint 11.3 — fetch content by ID, build adaptation prompt, call LLM
+        $networks = implode(', ', $targetNetworks);
+        $systemPrompt = "You are a cross-network content adaptation specialist. Adapt content from {$sourceNetwork} to: {$networks}. Respect each platform's character limits, hashtag conventions, and content style.";
+
+        if ($preserveTone) {
+            $systemPrompt .= "\nPreserve the original tone and voice.";
+        }
+
+        $userPrompt = "Adapt content ID {$contentId} from {$sourceNetwork} to the target networks. Return as a JSON object with each target network as a key, containing title, description, hashtags (array), character_count (object with title and description counts), and changes_summary.";
+
+        return $this->callAI($systemPrompt, $userPrompt, 'cross_network_adaptation');
+    }
+
     private function buildSystemPrompt(
         string $type,
         ?string $tone = null,

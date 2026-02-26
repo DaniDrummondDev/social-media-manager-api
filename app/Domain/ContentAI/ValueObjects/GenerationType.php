@@ -10,4 +10,6 @@ enum GenerationType: string
     case Description = 'description';
     case Hashtags = 'hashtags';
     case FullContent = 'full_content';
+    case CrossNetworkAdaptation = 'cross_network_adaptation';
+    case CalendarPlanning = 'calendar_planning';
 }

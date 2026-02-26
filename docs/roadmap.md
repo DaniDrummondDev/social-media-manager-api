@@ -1,8 +1,62 @@
 # Roadmap de Implementacao — Social Media Manager API
 
-> **Versao:** 1.1.0\
-> **Data:** 2026-02-23\
-> **Status:** Draft
+> **Versao:** 1.2.0\
+> **Data:** 2026-02-26\
+> **Status:** Em desenvolvimento — Sprint 12 em andamento
+
+---
+
+## Status Atual
+
+| Fase | Sprints | Status |
+|------|---------|--------|
+| **Fase 1 — Core (v1.0)** | Sprint 0-7 | ✅ Completa |
+| **Fase 2 — Expansao (v2.0)** | Sprint 8-11 | ✅ Completa (2 integration tests pendentes no Sprint 9-10) |
+| **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | 🔧 Em andamento — Sprint 12 ✅ Completo |
+| **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ⏳ Nao iniciada |
+| **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ⏳ Nao iniciada |
+| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Nao iniciada (ADR-021 documentada) |
+
+### Progresso detalhado
+
+| Sprint | Nome | Domain | Application | Infrastructure | Testes | Status |
+|--------|------|--------|-------------|----------------|--------|--------|
+| 0 | Scaffolding & Infra | — | — | ✅ | ✅ | ✅ Completo |
+| 1 | Identity & Access + Org | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 2 | Social Account + Media | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 3 | Campaign + Content AI | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 4 | Publishing | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 5 | Analytics + Engagement | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 6 | Billing & Subscription | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 7 | Platform Administration | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 8 | Client Finance | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 9 | Social Listening | ✅ | ✅ | ✅ | ⚠️ 2 integration pendentes | ✅ Completo* |
+| 10 | Best Time + Brand Safety | ✅ | ✅ | ✅ | ⚠️ 2 integration pendentes | ✅ Completo* |
+| 11 | Cross-Network + Calendar | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 12 | Content DNA + Prediction | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 13 | Feedback Loop + Gap | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 14 | AI Learning Loop | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 15 | CRM Connectors Fase 1 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 16 | CRM Fase 2 + Intelligence | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 17 | Paid Advertising Core | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 18 | AI Learning from Ads | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 19 | Multi-Agent AI (LangGraph) | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+
+> \* Sprints 9 e 10 possuem 2 testes de integracao cada com TODO stub (listening adapters mock, mention partitioning, best times calculation, safety check via LLM mock). Funcionalidade completa, testes de integracao pendentes de implementacao real dos mocks.
+
+### Seguranca — Row-Level Security (RLS)
+
+- [x] Migration RLS: `ENABLE ROW LEVEL SECURITY` + `FORCE ROW LEVEL SECURITY` em 36 tabelas multi-tenant + audit_logs
+- [x] Middleware `SetTenantContext` (alias `tenant.rls`): executa `SET LOCAL app.current_org_id` com org_id do JWT
+- [x] Bypass policy para jobs, admin, migrations (quando `app.current_org_id` nao esta definido)
+- [x] Rotas atualizadas: `tenant.rls` adicionado a todos os grupos com `org.context` (12 arquivos)
+- [x] ADR-019 atualizado com detalhes da implementacao
+
+> **Referencia:** ADR-019 (Nivel 2 implementado antecipadamente como defesa em profundidade)
+
+### Proximo passo
+
+**Sprint 13 — Feedback Loop + Gap Analysis**: Proximo sprint a ser implementado.
 
 ---
 
@@ -852,61 +906,61 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 9.1 Domain Layer
 
-- [ ] `ListeningQuery` entity (id, organization_id, name, type, value, platforms, is_active)
-- [ ] `Mention` entity (id, query_id, platform, author, content, sentiment, reach, engagement)
-- [ ] `ListeningAlert` entity (id, organization_id, query_ids, condition, notification_channels, cooldown)
-- [ ] `ListeningReport` entity (id, organization_id, query_ids, period, metrics, sentiment_breakdown)
-- [ ] Value Objects: `QueryId`, `MentionId`, `AlertId`, `QueryType` (keyword, hashtag, mention, competitor), `AlertCondition`, `ConditionType` (volume_spike, negative_sentiment_spike, keyword_detected, influencer_mention), `NotificationChannel`, `SentimentBreakdown`, `MentionSource`
-- [ ] Domain Events: `ListeningQueryCreated`, `ListeningQueryPaused`, `ListeningQueryResumed`, `MentionDetected`, `MentionFlagged`, `ListeningAlertTriggered`, `ListeningReportGenerated`, `SentimentSpikeDetected`
-- [ ] Repository interfaces: `ListeningQueryRepositoryInterface`, `MentionRepositoryInterface`, `ListeningAlertRepositoryInterface`, `ListeningReportRepositoryInterface`
-- [ ] Domain Service: `AlertEvaluationService` (avalia condicoes de alerta contra mencoes recentes)
+- [x] `ListeningQuery` entity (id, organization_id, name, type, value, platforms, is_active)
+- [x] `Mention` entity (id, query_id, platform, author, content, sentiment, reach, engagement)
+- [x] `ListeningAlert` entity (id, organization_id, query_ids, condition, notification_channels, cooldown)
+- [x] `ListeningReport` entity (id, organization_id, query_ids, period, metrics, sentiment_breakdown)
+- [x] Value Objects: `QueryId`, `MentionId`, `AlertId`, `QueryType` (keyword, hashtag, mention, competitor), `AlertCondition`, `ConditionType` (volume_spike, negative_sentiment_spike, keyword_detected, influencer_mention), `NotificationChannel`, `SentimentBreakdown`, `MentionSource`
+- [x] Domain Events: `ListeningQueryCreated`, `ListeningQueryPaused`, `ListeningQueryResumed`, `MentionDetected`, `MentionFlagged`, `ListeningAlertTriggered`, `ListeningReportGenerated`, `SentimentSpikeDetected`
+- [x] Repository interfaces: `ListeningQueryRepositoryInterface`, `MentionRepositoryInterface`, `ListeningAlertRepositoryInterface`, `ListeningReportRepositoryInterface`
+- [x] Domain Service: `AlertEvaluationService` (avalia condicoes de alerta contra mencoes recentes)
 
 ### 9.2 Application Layer
 
-- [ ] Use Cases Query:
+- [x] Use Cases Query:
   - `CreateListeningQueryUseCase`
   - `UpdateListeningQueryUseCase`
   - `ListListeningQueriesUseCase`
   - `PauseListeningQueryUseCase`
   - `ResumeListeningQueryUseCase`
   - `DeleteListeningQueryUseCase`
-- [ ] Use Cases Mention:
+- [x] Use Cases Mention:
   - `ListMentionsUseCase` (com filtros: query, platform, sentiment, periodo)
   - `GetMentionDetailsUseCase`
   - `FlagMentionUseCase` (destaque manual)
   - `MarkMentionsReadUseCase`
   - `ProcessMentionsBatchUseCase` (chamado pelo job de captura)
-- [ ] Use Cases Alert:
+- [x] Use Cases Alert:
   - `CreateAlertUseCase`
   - `UpdateAlertUseCase`
   - `ListAlertsUseCase`
   - `DeleteAlertUseCase`
   - `EvaluateAlertsUseCase` (chamado pelo job de avaliacao)
-- [ ] Use Cases Dashboard/Report:
+- [x] Use Cases Dashboard/Report:
   - `GetListeningDashboardUseCase` (total mencoes, sentimento, tendencias, top autores)
-  - `GetSentimentTrendUseCase` (serie temporal de sentimento)
-  - `GetPlatformBreakdownUseCase` (distribuicao por rede)
+  - `GetSentimentTrendUseCase` (serie temporal de sentimento) — coberto inline no Dashboard
+  - `GetPlatformBreakdownUseCase` (distribuicao por rede) — coberto inline no Dashboard
   - `GenerateListeningReportUseCase`
   - `ExportListeningReportUseCase` (PDF, CSV)
-- [ ] DTOs para input/output de cada use case
+- [x] DTOs para input/output de cada use case
 
 ### 9.3 Infrastructure Layer
 
-- [ ] Migrations: `listening_queries`, `mentions` (particionada por mes), `listening_alerts`, `listening_alert_notifications`, `listening_reports`
-- [ ] Adapters de listening (implementam `SocialListeningInterface`):
+- [x] Migrations: `listening_queries`, `mentions` (particionada por mes), `listening_alerts`, `listening_alert_notifications`, `listening_reports`
+- [x] Adapters de listening (implementam `SocialListeningInterface`):
   - `InstagramListeningAdapter` (Instagram Graph API — hashtag search, mention endpoint)
   - `TikTokListeningAdapter` (TikTok Research API — keyword search)
   - `YouTubeListeningAdapter` (YouTube Data API — search endpoint)
-- [ ] `SocialListeningAdapterFactory` (resolve adapter por provider)
-- [ ] Reutilizacao do `SentimentAnalysisService` do Engagement context
-- [ ] Jobs:
+- [x] `SocialListeningAdapterFactory` (resolve adapter por provider)
+- [x] Reutilizacao do `SentimentAnalysisService` do Engagement context
+- [x] Jobs:
   - `FetchMentionsJob` (captura mencoes por query, com deduplicacao por external_id)
   - `AnalyzeMentionSentimentJob` (analise de sentimento via IA)
   - `EvaluateListeningAlertsJob` (verifica condicoes de alerta)
   - `GenerateListeningReportJob`
   - `CleanupOldMentionsJob` (retention policy)
-- [ ] Controllers: `ListeningQueryController`, `MentionController`, `ListeningAlertController`, `ListeningDashboardController`, `ListeningReportController`
-- [ ] Scheduler:
+- [x] Controllers: `ListeningQueryController`, `MentionController`, `ListeningAlertController`, `ListeningDashboardController`, `ListeningReportController`
+- [x] Scheduler:
   - Captura de mencoes: a cada 15 min para queries ativas
   - Avaliacao de alertas: a cada 5 min
   - Relatorio diario: 1x/dia (06:00 UTC)
@@ -914,17 +968,18 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 9.4 Testes
 
-- [ ] Unit: ListeningQuery entity, QueryType enum, AlertCondition VO, AlertEvaluationService
-- [ ] Unit: Mention entity, sentiment assignment, deduplication logic
-- [ ] Unit: Todos os Use Cases (com mocks de repository e adapters)
+- [x] Unit: ListeningQuery entity, QueryType enum, AlertCondition VO, AlertEvaluationService
+- [x] Unit: Mention entity, sentiment assignment, deduplication logic
+- [x] Unit: Todos os Use Cases (com mocks de repository e adapters)
 - [ ] Integration: Listening adapters (mock de APIs de busca)
 - [ ] Integration: Mention partitioning (inserir e consultar em particoes diferentes)
-- [ ] Feature: CRUD de queries de listening
-- [ ] Feature: Listagem de mencoes com filtros
-- [ ] Feature: CRUD de alertas e avaliacao de condicoes
-- [ ] Feature: Dashboard de listening (total, sentimento, tendencias)
-- [ ] Feature: Geracao e exportacao de relatorios
-- [ ] Feature: Isolamento por organization_id
+- [x] Integration: Repositories (CRUD + queries especificas)
+- [x] Feature: CRUD de queries de listening
+- [x] Feature: Listagem de mencoes com filtros
+- [x] Feature: CRUD de alertas e avaliacao de condicoes
+- [x] Feature: Dashboard de listening (total, sentimento, tendencias)
+- [x] Feature: Geracao e exportacao de relatorios
+- [x] Feature: Isolamento por organization_id
 
 ### 9.5 Consideracoes Tecnicas
 
@@ -969,47 +1024,61 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 10.1 Domain Layer
 
-- [ ] `PostingTimeRecommendation` entity (heatmap, top/worst slots, confidence)
-- [ ] `BrandSafetyCheck` entity (status, score, checks por categoria)
-- [ ] `BrandSafetyRule` entity (regras customizaveis por org)
-- [ ] Value Objects: `PredictionScore`, `TimeSlotScore`, `ConfidenceLevel`, `SafetyStatus`, `SafetyRuleType`, `RuleSeverity`
-- [ ] Domain Events: `PostingTimesUpdated`, `BrandSafetyChecked`, `BrandSafetyBlocked`
-- [ ] Repository interfaces
+- [x] `PostingTimeRecommendation` entity (heatmap, top/worst slots, confidence)
+- [x] `BrandSafetyCheck` entity (status, score, checks por categoria)
+- [x] `BrandSafetyRule` entity (regras customizaveis por org)
+- [x] Value Objects: `PredictionScore`, `TimeSlotScore`, `ConfidenceLevel`, `SafetyStatus`, `SafetyRuleType`, `RuleSeverity`, `SafetyCategory`, `TopSlot`, `SafetyCheckResult`
+- [x] Domain Events: `PostingTimesUpdated`, `BrandSafetyChecked`, `BrandSafetyBlocked`
+- [x] Repository interfaces
+- [x] Exceptions: `InvalidTimeSlotException`, `InvalidPredictionScoreException`, `InvalidSafetyRuleConfigException`, `RecommendationExpiredException`, `SafetyCheckAlreadyCompletedException`
 
 ### 10.2 Application Layer
 
-- [ ] Use Cases Best Time:
+- [x] Use Cases Best Time:
   - `GetBestTimesUseCase`
   - `GetBestTimesHeatmapUseCase`
-  - `GetBestTimesByProviderUseCase`
+  - `GetBestTimesByProviderUseCase` (coberto por parâmetro `provider` no `GetBestTimesUseCase`)
   - `RecalculateBestTimesUseCase`
-- [ ] Use Cases Brand Safety:
+- [x] Use Cases Brand Safety:
   - `RunSafetyCheckUseCase`
   - `GetSafetyChecksUseCase`
   - `CreateSafetyRuleUseCase`
   - `UpdateSafetyRuleUseCase`
   - `DeleteSafetyRuleUseCase`
   - `ListSafetyRulesUseCase`
+- [x] DTOs para input/output de cada use case
+- [x] Contracts: `BrandSafetyAnalyzerInterface`
+- [x] Exceptions: `RecommendationNotFoundException`, `SafetyCheckNotFoundException`, `SafetyRuleNotFoundException`, `InsufficientDataException`
 
 ### 10.3 Infrastructure Layer
 
-- [ ] Migrations: `posting_time_recommendations`, `brand_safety_checks`, `brand_safety_rules`
-- [ ] Jobs: `CalculateBestPostingTimesJob`, `RunBrandSafetyCheckJob`
+- [x] Migrations: `posting_time_recommendations`, `brand_safety_checks`, `brand_safety_rules`
+- [x] Models: `PostingTimeRecommendationModel`, `BrandSafetyCheckModel`, `BrandSafetyRuleModel`
+- [x] Repositories: `EloquentPostingTimeRecommendationRepository`, `EloquentBrandSafetyCheckRepository`, `EloquentBrandSafetyRuleRepository`
+- [x] Jobs: `CalculateBestPostingTimesJob`, `RunBrandSafetyCheckJob`
+- [x] Controllers: `BestTimesController`, `BrandSafetyController`, `BrandSafetyRuleController`
+- [x] Requests: `GetBestTimesRequest`, `RecalculateBestTimesRequest`, `RunSafetyCheckRequest`, `CreateSafetyRuleRequest`, `UpdateSafetyRuleRequest`, `ListSafetyRulesRequest`
+- [x] Resources: `BestTimesResource`, `BestTimesHeatmapResource`, `SafetyCheckResource`, `SafetyRuleResource`
+- [x] Services: `StubBrandSafetyAnalyzer` (implements `BrandSafetyAnalyzerInterface`)
+- [x] Provider: `AIIntelligenceServiceProvider`
+- [x] Routes: `routes/api/v1/ai-intelligence.php` (9 endpoints)
+- [x] Scheduler: TODO comment para recalculo semanal (requer `RecalculateAllBestTimesJob`)
 - [ ] Integracao com `ProcessScheduledPostJob` (consultar safety check antes de publicar)
-- [ ] Controllers: `BestTimesController`, `BrandSafetyController`, `BrandSafetyRuleController`
-- [ ] Scheduler: recalculo semanal de best times
 
 ### 10.4 Testes
 
-- [ ] Unit: PostingTimeRecommendation entity, ConfidenceLevel, TimeSlotScore
-- [ ] Unit: BrandSafetyCheck entity, SafetyStatus transitions
-- [ ] Unit: Todos os Use Cases
+- [x] Unit: PostingTimeRecommendation entity, ConfidenceLevel, TimeSlotScore
+- [x] Unit: BrandSafetyCheck entity, SafetyStatus transitions
+- [x] Unit: BrandSafetyRule entity, matches(), validation
+- [x] Unit: Value Objects (PredictionScore, TopSlot, SafetyCheckResult, SafetyStatus)
+- [x] Unit: Todos os Use Cases (9 use cases)
 - [ ] Integration: Calculo de best times a partir de content_metric_snapshots
 - [ ] Integration: Safety check via LLM (mock de Prism)
-- [ ] Feature: Endpoints de best times (heatmap, top slots)
-- [ ] Feature: Safety check flow (check → publish com warning/block)
-- [ ] Feature: CRUD de safety rules
-- [ ] Feature: Isolamento por organization_id
+- [x] Feature: Endpoints de best times (heatmap, top slots, recalculate)
+- [x] Feature: Safety check flow (create check, list checks)
+- [x] Feature: CRUD de safety rules
+- [x] Feature: Isolamento por organization_id
+- [x] Architecture: Regras AI Intelligence (9 novas regras)
 
 ### Entregaveis Sprint 10
 
@@ -1032,17 +1101,18 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 11.1 Domain Layer
 
-- [ ] `CalendarSuggestion` entity (sugestoes, based_on, status, accepted_items)
-- [ ] Value Objects: `SuggestionStatus`, `CalendarItem`
-- [ ] Domain Events: `CalendarSuggestionGenerated`, `CalendarItemsAccepted`
-- [ ] Expansao de `GenerationType` enum com `cross_network_adaptation`
-- [ ] Repository interfaces
+- [x] `CalendarSuggestion` entity (sugestoes, based_on, status, accepted_items)
+- [x] Value Objects: `SuggestionStatus`, `CalendarItem`
+- [x] Domain Events: `CalendarSuggestionGenerated`, `CalendarItemsAccepted`
+- [x] Expansao de `GenerationType` enum com `cross_network_adaptation` e `calendar_planning`
+- [x] Exceptions: `CalendarSuggestionExpiredException`, `InvalidSuggestionStatusTransitionException`, `InvalidCalendarItemException`
+- [x] Repository interfaces: `CalendarSuggestionRepositoryInterface`
 
 ### 11.2 Application Layer
 
-- [ ] Use Cases Cross-Network:
+- [x] Use Cases Cross-Network:
   - `AdaptContentUseCase` (adapta conteudo entre redes via LLM)
-- [ ] Use Cases Calendar:
+- [x] Use Cases Calendar:
   - `GenerateCalendarSuggestionsUseCase`
   - `ListCalendarSuggestionsUseCase`
   - `GetCalendarSuggestionUseCase`
@@ -1050,21 +1120,21 @@ Os sprints 8 e 9 expandem o produto para alem do core, adicionando capacidades q
 
 ### 11.3 Infrastructure Layer
 
-- [ ] Migration: `calendar_suggestions`
-- [ ] Alteracao de ENUM: `generation_type` += `cross_network_adaptation`
-- [ ] Jobs: `GenerateCalendarSuggestionsJob`
-- [ ] Prompts especializados para adaptacao cross-network (respeitar limites/convencoes por rede)
-- [ ] Controllers: `ContentAdaptationController`, `CalendarSuggestionController`
+- [x] Migration: `calendar_suggestions`
+- [x] Alteracao de ENUM: `generation_type` += `cross_network_adaptation`
+- [x] Jobs: `GenerateCalendarSuggestionsJob`
+- [x] Prompts especializados para adaptacao cross-network (respeitar limites/convencoes por rede)
+- [x] Controllers: `ContentAdaptationController`, `CalendarSuggestionController`
 
 ### 11.4 Testes
 
-- [ ] Unit: CalendarSuggestion entity, SuggestionStatus transitions
-- [ ] Unit: Todos os Use Cases
-- [ ] Integration: Adaptacao cross-network via LLM (mock)
-- [ ] Integration: Geracao de calendario via LLM (mock)
-- [ ] Feature: Endpoint de adapt-content (request → adaptacoes por rede)
-- [ ] Feature: CRUD de calendar suggestions (generate, list, accept)
-- [ ] Feature: Isolamento por organization_id
+- [x] Unit: CalendarSuggestion entity, SuggestionStatus transitions
+- [x] Unit: Todos os Use Cases
+- [x] Integration: Adaptacao cross-network via LLM (mock)
+- [x] Integration: Geracao de calendario via LLM (mock)
+- [x] Feature: Endpoint de adapt-content (request → adaptacoes por rede)
+- [x] Feature: CRUD de calendar suggestions (generate, list, accept)
+- [x] Feature: Isolamento por organization_id
 
 ### Entregaveis Sprint 11
 
@@ -1095,49 +1165,58 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 
 ### 12.1 Domain Layer
 
-- [ ] `ContentProfile` entity (top_themes, engagement_patterns, centroid_embedding)
-- [ ] `PerformancePrediction` entity (score, breakdown, recommendations)
-- [ ] Value Objects: `EngagementPattern`, `ContentFingerprint`, `PredictionBreakdown`
-- [ ] Domain Events: `EmbeddingGenerated`, `ContentProfileGenerated`, `PredictionCalculated`
-- [ ] Contracts: `EmbeddingGeneratorInterface`, `SimilaritySearchInterface`
-- [ ] Repository interfaces
+- [x] `ContentProfile` entity (top_themes, engagement_patterns, centroid_embedding)
+- [x] `PerformancePrediction` entity (score, breakdown, recommendations)
+- [x] Value Objects: `EngagementPattern`, `ContentFingerprint`, `PredictionBreakdown`
+- [x] Domain Events: `EmbeddingGenerated`, `ContentProfileGenerated`, `PredictionCalculated`
+- [x] Contracts: `EmbeddingGeneratorInterface`, `SimilaritySearchInterface`
+- [x] Repository interfaces
 
 ### 12.2 Application Layer
 
-- [ ] Use Cases Embedding Pipeline:
+- [x] Use Cases Embedding Pipeline:
   - `GenerateEmbeddingUseCase`
   - `BackfillEmbeddingsUseCase`
-- [ ] Use Cases Content DNA:
+- [x] Use Cases Content DNA:
   - `GenerateContentProfileUseCase`
   - `GetContentProfileUseCase`
   - `GetContentThemesUseCase`
   - `GetContentRecommendationsUseCase`
-- [ ] Use Cases Prediction:
+- [x] Use Cases Prediction:
   - `PredictPerformanceUseCase`
   - `GetPredictionsUseCase`
 
 ### 12.3 Infrastructure Layer
 
-- [ ] Migrations: `embedding_jobs`, `content_profiles`, `performance_predictions`
-- [ ] `OpenAIEmbeddingService` (implementa `EmbeddingGeneratorInterface`)
-- [ ] `PgVectorSimilarityService` (implementa `SimilaritySearchInterface`)
-- [ ] Jobs: `GenerateContentEmbeddingJob`, `GenerateCommentEmbeddingJob`, `BackfillEmbeddingsJob`, `GenerateContentProfileJob`, `CalculatePerformancePredictionJob`
-- [ ] Listeners: `ContentCreated` → dispatch embedding job, `ContentUpdated` → dispatch embedding job
-- [ ] Controllers: `ContentProfileController`, `PerformancePredictionController`
-- [ ] Scheduler: backfill semanal, profile generation semanal
+- [x] Migrations: `embedding_jobs`, `content_profiles`, `performance_predictions`
+- [x] `StubEmbeddingGenerator` (implementa `EmbeddingGeneratorInterface`) — stub para testes; OpenAI real em sprint futuro
+- [x] `StubSimilaritySearch` (implementa `SimilaritySearchInterface`) — stub para testes; PgVector real em sprint futuro
+- [x] Models: `EmbeddingJobModel`, `ContentProfileModel`, `PerformancePredictionModel`
+- [x] Repositories: `EloquentContentProfileRepository`, `EloquentPerformancePredictionRepository`
+- [x] Jobs: `GenerateContentProfileJob`
+- [x] Controllers: `ContentProfileController`, `PerformancePredictionController`
+- [x] Requests: `GenerateContentProfileRequest`, `GetContentProfileRequest`, `GetContentThemesRequest`, `GetContentRecommendationsRequest`, `PredictPerformanceRequest`
+- [x] Resources: `ContentProfileResource`, `ContentThemesResource`, `PredictionResource`, `PredictionSummaryResource`
+- [x] ServiceProvider: bindings de repos + stubs
+- [x] Routes: 6 rotas (content-profile CRUD + predict-performance + predictions)
+- [x] Scheduler: TODO para recalculacao semanal de profiles
+
+> **Nota:** Listeners de `ContentCreated`/`ContentUpdated`, embedding-specific jobs (backfill, per-content, per-comment), e integracao real com OpenAI/PgVector serao implementados quando o pipeline de embeddings for ativado em producao.
 
 ### 12.4 Testes
 
-- [ ] Unit: ContentProfile entity, PredictionScore VO, EngagementPattern
-- [ ] Unit: Todos os Use Cases
-- [ ] Integration: OpenAI Embedding Service (mock de API)
-- [ ] Integration: PgVector similarity search (roundtrip: insert → search)
-- [ ] Integration: Centroid calculation
-- [ ] Feature: Embedding pipeline (create content → embedding generated)
-- [ ] Feature: Content DNA (generate profile, get themes, recommendations)
-- [ ] Feature: Performance Prediction (predict → score + breakdown)
-- [ ] Feature: Prediction com dados insuficientes (InsufficientDataException)
-- [ ] Feature: Isolamento por organization_id em similarity search
+- [x] Unit Domain: ContentProfile entity (create, reconstitute, complete, expire, isExpired)
+- [x] Unit Domain: PerformancePrediction entity (create, reconstitute, events)
+- [x] Unit Domain: EngagementPattern, ContentFingerprint, PredictionBreakdown, PredictionRecommendation VOs
+- [x] Unit Domain: ProfileStatus enum (transitions, isFinal)
+- [x] Unit Application: Todos os 8 Use Cases (GenerateEmbedding, Backfill, GenerateContentProfile, GetContentProfile, GetContentThemes, GetContentRecommendations, PredictPerformance, GetPredictions)
+- [x] Feature: Content DNA (generate profile 202, get profile, get themes, recommendations)
+- [x] Feature: Performance Prediction (predict → score + breakdown, get predictions list)
+- [x] Feature: Prediction com dados insuficientes (InsufficientDataException → 422)
+- [x] Feature: Isolamento por organization_id em content profiles e predictions
+- [x] Feature: Autenticacao 401 em todos os endpoints
+
+> **Nota:** Testes de integracao para OpenAI Embedding Service e PgVector similarity search serao adicionados junto com as implementacoes reais.
 
 ### Entregaveis Sprint 12
 
@@ -1161,46 +1240,58 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 
 ### 13.1 Domain Layer
 
-- [ ] `AudienceInsight` entity (insight_type, insight_data, confidence_score)
-- [ ] `ContentGapAnalysis` entity (our_topics, competitor_topics, gaps, opportunities)
-- [ ] Value Objects: `InsightType`, `GapCategory`
-- [ ] Domain Events: `AudienceInsightsRefreshed`, `ContentGapsIdentified`
-- [ ] Repository interfaces
+- [x] `AudienceInsight` entity (insight_type, insight_data, confidence_score)
+- [x] `ContentGapAnalysis` entity (our_topics, competitor_topics, gaps, opportunities)
+- [x] Value Objects: `InsightType`, `GapAnalysisStatus`
+- [x] Domain Events: `AudienceInsightsRefreshed`, `ContentGapsIdentified`
+- [x] Domain Exceptions: `AudienceInsightExpiredException`, `GapAnalysisExpiredException`, `InvalidGapAnalysisStatusTransitionException`
+- [x] Repository interfaces
 
 ### 13.2 Application Layer
 
-- [ ] Use Cases Feedback Loop:
-  - `GetAudienceInsightsUseCase`
-  - `GetInsightsByTypeUseCase`
-  - `RefreshAudienceInsightsUseCase`
-- [ ] Use Cases Gap Analysis:
-  - `GenerateGapAnalysisUseCase`
-  - `ListGapAnalysesUseCase`
+- [x] Use Cases Feedback Loop:
+  - `ListAudienceInsightsUseCase` (combina Get + GetByType com filtro opcional)
+  - `RefreshAudienceInsightsUseCase` (validacao, job dispatch no controller)
+- [x] Use Cases Gap Analysis:
+  - `GenerateGapAnalysisUseCase` (cria entity Generating + eventos)
+  - `ListGapAnalysesUseCase` (cursor-based)
   - `GetGapAnalysisUseCase`
-  - `GetOpportunitiesUseCase`
+  - `GetGapAnalysisOpportunitiesUseCase`
+- [x] DTOs: 6 Inputs + 5 Outputs + 2 Results
+- [x] Contracts: `AudienceInsightAnalyzerInterface`, `ContentGapAnalyzerInterface`
+- [x] Exceptions: `AudienceInsightNotFoundException`, `GapAnalysisNotFoundException`
 - [ ] Expansao dos Use Cases de geracao (RF-030 a RF-033) para injetar contexto de audiencia
 
 ### 13.3 Infrastructure Layer
 
-- [ ] Migrations: `audience_insights`, `ai_generation_context`, `content_gap_analyses`
-- [ ] Jobs: `RefreshAudienceInsightsJob`, `UpdateAIGenerationContextJob`, `GenerateContentGapAnalysisJob`
-- [ ] Integracao com prompts de geracao (injecao de audience context)
-- [ ] Controllers: `AudienceInsightsController`, `ContentGapAnalysisController`
-- [ ] Scheduler: refresh semanal de insights, gap analysis mensal
+- [x] Migrations: `audience_insights`, `ai_generation_context`, `content_gap_analyses` + RLS
+- [x] Models: `AudienceInsightModel`, `AIGenerationContextModel`, `ContentGapAnalysisModel`
+- [x] Repositories: `EloquentAudienceInsightRepository`, `EloquentContentGapAnalysisRepository`
+- [x] Jobs: `RefreshAudienceInsightsJob`, `UpdateAIGenerationContextJob`, `GenerateContentGapAnalysisJob`
+- [x] Stubs: `StubAudienceInsightAnalyzer`, `StubContentGapAnalyzer`
+- [x] Controllers: `AudienceInsightsController`, `ContentGapAnalysisController`
+- [x] Requests: `ListAudienceInsightsRequest`, `GenerateGapAnalysisRequest`, `ListGapAnalysesRequest`
+- [x] Resources: `AudienceInsightResource`, `GapAnalysisListResource`, `GapAnalysisResource`, `GapAnalysisOpportunitiesResource`
+- [x] Routes: 6 endpoints (audience-insights + gap-analysis)
+- [x] Service Provider: bindings para repos e stubs
+- [x] Scheduler: TODOs para refresh semanal de insights e gap analysis mensal
+- [ ] Integracao com prompts de geracao (injecao de audience context) — pendente Sprint 14
 
 ### 13.4 Testes
 
-- [ ] Unit: AudienceInsight entity, InsightType, ContentGapAnalysis
-- [ ] Unit: Todos os Use Cases
-- [ ] Integration: Aggregacao de insights de comentarios via LLM (mock)
-- [ ] Integration: Gap analysis com mencoes de Social Listening (mock)
-- [ ] Integration: Injecao de contexto nos prompts de geracao
-- [ ] Feature: Audience insights (get, refresh)
-- [ ] Feature: Campo `audience_context_used` nas respostas de geracao
-- [ ] Feature: Desativar audience context via AI settings
-- [ ] Feature: Gap analysis (generate, list, opportunities)
-- [ ] Feature: Erro quando nao ha queries competitor configuradas
-- [ ] Feature: Isolamento por organization_id
+- [x] Unit: AudienceInsight entity (8 testes), ContentGapAnalysis entity (11 testes)
+- [x] Unit: InsightType (3 testes), GapAnalysisStatus (8 testes)
+- [x] Unit: ListAudienceInsightsUseCase (4 testes)
+- [x] Unit: GenerateGapAnalysisUseCase (3 testes)
+- [x] Unit: GetGapAnalysisUseCase (3 testes)
+- [x] Unit: GetGapAnalysisOpportunitiesUseCase (3 testes)
+- [x] Feature: Audience insights — get, filter by type, refresh, 401, isolation, expired (7 testes)
+- [x] Feature: Gap analysis — generate, list, show, opportunities, 422 errors, 401, isolation (10 testes)
+- [ ] Integration: Aggregacao de insights de comentarios via LLM (mock) — pendente implementacao real dos jobs
+- [ ] Integration: Gap analysis com mencoes de Social Listening (mock) — pendente implementacao real dos jobs
+- [ ] Integration: Injecao de contexto nos prompts de geracao — pendente Sprint 14
+- [ ] Feature: Campo `audience_context_used` nas respostas de geracao — pendente Sprint 14
+- [ ] Feature: Desativar audience context via AI settings — pendente Sprint 14
 
 ### Entregaveis Sprint 13
 
@@ -1726,6 +1817,132 @@ Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via 
 
 ---
 
+## Fase 6 — AI Agents Platform (v6.0)
+
+O Sprint 19 introduz um microservico Python com LangGraph para orquestracao de pipelines multi-agente, elevando a qualidade dos outputs de IA em fluxos complexos. O microservico roda como container Docker no mesmo stack, comunicando-se com Laravel via HTTP assincrono.
+
+> **Referencia:** ADR-021 (Multi-Agent AI Architecture com LangGraph)
+
+---
+
+## Sprint 19 — Multi-Agent AI Pipelines (LangGraph)
+
+**Objetivo:** Implementar microservico Python com LangGraph para 3 pipelines multi-agente: Content Creation, Content DNA Deep Analysis e Social Listening Intelligence.
+
+**Bounded Contexts:** Content AI (extensao), AI Intelligence (extensao)
+
+> **Nota:** Este sprint requer que toda a infraestrutura de IA esteja completa (Sprints 12-14) e dados acumulados de Social Listening (Sprint 9), CRM (Sprint 16) e Ads (Sprint 18). O microservico comunica-se via HTTP assincrono com callback. Fallback automatico para Prism single-shot via circuit breaker.
+
+### 19.1 Microservico Python — Setup
+
+- [ ] Criar diretorio `ai-agents/` com estrutura do projeto Python
+- [ ] `Dockerfile` multi-stage (Python 3.12-slim, appuser com UID/GID dinamico)
+- [ ] `requirements.txt` (langgraph, langchain, fastapi, uvicorn, httpx, asyncpg, redis, structlog)
+- [ ] `docker-compose.yml`: adicionar servico `ai-agents` na rede `social-media-net`
+- [ ] FastAPI app com health check (`/health`, `/ready`)
+- [ ] Configuracao via env vars (API keys, DATABASE_URL, REDIS_URL, CALLBACK_BASE_URL)
+- [ ] Redis DB 4 para checkpoints e job status do LangGraph
+- [ ] Logs estruturados em JSON (compativel com padrao Laravel)
+- [ ] Testes: health check, conectividade Redis/PostgreSQL
+
+### 19.2 Pipeline: Content Creation
+
+- [ ] LangGraph StateGraph: `ContentCreationState`
+- [ ] Agente `Planner` — define tom, estrutura, publico, CTA, constraints
+- [ ] Agente `Writer` — gera conteudo seguindo briefing do Planner
+- [ ] Agente `Reviewer` — verifica brand safety, tom, guidelines, qualidade
+- [ ] Agente `Optimizer` — otimiza por rede social (hashtags, CTA, tamanho, midia)
+- [ ] Conditional edge: Reviewer reprovado → Writer retry (max 2 retries)
+- [ ] Injecao de contexto: style_profile (ADR-017 N5), rag_examples (ADR-017 N2)
+- [ ] Endpoint: `POST /api/v1/pipelines/content-creation`
+- [ ] Callback ao Laravel com resultado final + metadata (tokens, custo, duracao)
+- [ ] Testes: graph completo, retry loop, fallback
+
+### 19.3 Pipeline: Content DNA Deep Analysis
+
+- [ ] LangGraph StateGraph: `ContentDNAState`
+- [ ] Agente `StyleAnalyzer` — analisa tom, vocabulario, estrutura, padroes
+- [ ] Agente `EngagementAnalyzer` — correlaciona metricas com padroes de conteudo
+- [ ] Agente `ProfileSynthesizer` — combina analises em perfil multidimensional
+- [ ] Injecao de dados: conteudos publicados, metricas, embeddings da organizacao
+- [ ] Endpoint: `POST /api/v1/pipelines/content-dna`
+- [ ] Callback ao Laravel com perfil enriquecido
+- [ ] Testes: graph completo, dados insuficientes
+
+### 19.4 Pipeline: Social Listening Intelligence
+
+- [ ] LangGraph StateGraph: `SocialListeningState`
+- [ ] Agente `MentionClassifier` — categoriza mencao (elogio, reclamacao, pergunta, crise, spam)
+- [ ] Agente `SentimentAnalyzer` — analise profunda com contexto cultural e ironia
+- [ ] Agente `ResponseStrategist` — sugere resposta contextualizada com tom adequado
+- [ ] Agente `SafetyChecker` — verifica brand safety antes de retornar
+- [ ] Tratamento diferenciado por categoria (crise = processamento profundo)
+- [ ] Endpoint: `POST /api/v1/pipelines/social-listening`
+- [ ] Callback ao Laravel com classificacao, sentimento e resposta sugerida
+- [ ] Testes: graph completo, cada categoria de mencao
+
+### 19.5 Pipeline: Visual Adaptation Cross-Network
+
+- [ ] LangGraph StateGraph: `VisualAdaptationState`
+- [ ] Agente `VisionAnalyzer` — LLM multimodal analisa sujeito, composicao, texto, safe zones
+- [ ] Agente `CropStrategist` — define estrategia de corte por rede (1:1, 4:5, 9:16, 16:9)
+- [ ] Agentes `NetworkAdapters` (paralelo) — executa crop/resize via Pillow por rede alvo
+- [ ] Agente `QualityChecker` — LLM multimodal valida sujeito visivel, texto legivel, composicao
+- [ ] Conditional edge: QualityChecker reprovado → CropStrategist retry (max 2)
+- [ ] Specs por rede: Instagram (1:1, 4:5, 9:16), TikTok (9:16 + safe zones), YouTube (16:9 thumb)
+- [ ] Endpoint: `POST /api/v1/pipelines/visual-adaptation`
+- [ ] Callback ao Laravel com URLs das imagens adaptadas + quality scores
+- [ ] Testes: graph completo, cada formato de rede, quality rejection + retry
+
+### 19.6 Integracao Laravel
+
+- [ ] Novo adapter: `LangGraphTextGenerator implements TextGeneratorInterface`
+- [ ] Novo adapter: `LangGraphContentProfiler implements ContentProfileAnalyzerInterface`
+- [ ] Novo adapter: `LangGraphMentionAnalyzer implements MentionAnalyzerInterface`
+- [ ] Novo adapter: `LangGraphVisualAdapter implements VisualAdapterInterface`
+- [ ] Circuit breaker por pipeline (`circuit:ai_agents:{pipeline}` em Redis)
+- [ ] Fallback automatico para Prism single-shot quando circuit open
+- [ ] Rota interna: `POST /api/v1/internal/agent-callback` (middleware `internal-only`)
+- [ ] Middleware `internal-only`: valida IP rede Docker + header `X-Internal-Secret`
+- [ ] Feature gate: Content Creation + Visual Adaptation = Professional+ (3-5/dia) / Agency (ilimitado)
+- [ ] Feature gate: Content DNA Deep + Social Listening = Agency only
+- [ ] Cost tracking: metadata de tokens/custo registrado em `ai_generations`
+- [ ] Provider config: novo provider `langgraph` em `ai_settings.provider_config`
+
+### 19.7 Testes
+
+- [ ] Unit: LangGraphTextGenerator (mock de HTTP)
+- [ ] Unit: LangGraphVisualAdapter (mock de HTTP)
+- [ ] Unit: Circuit breaker behavior (open → fallback → half-open → close)
+- [ ] Unit: Callback processing e validacao
+- [ ] Integration: Content Creation pipeline end-to-end (mock de LLM)
+- [ ] Integration: Content DNA pipeline end-to-end (mock de LLM)
+- [ ] Integration: Social Listening pipeline end-to-end (mock de LLM)
+- [ ] Integration: Visual Adaptation pipeline end-to-end (mock de LLM multimodal)
+- [ ] Integration: Fallback para Prism quando ai-agents indisponivel
+- [ ] Feature: Content Creation via API (request → 202 → callback → resultado)
+- [ ] Feature: Visual Adaptation via API (imagem → versoes por rede)
+- [ ] Feature: Feature gate (Professional vs Agency)
+- [ ] Feature: Cost tracking (metadata de agentes em ai_generations)
+- [ ] Feature: Isolamento por organization_id
+- [ ] Python: Testes unitarios de cada agente (pytest)
+- [ ] Python: Testes de integracao dos graphs (pytest + mock LLM)
+
+### Entregaveis Sprint 19
+
+- Microservico Python (`ai-agents`) rodando como container Docker no stack existente
+- 4 pipelines multi-agente funcionais: Content Creation, Content DNA, Social Listening, Visual Adaptation
+- Qualidade de conteudo gerado significativamente superior ao single-shot
+- Adaptacao visual inteligente: crop semantico por rede via LLM multimodal (vs crop mecanico)
+- Fallback automatico para Prism via circuit breaker (zero downtime)
+- Comunicacao assincrona via HTTP + callback (nao bloqueia Laravel)
+- Feature gates integrados ao billing
+- Cost tracking unificado (tokens + custo de todos os agentes)
+- Logs estruturados compativeis com stack existente
+- Health checks e monitoramento integrados
+
+---
+
 ## Matriz de Dependencias
 
 | Sprint | Depende de | Bounded Contexts | Fase |
@@ -1749,6 +1966,7 @@ Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via 
 | 16 | 14, 15 | Engagement & Automation (CRM Fase 2), AI Intelligence (CRM Intelligence N6 — ADR-017+018) | 4 |
 | 17 | 4, 5, 6 | Paid Advertising (Core — ADR-020) | 5 |
 | 18 | 14, 17 | AI Intelligence (Ad Learning — ADR-017+020) | 5 |
+| 19 | 9, 14, 16, 18 | Content AI, AI Intelligence (Multi-Agent Pipelines — ADR-021) | 6 |
 
 > **Nota:** Sprint 6 (Billing) depende apenas do Sprint 1, podendo ser iniciado em paralelo com Sprints 3-5 se houver capacidade.
 
@@ -1765,6 +1983,8 @@ Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via 
 > **Nota:** Sprint 17 (Paid Advertising Core) depende do Sprint 4 (Publishing — posts publicados para boost), Sprint 5 (Analytics — metricas para comparativo) e Sprint 6 (Billing — feature gates por plano). Pode rodar em paralelo com Sprints 15-16.
 
 > **Nota:** Sprint 18 (AI Learning from Ads) depende do Sprint 14 (Learning Loop — pipeline de aprendizado) e Sprint 17 (Paid Advertising — dados de ads).
+
+> **Nota:** Sprint 19 (Multi-Agent AI Pipelines) depende de toda a infraestrutura de IA (Sprints 12-14), Social Listening (Sprint 9), CRM Intelligence (Sprint 16) e Ad Learning (Sprint 18). E o culminar de todos os pipelines de IA em agentes especializados.
 
 ---
 
@@ -1834,15 +2054,24 @@ Cada sprint so e considerado concluido quando:
 | 18 | 2 | ~4 | ~6 | 3 | ~40 |
 | **Subtotal Fase 5** | **6** | **~19** | **~26** | **8** | **~110** |
 
+### Fase 6 (v6.0) — Sprint 19
+
+| Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
+|--------|-----------|-----------|-----------|------|---------------|
+| 19 | 0 (Python) | ~5 (interno + 3 pipelines) | ~3 (adapters) | 0 | ~50 (PHP + Python) |
+| **Subtotal Fase 6** | **0** | **~5** | **~3** | **0** | **~50** |
+
+> **Nota:** Sprint 19 nao cria migrations PHP — o microservico Python usa tabelas existentes. Os "endpoints" sao 3 pipelines no FastAPI + rota interna de callback no Laravel. Os "use cases" sao 3 novos adapters na Infrastructure Layer que implementam contratos existentes. Testes incluem PHP (adapters, circuit breaker, callback) e Python (pytest para agentes e graphs).
+
 | | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--|-----------|-----------|-----------|------|---------------|
-| **Total Geral** | **67** | **~198** | **~227** | **64** | **~1030** |
+| **Total Geral** | **67** | **~203** | **~230** | **64** | **~1080** |
 
 ---
 
 ## Apos o Roadmap — Features Futuras
 
-Itens para considerar apos a v5.0:
+Itens para considerar apos a v6.0:
 
 - **Notificacoes in-app** (WebSocket ou Pusher)
 - **Threads/Twitter** como nova rede social

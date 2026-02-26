@@ -75,6 +75,11 @@ arch('value objects are final readonly')
         'App\Domain\ClientFinance\ValueObjects\TaxId',
         'App\Domain\ClientFinance\ValueObjects\Address',
         'App\Domain\ClientFinance\ValueObjects\YearMonth',
+        'App\Domain\AIIntelligence\ValueObjects\TimeSlotScore',
+        'App\Domain\AIIntelligence\ValueObjects\TopSlot',
+        'App\Domain\AIIntelligence\ValueObjects\SafetyCheckResult',
+        'App\Domain\AIIntelligence\ValueObjects\PredictionScore',
+        'App\Domain\AIIntelligence\ValueObjects\CalendarItem',
     ])
     ->classes()
     ->toBeFinal()
@@ -113,6 +118,12 @@ arch('value object enums are enums')
         'App\Domain\ClientFinance\ValueObjects\InvoiceStatus',
         'App\Domain\ClientFinance\ValueObjects\PaymentMethod',
         'App\Domain\ClientFinance\ValueObjects\ResourceType',
+        'App\Domain\AIIntelligence\ValueObjects\ConfidenceLevel',
+        'App\Domain\AIIntelligence\ValueObjects\SafetyStatus',
+        'App\Domain\AIIntelligence\ValueObjects\SafetyCategory',
+        'App\Domain\AIIntelligence\ValueObjects\SafetyRuleType',
+        'App\Domain\AIIntelligence\ValueObjects\RuleSeverity',
+        'App\Domain\AIIntelligence\ValueObjects\SuggestionStatus',
     ])
     ->toBeEnums();
 
@@ -152,6 +163,10 @@ arch('repository interfaces are interfaces')
         'App\Domain\ClientFinance\Repositories\ClientContractRepositoryInterface',
         'App\Domain\ClientFinance\Repositories\ClientInvoiceRepositoryInterface',
         'App\Domain\ClientFinance\Repositories\CostAllocationRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\PostingTimeRecommendationRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\BrandSafetyCheckRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\BrandSafetyRuleRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\CalendarSuggestionRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -182,6 +197,8 @@ arch('domain exceptions extend DomainException')
         'App\Domain\Billing\Exceptions',
         'App\Domain\PlatformAdmin\Exceptions',
         'App\Domain\ClientFinance\Exceptions',
+        'App\Domain\SocialListening\Exceptions',
+        'App\Domain\AIIntelligence\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -199,6 +216,8 @@ arch('domain events extend DomainEvent')
         'App\Domain\Billing\Events',
         'App\Domain\PlatformAdmin\Events',
         'App\Domain\ClientFinance\Events',
+        'App\Domain\SocialListening\Events',
+        'App\Domain\AIIntelligence\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -224,6 +243,8 @@ arch('entities are final readonly')
         'App\Domain\Billing\Entities',
         'App\Domain\PlatformAdmin\Entities',
         'App\Domain\ClientFinance\Entities',
+        'App\Domain\SocialListening\Entities',
+        'App\Domain\AIIntelligence\Entities',
     ])
     ->classes()
     ->toBeFinal()
@@ -556,6 +577,8 @@ arch('jobs do not use domain directly')
         'App\Infrastructure\PlatformAdmin\Jobs',
         'App\Infrastructure\ContentAI\Jobs',
         'App\Infrastructure\ClientFinance\Jobs',
+        'App\Infrastructure\SocialListening\Jobs',
+        'App\Infrastructure\AIIntelligence\Jobs',
     ])
     ->not->toUse('App\Domain');
 
@@ -647,5 +670,105 @@ arch('client finance resources are final readonly')
 
 arch('client finance requests are final')
     ->expect('App\Infrastructure\ClientFinance\Requests')
+    ->classes()
+    ->toBeFinal();
+
+// Social Listening
+arch('social listening domain services are final readonly')
+    ->expect('App\Domain\SocialListening\Services')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('social listening use cases are final')
+    ->expect('App\Application\SocialListening\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('social listening DTOs are final readonly')
+    ->expect('App\Application\SocialListening\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('social listening app contracts are interfaces')
+    ->expect('App\Application\SocialListening\Contracts')
+    ->toBeInterfaces();
+
+arch('social listening app exceptions extend ApplicationException')
+    ->expect('App\Application\SocialListening\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('social listening models are final')
+    ->expect('App\Infrastructure\SocialListening\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('social listening controllers are final')
+    ->expect('App\Infrastructure\SocialListening\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('social listening providers are final')
+    ->expect('App\Infrastructure\SocialListening\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('social listening resources are final readonly')
+    ->expect('App\Infrastructure\SocialListening\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('social listening requests are final')
+    ->expect('App\Infrastructure\SocialListening\Requests')
+    ->classes()
+    ->toBeFinal();
+
+// AI Intelligence
+arch('ai intelligence use cases are final')
+    ->expect('App\Application\AIIntelligence\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('ai intelligence DTOs are final readonly')
+    ->expect('App\Application\AIIntelligence\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('ai intelligence app contracts are interfaces')
+    ->expect('App\Application\AIIntelligence\Contracts')
+    ->toBeInterfaces();
+
+arch('ai intelligence app exceptions extend ApplicationException')
+    ->expect('App\Application\AIIntelligence\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('ai intelligence models are final')
+    ->expect('App\Infrastructure\AIIntelligence\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('ai intelligence controllers are final')
+    ->expect('App\Infrastructure\AIIntelligence\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('ai intelligence providers are final')
+    ->expect('App\Infrastructure\AIIntelligence\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('ai intelligence resources are final readonly')
+    ->expect('App\Infrastructure\AIIntelligence\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('ai intelligence requests are final')
+    ->expect('App\Infrastructure\AIIntelligence\Requests')
     ->classes()
     ->toBeFinal();

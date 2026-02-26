@@ -9,7 +9,7 @@ use App\Infrastructure\ClientFinance\Controllers\CostAllocationController;
 use App\Infrastructure\ClientFinance\Controllers\FinancialReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     // Clients — read (all roles)
     Route::get('clients', [ClientController::class, 'index']);
     Route::get('clients/{id}', [ClientController::class, 'show']);

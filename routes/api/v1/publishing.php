@@ -4,7 +4,7 @@ use App\Infrastructure\Publishing\Controllers\PublishingController;
 use App\Infrastructure\Publishing\Controllers\ScheduledPostController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     // Schedule & Publish
     Route::post('contents/{contentId}/schedule', [PublishingController::class, 'schedule']);
     Route::post('contents/{contentId}/publish-now', [PublishingController::class, 'publishNow']);

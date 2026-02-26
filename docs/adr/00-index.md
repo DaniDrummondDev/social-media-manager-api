@@ -52,6 +52,7 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 |---|--------|--------|
 | [ADR-016](adr-016-multi-provider-ai.md) | Arquitetura Multi-Provider AI | Accepted |
 | [ADR-017](adr-017-ai-learning-feedback-loop.md) | AI Learning & Feedback Loop | Accepted |
+| [ADR-021](adr-021-multi-agent-ai-langgraph.md) | Arquitetura Multi-Agent com LangGraph | Accepted |
 
 ### Integrações Externas
 
@@ -66,3 +67,5 @@ durante o desenvolvimento do projeto. Cada ADR segue o formato:
 | ADR-020 | Paid Advertising Strategy — Marketing APIs & Audience Targeting | Planned |
 
 > **Nota:** ADR-020 será criado quando a implementação da Fase 5 (Sprints 17-18) iniciar. Cobrirá: Adapter Pattern para Marketing APIs (Meta Ads, TikTok Ads, Google Ads), estratégia de OAuth separado para contas de anúncios, normalização de targeting spec cross-platform, tratamento de billing/transferência monetária, e integração com o AI Learning Loop (ADR-017) para aprendizado a partir de dados de tráfego pago.
+
+> **Nota:** ADR-021 documenta a arquitetura Multi-Agent com LangGraph (microserviço Python), planejada para o Sprint 19 (Fase 6). Complementa ADR-016 e ADR-017 com pipelines multi-agente para Content Creation, Content DNA e Social Listening.

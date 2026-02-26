@@ -6,8 +6,10 @@ namespace App\Infrastructure\Shared\Providers;
 
 use App\Application\Shared\Contracts\EventDispatcherInterface;
 use App\Application\Shared\Contracts\HashServiceInterface;
+use App\Application\Shared\Contracts\SentimentAnalyzerInterface;
 use App\Infrastructure\Shared\Services\LaravelEventDispatcher;
 use App\Infrastructure\Shared\Services\Sha256HashService;
+use App\Infrastructure\Shared\Services\StubSentimentAnalyzer;
 use Illuminate\Support\ServiceProvider;
 
 final class SharedServiceProvider extends ServiceProvider
@@ -16,5 +18,6 @@ final class SharedServiceProvider extends ServiceProvider
     {
         $this->app->bind(EventDispatcherInterface::class, LaravelEventDispatcher::class);
         $this->app->bind(HashServiceInterface::class, Sha256HashService::class);
+        $this->app->bind(SentimentAnalyzerInterface::class, StubSentimentAnalyzer::class);
     }
 }

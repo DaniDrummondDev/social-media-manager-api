@@ -12,7 +12,7 @@ Route::get('plans', [PlanController::class, 'index']);
 Route::post('webhooks/stripe', [StripeWebhookController::class, 'handle']);
 
 // Authenticated billing routes
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     Route::get('billing/subscription', [BillingController::class, 'subscription']);
     Route::get('billing/usage', [BillingController::class, 'usage']);
     Route::get('billing/invoices', [BillingController::class, 'invoices']);

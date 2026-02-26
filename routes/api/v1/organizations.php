@@ -16,7 +16,7 @@ Route::middleware('auth.jwt')->group(function () {
     Route::post('organizations/switch', [OrganizationController::class, 'switchOrganization']);
 
     // Routes requiring organization context
-    Route::middleware('org.context')->group(function () {
+    Route::middleware(['org.context', 'tenant.rls'])->group(function () {
         Route::put('organizations/{id}', [OrganizationController::class, 'update']);
         Route::get('organizations/{organizationId}/members', [MemberController::class, 'list']);
         Route::post('organizations/{organizationId}/members/invite', [MemberController::class, 'invite']);

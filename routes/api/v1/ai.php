@@ -1,9 +1,10 @@
 <?php
 
 use App\Infrastructure\ContentAI\Controllers\AIController;
+use App\Infrastructure\ContentAI\Controllers\ContentAdaptationController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->prefix('ai')->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->prefix('ai')->group(function () {
     Route::post('generate-title', [AIController::class, 'generateTitle']);
     Route::post('generate-description', [AIController::class, 'generateDescription']);
     Route::post('generate-hashtags', [AIController::class, 'generateHashtags']);
@@ -11,4 +12,5 @@ Route::middleware(['auth.jwt', 'org.context'])->prefix('ai')->group(function () 
     Route::get('settings', [AIController::class, 'getSettings']);
     Route::put('settings', [AIController::class, 'updateSettings']);
     Route::get('history', [AIController::class, 'history']);
+    Route::post('adapt-content', [ContentAdaptationController::class, 'adaptContent']);
 });

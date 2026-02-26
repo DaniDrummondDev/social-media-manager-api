@@ -3,7 +3,7 @@
 use App\Infrastructure\Analytics\Controllers\AnalyticsController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     // Overview
     Route::get('analytics/overview', [AnalyticsController::class, 'overview']);
 

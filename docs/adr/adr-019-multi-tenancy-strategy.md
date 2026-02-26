@@ -119,27 +119,38 @@ Já documentado e planejado:
 | Busca semântica (pgvector) | < 50ms | IVFFlat index + filtro por org |
 | Posts pendentes para dispatch | < 1ms | Índice parcial (status = pending) |
 
-### Nível 2 — Reforço (quando atingir ~50K-200K organizations)
+### Nível 2 — Reforço (implementado antecipadamente como defesa em profundidade)
 
-| Técnica | Benefício | Implementação |
-|---------|-----------|---------------|
-| **Row-Level Security (RLS)** | Isolamento enforcement no banco, não só na aplicação | Políticas `USING (organization_id = current_setting('app.current_org_id')::uuid)` |
-| Particionamento adicional | Reduz scan em tabelas que ultrapassaram trigger de volume | comments, audit_logs, automation_executions, webhook_deliveries |
-| Materialized views para agregações | Dashboard admin rápido | platform_metrics_cache (já planejado) |
-| Connection pooling agressivo | Mais tenants concorrentes | PgBouncer max_client_conn aumentado |
+> **Status:** Implementado em 2026-02-26. Antecipado do trigger de 50K orgs para garantir isolamento de dados desde o início.
 
-**Row-Level Security (exemplo):**
+| Técnica | Benefício | Status |
+|---------|-----------|--------|
+| **Row-Level Security (RLS)** | Isolamento enforcement no banco, não só na aplicação | ✅ Implementado — 36 tabelas com policies |
+| Particionamento adicional | Reduz scan em tabelas que ultrapassaram trigger de volume | Pendente (trigger: volume) |
+| Materialized views para agregações | Dashboard admin rápido | Pendente (platform_metrics_cache) |
+| Connection pooling agressivo | Mais tenants concorrentes | Pendente (trigger: conexões) |
+
+**Implementação RLS:**
+
+- **Migration:** `0001_01_01_000057_enable_row_level_security.php`
+- **Middleware:** `SetTenantContext` (alias `tenant.rls`) — executa `SET LOCAL app.current_org_id = ?` com org_id do JWT
+- **Policies por tabela:** 2 policies cada — `tenant_isolation` (filtra por org) + `bypass_rls` (permite acesso quando contexto não definido)
+- **Bypass:** Rotas admin, jobs em background, migrations e artisan commands não setam `app.current_org_id` — a policy `bypass_rls` permite acesso livre quando a variável é NULL
+- **Caso especial:** `audit_logs` tem `organization_id` nullable — policy aceita NULL ou match com contexto
+- **SQLite:** Migration é no-op em SQLite (testes); middleware ignora quando driver não é `pgsql`
 
 ```sql
--- Ativar RLS em tabelas de negócio
-ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
+-- Aplicado em 36 tabelas multi-tenant:
+ALTER TABLE {table} ENABLE ROW LEVEL SECURITY;
+ALTER TABLE {table} FORCE ROW LEVEL SECURITY;
 
--- Política: só vê dados da própria organização
-CREATE POLICY tenant_isolation ON campaigns
-    USING (organization_id = current_setting('app.current_org_id')::uuid);
+CREATE POLICY tenant_isolation ON {table}
+    USING (organization_id = current_setting('app.current_org_id', true)::uuid)
+    WITH CHECK (organization_id = current_setting('app.current_org_id', true)::uuid);
 
--- No middleware Laravel (antes de cada request):
--- SET LOCAL app.current_org_id = '<org-id-do-jwt>';
+CREATE POLICY bypass_rls ON {table}
+    USING (current_setting('app.current_org_id', true) IS NULL)
+    WITH CHECK (current_setting('app.current_org_id', true) IS NULL);
 ```
 
 RLS funciona como **segunda camada de defesa** — mesmo que a Application Layer tenha um bug e esqueça o filtro `organization_id`, o PostgreSQL bloqueia o acesso. Não substitui o filtro na aplicação, complementa.

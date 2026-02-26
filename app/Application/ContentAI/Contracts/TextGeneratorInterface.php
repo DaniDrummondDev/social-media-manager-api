@@ -22,4 +22,9 @@ interface TextGeneratorInterface
      * @param  string[]  $keywords
      */
     public function generateFullContent(string $topic, array $socialNetworks, ?string $tone = null, array $keywords = [], ?string $language = null): TextGenerationResult;
+
+    /**
+     * @param  string[]  $targetNetworks
+     */
+    public function adaptContent(string $contentId, string $organizationId, string $sourceNetwork, array $targetNetworks, bool $preserveTone): TextGenerationResult;
 }

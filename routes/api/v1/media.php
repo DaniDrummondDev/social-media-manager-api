@@ -4,7 +4,7 @@ use App\Infrastructure\Media\Controllers\MediaController;
 use App\Infrastructure\Media\Controllers\MediaUploadController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
     Route::post('media', [MediaController::class, 'upload']);
     Route::get('media', [MediaController::class, 'list']);
     Route::delete('media/{id}', [MediaController::class, 'delete']);

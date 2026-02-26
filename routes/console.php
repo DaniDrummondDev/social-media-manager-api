@@ -50,3 +50,31 @@ Schedule::job(new \App\Infrastructure\ClientFinance\Jobs\GenerateMonthlyInvoices
 
 // Send invoice reminders — daily at 08:00
 Schedule::job(new \App\Infrastructure\ClientFinance\Jobs\SendInvoiceReminderJob)->dailyAt('08:00');
+
+// Fetch mentions from social networks — every 15 minutes
+Schedule::job(new \App\Infrastructure\SocialListening\Jobs\FetchMentionsJob)->everyFifteenMinutes();
+
+// Evaluate listening alerts — every 5 minutes
+Schedule::job(new \App\Infrastructure\SocialListening\Jobs\EvaluateListeningAlertsJob)->everyFiveMinutes();
+
+// Dispatch daily listening reports — daily at 06:00 UTC
+Schedule::job(new \App\Infrastructure\SocialListening\Jobs\DispatchDailyListeningReportsJob)->dailyAt('06:00');
+
+// Cleanup old mentions — daily at 07:00
+Schedule::job(new \App\Infrastructure\SocialListening\Jobs\CleanupOldMentionsJob)->dailyAt('07:00');
+
+// AI Intelligence: Weekly recalculation of best posting times
+// TODO: Implement RecalculateAllBestTimesJob that iterates organizations and dispatches
+// CalculateBestPostingTimesJob for each. Schedule weekly on Mondays at 04:00 UTC.
+
+// AI Intelligence: Weekly content profile recalculation
+// TODO: Implement RecalculateContentProfilesJob that iterates organizations and dispatches
+// GenerateContentProfileJob for each. Schedule weekly on Tuesdays at 04:00 UTC.
+
+// AI Intelligence: Weekly audience insights refresh
+// TODO: Implement RefreshAllAudienceInsightsJob that iterates organizations and dispatches
+// RefreshAudienceInsightsJob for each. Schedule weekly on Wednesdays at 05:00 UTC.
+
+// AI Intelligence: Monthly content gap analysis
+// TODO: Implement GenerateAllContentGapAnalysesJob that iterates organizations with competitor
+// queries and dispatches GenerateContentGapAnalysisJob for each. Schedule monthly on 15th at 05:00 UTC.
