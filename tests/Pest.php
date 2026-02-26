@@ -25,3 +25,4 @@ uses(RefreshDatabase::class)->in('Integration', 'Feature');
 */
 
 require __DIR__.'/Feature/PlatformAdmin/Helpers.php';
+require __DIR__.'/Unit/Application/Engagement/Helpers.php';

@@ -51,6 +51,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/client-finance.php';
                     require __DIR__.'/../routes/api/v1/social-listening.php';
                     require __DIR__.'/../routes/api/v1/ai-intelligence.php';
+                    require __DIR__.'/../routes/api/v1/crm.php';
                 });
         },
     )

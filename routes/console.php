@@ -63,6 +63,12 @@ Schedule::job(new \App\Infrastructure\SocialListening\Jobs\DispatchDailyListenin
 // Cleanup old mentions — daily at 07:00
 Schedule::job(new \App\Infrastructure\SocialListening\Jobs\CleanupOldMentionsJob)->dailyAt('07:00');
 
+// Recalculate prompt performance scores — weekly on Sundays at 03:00
+Schedule::job(new \App\Infrastructure\ContentAI\Jobs\CalculatePromptPerformanceJob)->weeklyOn(0, '03:00');
+
+// Cleanup expired learning data (style profiles, old validations) — weekly on Sundays at 04:00
+Schedule::job(new \App\Infrastructure\AIIntelligence\Jobs\CleanupExpiredLearningDataJob)->weeklyOn(0, '04:00');
+
 // AI Intelligence: Weekly recalculation of best posting times
 // TODO: Implement RecalculateAllBestTimesJob that iterates organizations and dispatches
 // CalculateBestPostingTimesJob for each. Schedule weekly on Mondays at 04:00 UTC.

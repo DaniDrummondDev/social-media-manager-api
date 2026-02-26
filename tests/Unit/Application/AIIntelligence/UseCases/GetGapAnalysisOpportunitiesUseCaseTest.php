@@ -10,7 +10,6 @@ use App\Domain\AIIntelligence\Entities\ContentGapAnalysis;
 use App\Domain\AIIntelligence\Repositories\ContentGapAnalysisRepositoryInterface;
 use App\Domain\AIIntelligence\ValueObjects\GapAnalysisStatus;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DateTimeImmutable;
 
 beforeEach(function () {
     $this->gapAnalysisRepository = Mockery::mock(ContentGapAnalysisRepositoryInterface::class);

@@ -6,7 +6,6 @@ use App\Domain\AIIntelligence\Entities\AudienceInsight;
 use App\Domain\AIIntelligence\Events\AudienceInsightsRefreshed;
 use App\Domain\AIIntelligence\ValueObjects\InsightType;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DateTimeImmutable;
 
 function createAudienceInsight(array $overrides = []): AudienceInsight
 {

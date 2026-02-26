@@ -8,7 +8,6 @@ use App\Domain\AIIntelligence\Exceptions\GapAnalysisExpiredException;
 use App\Domain\AIIntelligence\Exceptions\InvalidGapAnalysisStatusTransitionException;
 use App\Domain\AIIntelligence\ValueObjects\GapAnalysisStatus;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DateTimeImmutable;
 
 function createGapAnalysis(array $overrides = []): ContentGapAnalysis
 {

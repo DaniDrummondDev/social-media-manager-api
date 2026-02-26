@@ -2,7 +2,7 @@
 
 > **Versao:** 1.2.0\
 > **Data:** 2026-02-26\
-> **Status:** Em desenvolvimento — Sprint 12 em andamento
+> **Status:** Em desenvolvimento — Fase 4 em progresso, Sprint 15.4 completo
 
 ---
 
@@ -12,8 +12,8 @@
 |------|---------|--------|
 | **Fase 1 — Core (v1.0)** | Sprint 0-7 | ✅ Completa |
 | **Fase 2 — Expansao (v2.0)** | Sprint 8-11 | ✅ Completa (2 integration tests pendentes no Sprint 9-10) |
-| **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | 🔧 Em andamento — Sprint 12 ✅ Completo |
-| **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ⏳ Nao iniciada |
+| **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
+| **Fase 4 — CRM (v4.0)** | Sprint 15-16 | 🔄 Em progresso |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ⏳ Nao iniciada |
 | **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Nao iniciada (ADR-021 documentada) |
 
@@ -34,9 +34,9 @@
 | 10 | Best Time + Brand Safety | ✅ | ✅ | ✅ | ⚠️ 2 integration pendentes | ✅ Completo* |
 | 11 | Cross-Network + Calendar | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 12 | Content DNA + Prediction | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
-| 13 | Feedback Loop + Gap | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
-| 14 | AI Learning Loop | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
-| 15 | CRM Connectors Fase 1 | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 13 | Feedback Loop + Gap | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 14 | AI Learning Loop | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 15 | CRM Connectors Fase 1 | ✅ | ✅ | ⏳ | ⏳ | 🔄 Em progresso |
 | 16 | CRM Fase 2 + Intelligence | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 17 | Paid Advertising Core | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 18 | AI Learning from Ads | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
@@ -56,7 +56,7 @@
 
 ### Proximo passo
 
-**Sprint 13 — Feedback Loop + Gap Analysis**: Proximo sprint a ser implementado.
+**Sprint 15.3 — CRM Infrastructure Layer**: Proximo passo (migrations, models, repos, connectors, jobs, controllers, routes, listeners).
 
 ---
 
@@ -1315,43 +1315,50 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
 
 ### 14.1 Domain Layer
 
-- [ ] `GenerationFeedback` entity (action, original_output, edited_output, diff_summary)
-- [ ] `PromptTemplate` aggregate root (system_prompt, user_prompt_template, performance_score, counters)
-- [ ] `PromptExperiment` entity (A/B test entre 2 templates, z-test, confidence_level)
-- [ ] `PredictionValidation` entity (predicted_score vs actual_normalized_score, accuracy)
-- [ ] `OrgStyleProfile` aggregate root (tone, length, vocabulary, structure, hashtag preferences)
-- [ ] Value Objects: `FeedbackAction`, `DiffSummary`, `PerformanceScore`, `StylePreferences`, `PredictionAccuracy`
-- [ ] Domain Events: `GenerationFeedbackRecorded`, `GenerationEdited`, `PromptTemplateCreated`, `PromptPerformanceCalculated`, `PromptExperimentStarted`, `PromptExperimentCompleted`, `PredictionValidated`, `OrgStyleProfileGenerated`, `LearningContextUpdated`
-- [ ] Contracts: `PromptTemplateResolverInterface`, `RAGContextProviderInterface`, `StyleProfileAnalyzerInterface`, `PredictionValidatorInterface`
-- [ ] Repository interfaces
+- [x] `GenerationFeedback` entity (action, original_output, edited_output, diff_summary)
+- [x] `PromptTemplate` aggregate root (system_prompt, user_prompt_template, performance_score, counters)
+- [x] `PromptExperiment` entity (A/B test entre 2 templates, z-test, confidence_level)
+- [x] `PredictionValidation` entity (predicted_score vs actual_normalized_score, accuracy)
+- [x] `OrgStyleProfile` aggregate root (tone, length, vocabulary, structure, hashtag preferences)
+- [x] Value Objects: `FeedbackAction`, `DiffSummary`, `PerformanceScore`, `ExperimentStatus`, `StylePreferences`, `PredictionAccuracy`
+- [x] Domain Events: `GenerationFeedbackRecorded`, `GenerationEdited`, `PromptTemplateCreated`, `PromptPerformanceCalculated`, `PromptExperimentStarted`, `PromptExperimentCompleted`, `PredictionValidated`, `OrgStyleProfileGenerated`, `LearningContextUpdated`
+- [ ] Contracts: `PromptTemplateResolverInterface`, `RAGContextProviderInterface`, `StyleProfileAnalyzerInterface`, `PredictionValidatorInterface` — movidos para 14.2 (Application Layer contracts)
+- [x] Repository interfaces (5: GenerationFeedback, PromptTemplate, PromptExperiment, PredictionValidation, OrgStyleProfile)
+- [x] Domain exceptions: `InvalidExperimentStatusTransitionException`, `InvalidFeedbackException`, `PredictionNotYetPublishedException`, `OrgStyleProfileExpiredException`, `InsufficientEditDataException`
 
 ### 14.2 Application Layer
 
-- [ ] Use Cases Feedback (Nivel 1):
+- [x] Use Cases Feedback (Nivel 1):
   - `RecordGenerationFeedbackUseCase`
-- [ ] Use Cases RAG (Nivel 2):
+- [x] Use Cases RAG (Nivel 2):
   - `RetrieveSimilarContentUseCase`
-- [ ] Use Cases Prompt Optimization (Nivel 3):
+- [x] Use Cases Prompt Optimization (Nivel 3):
   - `ResolvePromptTemplateUseCase`
   - `CreatePromptTemplateUseCase`
   - `CreatePromptExperimentUseCase`
   - `EvaluateExperimentUseCase`
   - `CalculatePromptPerformanceUseCase`
-- [ ] Use Cases Prediction Accuracy (Nivel 4):
+- [x] Use Cases Prediction Accuracy (Nivel 4):
   - `ValidatePredictionUseCase`
   - `GetPredictionAccuracyUseCase`
-- [ ] Use Cases Style Learning (Nivel 5):
+- [x] Use Cases Style Learning (Nivel 5):
   - `GenerateStyleProfileUseCase`
   - `UpdateLearningContextUseCase`
-- [ ] Expansao dos Use Cases de geracao (Sprint 3) para integrar RAG + style + template resolution
-- [ ] DTOs para input/output de cada use case
+- [ ] Expansao dos Use Cases de geracao (Sprint 3) para integrar RAG + style + template resolution — adiado para 14.3 (requer implementacao das contracts na Infrastructure)
+- [x] DTOs para input/output de cada use case (21 DTOs: 11 inputs, 7 outputs, 3 results internos)
+- [x] Contracts: `PromptTemplateResolverInterface`, `RAGContextProviderInterface`, `StyleProfileAnalyzerInterface`, `PredictionValidatorInterface`
 
 ### 14.3 Infrastructure Layer
 
-- [ ] Migrations: `generation_feedback`, `prompt_templates`, `prompt_experiments`, `prediction_validations`, `org_style_profiles`
-- [ ] ALTER TABLE `ai_generations`: add `prompt_template_id`, `experiment_id`, `rag_context_used`, `style_context_used`
-- [ ] Seeds: prompt templates globais default por generation_type
-- [ ] Jobs:
+- [x] Migrations: `generation_feedback`, `prompt_templates`, `prompt_experiments`, `prediction_validations`, `org_style_profiles`
+- [x] ALTER TABLE `ai_generations`: add `prompt_template_id`, `experiment_id`, `rag_context_used`, `style_context_used`
+- [ ] Seeds: prompt templates globais default por generation_type — adiado para 14.4 (depende de feature tests)
+- [x] Eloquent Models: `GenerationFeedbackModel`, `PromptTemplateModel`, `PromptExperimentModel`, `PredictionValidationModel`, `OrgStyleProfileModel`
+- [x] Repository Implementations: Eloquent repos para os 5 novos aggregates
+- [x] Service Stubs: `StubPromptTemplateResolver`, `StubRAGContextProvider`, `StubStyleProfileAnalyzer`, `StubPredictionValidator`
+- [x] Resources: `GenerationFeedbackResource`, `PromptTemplateResource`, `PromptExperimentResource`, `PredictionValidationResource`, `PredictionAccuracyResource`, `StyleProfileResource`
+- [x] Form Requests: `RecordGenerationFeedbackRequest`, `CreatePromptTemplateRequest`, `CreatePromptExperimentRequest`, `ValidatePredictionRequest`, `GenerateStyleProfileRequest`
+- [x] Jobs:
   - `TrackGenerationFeedbackJob` (N1 — a cada feedback)
   - `CalculateDiffSummaryJob` (N1 — a cada edicao)
   - `RetrieveSimilarContentJob` (N2 — pre-geracao)
@@ -1361,30 +1368,33 @@ Os sprints 12, 13 e 14 implementam as features mais avancadas de IA, dependentes
   - `GenerateOrgStyleProfileJob` (N5 — semanal, min 10 edits)
   - `UpdateLearningContextJob` (N2+N5 — pos-atualizacao)
   - `CleanupExpiredLearningDataJob` (todos — semanal)
-- [ ] Async Listeners: `PostPublished` → schedule validation, `MetricsSynced` → validate prediction, `PromptExperimentCompleted` → activate winner, `OrgStyleProfileGenerated` → update context
-- [ ] Controllers: `GenerationFeedbackController`, `PromptTemplateController`, `PromptExperimentController`, `PredictionAccuracyController`, `StyleProfileController`
-- [ ] Scheduler: performance recalc semanal, style profile semanal, cleanup semanal
+- [ ] Async Listeners: `PostPublished` → schedule validation, `MetricsSynced` → validate prediction, `PromptExperimentCompleted` → activate winner, `OrgStyleProfileGenerated` → update context — adiado para 14.4 (requer feature tests para validar integração)
+- [x] Controllers: `GenerationFeedbackController`, `PromptTemplateController`, `PromptExperimentController`, `PredictionAccuracyController`, `StyleProfileController`
+- [x] Scheduler: performance recalc semanal, cleanup semanal
+- [x] Service Providers: `ContentAIServiceProvider`, `AIIntelligenceServiceProvider` atualizados com novos bindings
+- [x] Routes: endpoints em `ai.php` (feedback, templates, experiments) e `ai-intelligence.php` (prediction validation, accuracy, style profile)
 
 ### 14.4 Testes
 
-- [ ] Unit: GenerationFeedback entity, FeedbackAction VO, DiffSummary VO, PerformanceScore VO
-- [ ] Unit: PromptTemplate entity, version immutability, performance_score calculation
-- [ ] Unit: PromptExperiment entity, z-test, confidence threshold, status transitions
-- [ ] Unit: PredictionValidation entity, accuracy calculation, normalization
-- [ ] Unit: OrgStyleProfile entity, confidence levels, TTL
-- [ ] Unit: Todos os Use Cases (com mocks de repository)
-- [ ] Integration: RAG via pgvector (cosine similarity + engagement filter)
-- [ ] Integration: Style profile generation via LLM (mock de Prism)
-- [ ] Integration: Diff calculation (Levenshtein)
-- [ ] Feature: Feedback endpoint (accept/edit/reject)
-- [ ] Feature: CRUD prompt templates (custom + system)
-- [ ] Feature: A/B experiment lifecycle (create → run → complete)
-- [ ] Feature: Prediction accuracy (validate → get metrics)
-- [ ] Feature: Style learning (generate profile → inject in prompt)
-- [ ] Feature: Geracao enriquecida (template + RAG + style + audience context)
-- [ ] Feature: Feature gates por plano (RAG: Creator+, Style: Professional+, A/B: Agency)
-- [ ] Feature: Graceful degradation (cada nivel falha silenciosamente)
-- [ ] Feature: Isolamento por organization_id em todos os niveis
+- [x] Refatoracao: `CalculateDiffSummaryJob` → `CalculateDiffSummaryUseCase` + DTO (arch violation fix)
+- [x] Arch tests: regras ContentAI + AIIntelligence faltantes adicionadas (129 arch tests)
+- [x] Unit: FeedbackAction VO (4 testes), DiffSummary VO (10 testes), ExperimentStatus VO (5 testes), PerformanceScore VO (10 testes)
+- [x] Unit: PredictionAccuracy VO (10 testes), StylePreferences VO (4 testes)
+- [x] Unit: GenerationFeedback entity (8 testes), PromptTemplate entity (11 testes), PromptExperiment entity (16 testes)
+- [x] Unit: PredictionValidation entity (6 testes), OrgStyleProfile entity (11 testes)
+- [x] Unit: 12 Use Cases com mocks de repository (31 testes)
+- [x] Feature: Feedback endpoint accept/edit/reject (5 testes)
+- [x] Feature: Prompt templates CRUD (3 testes)
+- [x] Feature: A/B experiment lifecycle create + evaluate (4 testes)
+- [x] Feature: Prediction validation + accuracy (4 testes)
+- [x] Feature: Style profile generation (3 testes)
+- [ ] Integration: RAG via pgvector (cosine similarity + engagement filter) — adiado para sprint dedicado
+- [ ] Integration: Style profile generation via LLM (mock de Prism) — adiado para sprint dedicado
+- [ ] Integration: Diff calculation (Levenshtein) — adiado para sprint dedicado
+- [ ] Feature: Geracao enriquecida (template + RAG + style + audience context) — adiado (requer expansao use cases)
+- [ ] Feature: Feature gates por plano (RAG: Creator+, Style: Professional+, A/B: Agency) — adiado para Sprint 15+
+- [ ] Feature: Graceful degradation (cada nivel falha silenciosamente) — adiado para Sprint 15+
+- [ ] Feature: Isolamento por organization_id em todos os niveis — coberto parcialmente nos feature tests
 
 ### Entregaveis Sprint 14
 
@@ -1414,99 +1424,102 @@ Os sprints 15 e 16 implementam conectores nativos com os CRMs mais populares do 
 
 > **Nota:** Este sprint implementa a infraestrutura de CRM connectors (interface, factory, tabelas, jobs) que sera reutilizada pelo Sprint 16.
 
-### 15.1 Domain Layer
+### 15.1 Domain Layer ✅
 
-- [ ] `CrmProvider` enum (hubspot, rdstation, pipedrive, salesforce, activecampaign)
-- [ ] `CrmConnection` entity (provider, tokens, status, settings)
-- [ ] `CrmFieldMapping` value object (smm_field, crm_field, transform)
-- [ ] `CrmSyncResult` value object (direction, entity_type, action, status)
-- [ ] Domain Events: `CrmConnected`, `CrmDisconnected`, `CrmContactSynced`, `CrmDealCreated`, `CrmActivityLogged`, `CrmSyncFailed`, `CrmTokenExpired`, `CrmFieldMappingUpdated`
-- [ ] Contracts: `CrmConnectorInterface` (authenticate, createContact, createDeal, logActivity, searchContacts, etc.)
-- [ ] Repository interfaces: `CrmConnectionRepositoryInterface`, `CrmFieldMappingRepositoryInterface`, `CrmSyncLogRepositoryInterface`
+- [x] `CrmProvider` enum (hubspot, rdstation, pipedrive, salesforce, activecampaign) + `label()`, `supportsDeals()`, `supportsActivities()`
+- [x] `CrmConnectionStatus` enum (connected, token_expired, revoked, error) + state machine `canTransitionTo()`
+- [x] `CrmSyncDirection` enum (outbound, inbound), `CrmEntityType` enum (contact, deal, activity), `CrmSyncStatus` enum (success, failed, partial)
+- [x] `CrmConnection` entity — aggregate root com state machine, OAuth tokens, domain events
+- [x] `CrmSyncLog` entity — sync audit trail (sem domain events, padrao AutomationExecution)
+- [x] `CrmFieldMapping` value object (smm_field, crm_field, transform, position) — padrao RuleCondition
+- [x] `CrmSyncResult` value object — private ctor + named factories (success/failed/partial)
+- [x] Domain Events (8): `CrmConnected`, `CrmDisconnected`, `CrmContactSynced`, `CrmDealCreated`, `CrmActivityLogged`, `CrmSyncFailed`, `CrmTokenExpired`, `CrmFieldMappingUpdated`
+- [x] Contracts: `CrmConnectorInterface` (getAuthorizationUrl, authenticate, refreshToken, revokeToken, createContact, updateContact, createDeal, logActivity, searchContacts, getConnectionStatus)
+- [x] Repository interfaces: `CrmConnectionRepositoryInterface`, `CrmFieldMappingRepositoryInterface`, `CrmSyncLogRepositoryInterface`
+- [x] Exceptions (3): `CrmConnectionAlreadyExistsException`, `InvalidCrmConnectionStatusTransitionException`, `CrmTokenExpiredException`
+- [x] Arch tests: 130 passed (5 enums, 2 VOs, 3 repos, 1 contract rule)
 
-### 15.2 Application Layer
+### 15.2 Application Layer ✅
 
-- [ ] Use Cases CRM Connection:
-  - `ConnectCrmUseCase` (inicia OAuth flow)
-  - `HandleCrmCallbackUseCase` (processa callback OAuth)
-  - `DisconnectCrmUseCase` (revoke + soft delete)
-  - `TestCrmConnectionUseCase` (verifica status)
-  - `ListCrmConnectionsUseCase`
-  - `GetCrmConnectionStatusUseCase`
-- [ ] Use Cases CRM Sync (Outbound):
-  - `SyncContactToCrmUseCase` (cria/atualiza contato)
-  - `CreateCrmDealUseCase` (cria oportunidade)
-  - `LogCrmActivityUseCase` (registra atividade)
-- [ ] Use Cases CRM Sync (Inbound):
-  - `ProcessCrmWebhookUseCase` (processa webhook do CRM)
-- [ ] Use Cases Field Mapping:
-  - `GetCrmFieldMappingsUseCase`
-  - `UpdateCrmFieldMappingsUseCase`
-  - `ResetCrmFieldMappingsToDefaultUseCase`
-- [ ] Use Cases Maintenance:
-  - `ForceCrmSyncUseCase` (sincronizacao manual)
-  - `BackfillCrmContactsUseCase` (backfill apos conexao)
-- [ ] DTOs: `CrmConnectionDTO`, `CrmMappingDTO`, `CrmSyncLogDTO`
-- [ ] Listeners:
-  - `CommentCaptured` → `SyncContactToCrmJob` (se CRM conectado)
+- [x] Use Cases CRM Connection (7):
+  - `ConnectCrmUseCase` (valida unicidade, gera OAuth state, retorna authorizationUrl)
+  - `HandleCrmCallbackUseCase` (valida state, authenticate, cria CrmConnection, dispatch events)
+  - `DisconnectCrmUseCase` (revoke best-effort + disconnect entity + dispatch events)
+  - `TestCrmConnectionUseCase` (verifica status via CRM API, markError se unhealthy)
+  - `ListCrmConnectionsUseCase` (lista conexoes da org)
+  - `GetCrmConnectionStatusUseCase` (retorna conexao unica com org check)
+  - `RefreshCrmTokenUseCase` (renova tokens, markTokenExpired em falha)
+- [x] Use Cases CRM Sync — Outbound (3):
+  - `SyncContactToCrmUseCase` (search+create/update, field mappings, sync log, events)
+  - `CreateCrmDealUseCase` (cria deal, sync log, events)
+  - `LogCrmActivityUseCase` (registra atividade, sync log, events)
+- [x] Use Cases CRM Sync — Inbound (1):
+  - `ProcessCrmWebhookUseCase` (log inbound webhook, detecta entityType por eventType)
+- [x] Use Cases Field Mapping (3):
+  - `GetCrmFieldMappingsUseCase` (retorna custom ou defaults do provider)
+  - `UpdateCrmFieldMappingsUseCase` (bulk replace, dispatch CrmFieldMappingUpdated)
+  - `ResetCrmFieldMappingsToDefaultUseCase` (reset + dispatch event)
+- [x] Use Cases Monitoring (1):
+  - `ListCrmSyncLogsUseCase` (paginacao cursor-based com org check)
+- [x] DTOs (12): ConnectCrmInput/Output, HandleCrmCallbackInput, CrmConnectionOutput, SyncContactToCrmInput, CreateCrmDealInput, LogCrmActivityInput, CrmSyncResultOutput, UpdateCrmFieldMappingsInput, CrmFieldMappingOutput, ListCrmSyncLogsInput, CrmSyncLogOutput
+- [x] Contracts (2): `CrmConnectorFactoryInterface`, `CrmOAuthStateServiceInterface`
+- [x] Exceptions (2): `CrmConnectionNotFoundException`, `CrmOAuthStateInvalidException`
+- [x] Listeners (implemented in 15.3):
+  - `CommentCaptured` → `SyncCommentAuthorToCrm` → `SyncContactToCrmJob` (se CRM conectado)
+  - `CrmTokenExpired` → `ScheduleCrmTokenRefresh` → `RefreshCrmTokenJob`
+- [ ] Listeners (deferred — requires additional domain events):
   - `AutomationTriggered` (lead) → `CreateCrmDealJob` (se CRM conectado)
   - `PostPublished` → `LogCrmActivityJob` (se CRM conectado)
-  - `CrmTokenExpired` → `RefreshCrmTokenJob`
+- [ ] Use Cases Maintenance (deferred — requires job dispatch):
+  - `ForceCrmSyncUseCase` (sincronizacao manual)
+  - `BackfillCrmContactsUseCase` (backfill apos conexao)
 
-### 15.3 Infrastructure Layer
+### 15.3 Infrastructure Layer ✅
 
-- [ ] Migration: `crm_connections` table
-- [ ] Migration: `crm_field_mappings` table
-- [ ] Migration: `crm_sync_logs` table
-- [ ] Migration: `crm_provider_type` enum
-- [ ] Eloquent Models: CrmConnection, CrmFieldMapping, CrmSyncLog
-- [ ] Repository implementations (Eloquent)
-- [ ] **HubSpot Connector:**
-  - OAuth 2.0 flow (access token 30min, refresh token)
-  - Create/update contacts via HubSpot CRM API v3
-  - Create deals via HubSpot Deals API
-  - Log activities via HubSpot Engagements API
-  - Search contacts via HubSpot Search API
-  - Rate limiting: 150 req/10s (token bucket)
-  - Default field mappings
-- [ ] **RD Station Connector:**
-  - OAuth 2.0 flow (access token 24h, refresh token)
-  - Create/update contacts via RD Station CRM API
-  - Create deals via RD Station Deals API
-  - Rate limiting: 120 req/min
-  - Default field mappings
-- [ ] **Pipedrive Connector:**
-  - OAuth 2.0 flow (access token 60min, refresh token)
-  - Create/update persons via Pipedrive Persons API
-  - Create deals via Pipedrive Deals API
-  - Log activities via Pipedrive Activities API
-  - Rate limiting: 80 req/2s
-  - Default field mappings
-- [ ] `CrmConnectorFactory` — resolve connector por provider
-- [ ] Jobs:
+- [x] Migration: `crm_connections` table (UUID PK, org FK, provider, tokens, status, settings)
+- [x] Migration: `crm_field_mappings` table (UUID PK, connection FK, smm_field, crm_field, transform, position)
+- [x] Migration: `crm_sync_logs` table (UUID PK, org FK, connection FK, direction, entity_type, action, status, payload)
+- [x] Eloquent Models: CrmConnectionModel, CrmFieldMappingModel, CrmSyncLogModel
+- [x] Repository implementations (Eloquent): EloquentCrmConnectionRepository, EloquentCrmFieldMappingRepository, EloquentCrmSyncLogRepository
+- [x] `StubCrmConnector` — stub para todos os providers (real connectors deferred)
+- [x] `CrmConnectorFactory` — resolve connector por provider (retorna StubCrmConnector)
+- [x] `CrmOAuthStateService` — Redis-based single-use OAuth state tokens com TTL
+- [x] Jobs (5):
   - `SyncContactToCrmJob` (queue: default, retry: 3, backoff: 60s/300s/900s)
-  - `CreateCrmDealJob` (queue: default, retry: 3)
-  - `LogCrmActivityJob` (queue: low, retry: 3)
-  - `RefreshCrmTokenJob` (queue: high, retry: 2)
-  - `ProcessCrmWebhookJob` (queue: default, retry: 3)
-  - `BackfillCrmContactsJob` (queue: low, retry: 1)
-- [ ] Controllers: CrmConnectionController, CrmMappingController, CrmSyncController
-- [ ] Routes: 11 endpoints sob `/api/v1/crm/`
+  - `CreateCrmDealJob` (queue: default, retry: 3, backoff: 60s/300s/900s)
+  - `LogCrmActivityJob` (queue: low, retry: 3, backoff: 60s/300s/900s)
+  - `RefreshCrmTokenJob` (queue: high, retry: 2, backoff: 60s/300s)
+  - `ProcessCrmWebhookJob` (queue: default, retry: 3, backoff: 60s/300s/900s)
+- [x] Controllers: CrmConnectionController (6 actions), CrmFieldMappingController (3 actions), CrmSyncController (1 action)
+- [x] Requests: ConnectCrmRequest, HandleCrmCallbackRequest, UpdateCrmFieldMappingsRequest
+- [x] Resources: CrmConnectionResource, CrmFieldMappingResource, CrmSyncLogResource
+- [x] Routes: 10 endpoints sob `/api/v1/crm/` com middleware auth.jwt, org.context, tenant.rls
+- [x] Listeners: SyncCommentAuthorToCrm (CommentCaptured), ScheduleCrmTokenRefresh (CrmTokenExpired)
+- [x] Service Provider bindings: 5 interfaces (3 repos + factory + OAuth state) + 2 event listeners
+- [x] Arch tests: 130 passed, full suite: 2056 passed
+- [ ] Real CRM connectors (deferred — HubSpot, RD Station, Pipedrive HTTP implementations)
 - [ ] Feature gate middleware: Professional+ para CRM connectors
+- [ ] BackfillCrmContactsJob (deferred — requires BackfillCrmContactsUseCase)
 
-### 15.4 Testes
+### 15.4 Testes ✅
 
-- [ ] Unit tests: CrmConnection entity, CrmFieldMapping VO, CrmProvider enum
-- [ ] Unit tests: Todos os Use Cases (mock de CrmConnectorInterface)
-- [ ] Integration tests: HubSpot connector (HTTP mock)
-- [ ] Integration tests: RD Station connector (HTTP mock)
-- [ ] Integration tests: Pipedrive connector (HTTP mock)
-- [ ] Integration tests: CrmConnectorFactory
-- [ ] Feature tests: Endpoints de conexao, mapeamento, sync, logs
-- [ ] Feature tests: Feature gate (Free/Creator bloqueado, Professional/Agency permitido)
-- [ ] Feature tests: Fluxo completo outbound (comentario → contato no CRM)
-- [ ] Feature tests: Fluxo completo inbound (webhook CRM → tag no SMM)
-- [ ] Architecture tests: CrmConnectorInterface no Domain, implementacoes no Infrastructure
+- [x] Unit tests: CrmConnection entity (18 tests), CrmSyncLog entity (5 tests)
+- [x] Unit tests: CrmFieldMapping VO (5 tests), CrmSyncResult VO (4 tests)
+- [x] Unit tests: CrmProvider enum (5 tests), CrmConnectionStatus enum (5 tests)
+- [x] Unit tests: Todos os 15 Use Cases com mock de dependencias (45 tests)
+  - ConnectCrmUseCase, HandleCrmCallbackUseCase, DisconnectCrmUseCase, TestCrmConnectionUseCase
+  - ListCrmConnectionsUseCase, GetCrmConnectionStatusUseCase, RefreshCrmTokenUseCase
+  - SyncContactToCrmUseCase, CreateCrmDealUseCase, LogCrmActivityUseCase, ProcessCrmWebhookUseCase
+  - GetCrmFieldMappingsUseCase, UpdateCrmFieldMappingsUseCase, ResetCrmFieldMappingsToDefaultUseCase
+  - ListCrmSyncLogsUseCase
+- [x] Feature tests: CrmConnection endpoints (9 tests — connect, list, show, test, delete, duplicata, validacao, 401)
+- [x] Feature tests: CrmFieldMapping endpoints (6 tests — list defaults, update, validate, reset, 422)
+- [x] Feature tests: CrmSyncLog endpoints (5 tests — list, empty, pagination, 422, 401)
+- [x] Architecture tests: 130 passed (CRM classes incluidos nos rules existentes)
+- [x] Full suite: 2165 passed (6461 assertions)
+- [ ] Integration tests: HubSpot/RD Station/Pipedrive connectors (deferred — requires real HTTP implementations)
+- [ ] Feature tests: Feature gate (deferred — middleware not yet implemented)
+- [ ] Feature tests: Fluxo completo outbound/inbound (deferred — requires listener chain + real connectors)
 
 ### Entregaveis Sprint 15
 

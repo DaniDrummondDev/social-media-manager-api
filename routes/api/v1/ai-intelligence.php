@@ -8,6 +8,8 @@ use App\Infrastructure\AIIntelligence\Controllers\CalendarSuggestionController;
 use App\Infrastructure\AIIntelligence\Controllers\ContentGapAnalysisController;
 use App\Infrastructure\AIIntelligence\Controllers\ContentProfileController;
 use App\Infrastructure\AIIntelligence\Controllers\PerformancePredictionController;
+use App\Infrastructure\AIIntelligence\Controllers\PredictionAccuracyController;
+use App\Infrastructure\AIIntelligence\Controllers\StyleProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
@@ -51,4 +53,11 @@ Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () 
     Route::get('ai-intelligence/gap-analyses', [ContentGapAnalysisController::class, 'index']);
     Route::get('ai-intelligence/gap-analyses/{id}', [ContentGapAnalysisController::class, 'show']);
     Route::get('ai-intelligence/gap-analyses/{id}/opportunities', [ContentGapAnalysisController::class, 'opportunities']);
+
+    // Prediction Accuracy (AI Learning — N4)
+    Route::post('ai-intelligence/prediction-validations', [PredictionAccuracyController::class, 'store']);
+    Route::get('ai-intelligence/prediction-accuracy', [PredictionAccuracyController::class, 'index']);
+
+    // Style Profile (AI Learning — N5)
+    Route::post('ai-intelligence/style-profile', [StyleProfileController::class, 'store']);
 });

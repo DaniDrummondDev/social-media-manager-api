@@ -80,6 +80,12 @@ arch('value objects are final readonly')
         'App\Domain\AIIntelligence\ValueObjects\SafetyCheckResult',
         'App\Domain\AIIntelligence\ValueObjects\PredictionScore',
         'App\Domain\AIIntelligence\ValueObjects\CalendarItem',
+        'App\Domain\ContentAI\ValueObjects\DiffSummary',
+        'App\Domain\ContentAI\ValueObjects\PerformanceScore',
+        'App\Domain\AIIntelligence\ValueObjects\PredictionAccuracy',
+        'App\Domain\AIIntelligence\ValueObjects\StylePreferences',
+        'App\Domain\Engagement\ValueObjects\CrmFieldMapping',
+        'App\Domain\Engagement\ValueObjects\CrmSyncResult',
     ])
     ->classes()
     ->toBeFinal()
@@ -124,6 +130,14 @@ arch('value object enums are enums')
         'App\Domain\AIIntelligence\ValueObjects\SafetyRuleType',
         'App\Domain\AIIntelligence\ValueObjects\RuleSeverity',
         'App\Domain\AIIntelligence\ValueObjects\SuggestionStatus',
+        'App\Domain\ContentAI\ValueObjects\GenerationType',
+        'App\Domain\ContentAI\ValueObjects\FeedbackAction',
+        'App\Domain\ContentAI\ValueObjects\ExperimentStatus',
+        'App\Domain\Engagement\ValueObjects\CrmProvider',
+        'App\Domain\Engagement\ValueObjects\CrmConnectionStatus',
+        'App\Domain\Engagement\ValueObjects\CrmSyncDirection',
+        'App\Domain\Engagement\ValueObjects\CrmEntityType',
+        'App\Domain\Engagement\ValueObjects\CrmSyncStatus',
     ])
     ->toBeEnums();
 
@@ -167,12 +181,30 @@ arch('repository interfaces are interfaces')
         'App\Domain\AIIntelligence\Repositories\BrandSafetyCheckRepositoryInterface',
         'App\Domain\AIIntelligence\Repositories\BrandSafetyRuleRepositoryInterface',
         'App\Domain\AIIntelligence\Repositories\CalendarSuggestionRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\ContentProfileRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\PerformancePredictionRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\PredictionValidationRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\OrgStyleProfileRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\AudienceInsightRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\ContentGapAnalysisRepositoryInterface',
+        'App\Domain\ContentAI\Contracts\AIGenerationRepositoryInterface',
+        'App\Domain\ContentAI\Contracts\AISettingsRepositoryInterface',
+        'App\Domain\ContentAI\Contracts\GenerationFeedbackRepositoryInterface',
+        'App\Domain\ContentAI\Contracts\PromptTemplateRepositoryInterface',
+        'App\Domain\ContentAI\Contracts\PromptExperimentRepositoryInterface',
+        'App\Domain\Engagement\Repositories\CrmConnectionRepositoryInterface',
+        'App\Domain\Engagement\Repositories\CrmFieldMappingRepositoryInterface',
+        'App\Domain\Engagement\Repositories\CrmSyncLogRepositoryInterface',
     ])
     ->toBeInterfaces();
 
 // Domain contracts (adapter interfaces) are interfaces
 arch('social account contracts are interfaces')
     ->expect('App\Domain\SocialAccount\Contracts')
+    ->toBeInterfaces();
+
+arch('engagement domain contracts are interfaces')
+    ->expect('App\Domain\Engagement\Contracts')
     ->toBeInterfaces();
 
 arch('billing contracts are interfaces')
@@ -198,6 +230,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\PlatformAdmin\Exceptions',
         'App\Domain\ClientFinance\Exceptions',
         'App\Domain\SocialListening\Exceptions',
+        'App\Domain\ContentAI\Exceptions',
         'App\Domain\AIIntelligence\Exceptions',
     ])
     ->classes()
@@ -217,6 +250,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\PlatformAdmin\Events',
         'App\Domain\ClientFinance\Events',
         'App\Domain\SocialListening\Events',
+        'App\Domain\ContentAI\Events',
         'App\Domain\AIIntelligence\Events',
     ])
     ->classes()
@@ -770,5 +804,47 @@ arch('ai intelligence resources are final readonly')
 
 arch('ai intelligence requests are final')
     ->expect('App\Infrastructure\AIIntelligence\Requests')
+    ->classes()
+    ->toBeFinal();
+
+// Content AI
+arch('content ai use cases are final')
+    ->expect('App\Application\ContentAI\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('content ai DTOs are final readonly')
+    ->expect('App\Application\ContentAI\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('content ai app contracts are interfaces')
+    ->expect('App\Application\ContentAI\Contracts')
+    ->toBeInterfaces();
+
+arch('content ai models are final')
+    ->expect('App\Infrastructure\ContentAI\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('content ai controllers are final')
+    ->expect('App\Infrastructure\ContentAI\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('content ai providers are final')
+    ->expect('App\Infrastructure\ContentAI\Providers')
+    ->classes()
+    ->toBeFinal();
+
+arch('content ai resources are final readonly')
+    ->expect('App\Infrastructure\ContentAI\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('content ai requests are final')
+    ->expect('App\Infrastructure\ContentAI\Requests')
     ->classes()
     ->toBeFinal();

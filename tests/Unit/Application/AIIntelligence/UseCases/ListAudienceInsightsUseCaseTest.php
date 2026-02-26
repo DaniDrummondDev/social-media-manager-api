@@ -9,7 +9,6 @@ use App\Domain\AIIntelligence\Entities\AudienceInsight;
 use App\Domain\AIIntelligence\Repositories\AudienceInsightRepositoryInterface;
 use App\Domain\AIIntelligence\ValueObjects\InsightType;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DateTimeImmutable;
 
 beforeEach(function () {
     $this->insightRepository = Mockery::mock(AudienceInsightRepositoryInterface::class);
