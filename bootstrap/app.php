@@ -27,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
         App\Infrastructure\ClientFinance\Providers\ClientFinanceServiceProvider::class,
         App\Infrastructure\SocialListening\Providers\SocialListeningServiceProvider::class,
         App\Infrastructure\AIIntelligence\Providers\AIIntelligenceServiceProvider::class,
+        App\Infrastructure\PaidAdvertising\Providers\PaidAdvertisingServiceProvider::class,
     ])
     ->withRouting(
         commands: __DIR__.'/../routes/console.php',
@@ -52,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/social-listening.php';
                     require __DIR__.'/../routes/api/v1/ai-intelligence.php';
                     require __DIR__.'/../routes/api/v1/crm.php';
+                    require __DIR__.'/../routes/api/v1/ads.php';
                 });
         },
     )

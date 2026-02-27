@@ -104,6 +104,7 @@ it('returns correct array from toArray', function () {
         'crm_connections' => 3,
         'reports_month' => 30,
         'analytics_retention_days' => 365,
+        'paid_advertising' => -1,
     ];
 
     $limits = PlanLimits::fromArray($data);

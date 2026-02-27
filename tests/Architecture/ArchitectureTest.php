@@ -86,6 +86,12 @@ arch('value objects are final readonly')
         'App\Domain\AIIntelligence\ValueObjects\StylePreferences',
         'App\Domain\Engagement\ValueObjects\CrmFieldMapping',
         'App\Domain\Engagement\ValueObjects\CrmSyncResult',
+        'App\Domain\PaidAdvertising\ValueObjects\AdBudget',
+        'App\Domain\PaidAdvertising\ValueObjects\DemographicFilter',
+        'App\Domain\PaidAdvertising\ValueObjects\LocationFilter',
+        'App\Domain\PaidAdvertising\ValueObjects\InterestFilter',
+        'App\Domain\PaidAdvertising\ValueObjects\TargetingSpec',
+        'App\Domain\PaidAdvertising\ValueObjects\AdAccountCredentials',
     ])
     ->classes()
     ->toBeFinal()
@@ -133,11 +139,19 @@ arch('value object enums are enums')
         'App\Domain\ContentAI\ValueObjects\GenerationType',
         'App\Domain\ContentAI\ValueObjects\FeedbackAction',
         'App\Domain\ContentAI\ValueObjects\ExperimentStatus',
+        'App\Domain\AIIntelligence\ValueObjects\AttributionType',
+        'App\Domain\AIIntelligence\ValueObjects\AdInsightType',
         'App\Domain\Engagement\ValueObjects\CrmProvider',
         'App\Domain\Engagement\ValueObjects\CrmConnectionStatus',
         'App\Domain\Engagement\ValueObjects\CrmSyncDirection',
         'App\Domain\Engagement\ValueObjects\CrmEntityType',
         'App\Domain\Engagement\ValueObjects\CrmSyncStatus',
+        'App\Domain\PaidAdvertising\ValueObjects\AdProvider',
+        'App\Domain\PaidAdvertising\ValueObjects\AdAccountStatus',
+        'App\Domain\PaidAdvertising\ValueObjects\AdStatus',
+        'App\Domain\PaidAdvertising\ValueObjects\AdObjective',
+        'App\Domain\PaidAdvertising\ValueObjects\BudgetType',
+        'App\Domain\PaidAdvertising\ValueObjects\MetricPeriod',
     ])
     ->toBeEnums();
 
@@ -187,6 +201,8 @@ arch('repository interfaces are interfaces')
         'App\Domain\AIIntelligence\Repositories\OrgStyleProfileRepositoryInterface',
         'App\Domain\AIIntelligence\Repositories\AudienceInsightRepositoryInterface',
         'App\Domain\AIIntelligence\Repositories\ContentGapAnalysisRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\CrmConversionAttributionRepositoryInterface',
+        'App\Domain\AIIntelligence\Repositories\AdPerformanceInsightRepositoryInterface',
         'App\Domain\ContentAI\Contracts\AIGenerationRepositoryInterface',
         'App\Domain\ContentAI\Contracts\AISettingsRepositoryInterface',
         'App\Domain\ContentAI\Contracts\GenerationFeedbackRepositoryInterface',
@@ -195,6 +211,10 @@ arch('repository interfaces are interfaces')
         'App\Domain\Engagement\Repositories\CrmConnectionRepositoryInterface',
         'App\Domain\Engagement\Repositories\CrmFieldMappingRepositoryInterface',
         'App\Domain\Engagement\Repositories\CrmSyncLogRepositoryInterface',
+        'App\Domain\PaidAdvertising\Repositories\AdAccountRepositoryInterface',
+        'App\Domain\PaidAdvertising\Repositories\AudienceRepositoryInterface',
+        'App\Domain\PaidAdvertising\Repositories\AdBoostRepositoryInterface',
+        'App\Domain\PaidAdvertising\Repositories\AdMetricSnapshotRepositoryInterface',
     ])
     ->toBeInterfaces();
 
@@ -215,6 +235,14 @@ arch('platform admin domain contracts are interfaces')
     ->expect('App\Domain\PlatformAdmin\Contracts')
     ->toBeInterfaces();
 
+arch('ai intelligence domain contracts are interfaces')
+    ->expect('App\Domain\AIIntelligence\Contracts')
+    ->toBeInterfaces();
+
+arch('paid advertising domain contracts are interfaces')
+    ->expect('App\Domain\PaidAdvertising\Contracts')
+    ->toBeInterfaces();
+
 // Exceptions extend DomainException
 arch('domain exceptions extend DomainException')
     ->expect([
@@ -232,6 +260,7 @@ arch('domain exceptions extend DomainException')
         'App\Domain\SocialListening\Exceptions',
         'App\Domain\ContentAI\Exceptions',
         'App\Domain\AIIntelligence\Exceptions',
+        'App\Domain\PaidAdvertising\Exceptions',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Exceptions\DomainException');
@@ -252,6 +281,7 @@ arch('domain events extend DomainEvent')
         'App\Domain\SocialListening\Events',
         'App\Domain\ContentAI\Events',
         'App\Domain\AIIntelligence\Events',
+        'App\Domain\PaidAdvertising\Events',
     ])
     ->classes()
     ->toExtend('App\Domain\Shared\Events\DomainEvent');
@@ -279,6 +309,7 @@ arch('entities are final readonly')
         'App\Domain\ClientFinance\Entities',
         'App\Domain\SocialListening\Entities',
         'App\Domain\AIIntelligence\Entities',
+        'App\Domain\PaidAdvertising\Entities',
     ])
     ->classes()
     ->toBeFinal()
@@ -846,5 +877,47 @@ arch('content ai resources are final readonly')
 
 arch('content ai requests are final')
     ->expect('App\Infrastructure\ContentAI\Requests')
+    ->classes()
+    ->toBeFinal();
+
+// Paid Advertising
+arch('paid advertising use cases are final')
+    ->expect('App\Application\PaidAdvertising\UseCases')
+    ->classes()
+    ->toBeFinal();
+
+arch('paid advertising DTOs are final readonly')
+    ->expect('App\Application\PaidAdvertising\DTOs')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('paid advertising app contracts are interfaces')
+    ->expect('App\Application\PaidAdvertising\Contracts')
+    ->toBeInterfaces();
+
+arch('paid advertising app exceptions extend ApplicationException')
+    ->expect('App\Application\PaidAdvertising\Exceptions')
+    ->classes()
+    ->toExtend('App\Application\Shared\Exceptions\ApplicationException');
+
+arch('paid advertising models are final')
+    ->expect('App\Infrastructure\PaidAdvertising\Models')
+    ->classes()
+    ->toBeFinal();
+
+arch('paid advertising controllers are final')
+    ->expect('App\Infrastructure\PaidAdvertising\Controllers')
+    ->classes()
+    ->toBeFinal();
+
+arch('paid advertising resources are final readonly')
+    ->expect('App\Infrastructure\PaidAdvertising\Resources')
+    ->classes()
+    ->toBeFinal()
+    ->toBeReadonly();
+
+arch('paid advertising requests are final')
+    ->expect('App\Infrastructure\PaidAdvertising\Requests')
     ->classes()
     ->toBeFinal();

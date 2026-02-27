@@ -13,11 +13,15 @@ final class CrmConnectorFactory implements CrmConnectorFactoryInterface
     public function make(CrmProvider $provider): CrmConnectorInterface
     {
         return match ($provider) {
+            CrmProvider::Salesforce => new SalesforceConnector(
+                config: config('crm.salesforce', []),
+            ),
+            CrmProvider::ActiveCampaign => new ActiveCampaignConnector(
+                config: config('crm.activecampaign', []),
+            ),
             CrmProvider::HubSpot,
             CrmProvider::RdStation,
-            CrmProvider::Pipedrive,
-            CrmProvider::Salesforce,
-            CrmProvider::ActiveCampaign => new StubCrmConnector($provider->value),
+            CrmProvider::Pipedrive => new StubCrmConnector($provider->value),
         };
     }
 }

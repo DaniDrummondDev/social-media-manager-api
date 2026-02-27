@@ -42,6 +42,7 @@ final class PlanSeeder extends Seeder
                     'webhooks' => 0,
                     'reports_month' => 5,
                     'analytics_retention_days' => 30,
+                    'paid_advertising' => 0,
                 ]),
                 'features' => json_encode([
                     'ai_generation_basic' => true,
@@ -51,6 +52,7 @@ final class PlanSeeder extends Seeder
                     'automations' => false,
                     'webhooks' => false,
                     'crm_native' => false,
+                    'paid_advertising' => false,
                     'export_pdf' => false,
                     'export_csv' => true,
                     'priority_publishing' => false,
@@ -79,6 +81,7 @@ final class PlanSeeder extends Seeder
                     'webhooks' => 0,
                     'reports_month' => 15,
                     'analytics_retention_days' => 90,
+                    'paid_advertising' => 0,
                 ]),
                 'features' => json_encode([
                     'ai_generation_basic' => true,
@@ -88,6 +91,7 @@ final class PlanSeeder extends Seeder
                     'automations' => true,
                     'webhooks' => false,
                     'crm_native' => false,
+                    'paid_advertising' => false,
                     'export_pdf' => false,
                     'export_csv' => true,
                     'priority_publishing' => true,
@@ -116,6 +120,7 @@ final class PlanSeeder extends Seeder
                     'webhooks' => 5,
                     'reports_month' => 50,
                     'analytics_retention_days' => 180,
+                    'paid_advertising' => -1,
                 ]),
                 'features' => json_encode([
                     'ai_generation_basic' => true,
@@ -125,6 +130,7 @@ final class PlanSeeder extends Seeder
                     'automations' => true,
                     'webhooks' => true,
                     'crm_native' => true,
+                    'paid_advertising' => true,
                     'export_pdf' => true,
                     'export_csv' => true,
                     'priority_publishing' => true,
@@ -153,6 +159,7 @@ final class PlanSeeder extends Seeder
                     'webhooks' => 20,
                     'reports_month' => -1,
                     'analytics_retention_days' => 730,
+                    'paid_advertising' => -1,
                 ]),
                 'features' => json_encode([
                     'ai_generation_basic' => true,
@@ -162,6 +169,7 @@ final class PlanSeeder extends Seeder
                     'automations' => true,
                     'webhooks' => true,
                     'crm_native' => true,
+                    'paid_advertising' => true,
                     'export_pdf' => true,
                     'export_csv' => true,
                     'priority_publishing' => true,

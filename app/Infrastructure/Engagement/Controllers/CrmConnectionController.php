@@ -5,14 +5,17 @@ declare(strict_types=1);
 namespace App\Infrastructure\Engagement\Controllers;
 
 use App\Application\Engagement\DTOs\ConnectCrmInput;
+use App\Application\Engagement\DTOs\ConnectCrmWithApiKeyInput;
 use App\Application\Engagement\DTOs\HandleCrmCallbackInput;
 use App\Application\Engagement\UseCases\ConnectCrmUseCase;
+use App\Application\Engagement\UseCases\ConnectCrmWithApiKeyUseCase;
 use App\Application\Engagement\UseCases\DisconnectCrmUseCase;
 use App\Application\Engagement\UseCases\GetCrmConnectionStatusUseCase;
 use App\Application\Engagement\UseCases\HandleCrmCallbackUseCase;
 use App\Application\Engagement\UseCases\ListCrmConnectionsUseCase;
 use App\Application\Engagement\UseCases\TestCrmConnectionUseCase;
 use App\Infrastructure\Engagement\Requests\ConnectCrmRequest;
+use App\Infrastructure\Engagement\Requests\ConnectCrmWithApiKeyRequest;
 use App\Infrastructure\Engagement\Requests\HandleCrmCallbackRequest;
 use App\Infrastructure\Engagement\Resources\CrmConnectionResource;
 use App\Infrastructure\Shared\Http\Resources\ApiResponse;
@@ -35,6 +38,24 @@ final class CrmConnectionController
             'authorization_url' => $output->authorizationUrl,
             'state' => $output->state,
         ]);
+    }
+
+    public function connectWithApiKey(
+        ConnectCrmWithApiKeyRequest $request,
+        ConnectCrmWithApiKeyUseCase $useCase,
+    ): JsonResponse {
+        $output = $useCase->execute(new ConnectCrmWithApiKeyInput(
+            organizationId: $request->attributes->get('auth_organization_id'),
+            userId: $request->attributes->get('auth_user_id'),
+            provider: $request->validated('provider'),
+            apiKey: $request->validated('api_key'),
+            accountName: $request->validated('account_name'),
+        ));
+
+        return ApiResponse::success(
+            CrmConnectionResource::fromOutput($output)->toArray(),
+            status: 201,
+        );
     }
 
     public function callback(

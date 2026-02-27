@@ -34,6 +34,20 @@ final class EloquentCrmFieldMappingRepository implements CrmFieldMappingReposito
             ['smm_field' => 'network', 'crm_field' => 'social_network', 'transform' => null, 'position' => 3],
             ['smm_field' => 'sentiment', 'crm_field' => 'sentiment', 'transform' => null, 'position' => 4],
         ],
+        'salesforce' => [
+            ['smm_field' => 'name', 'crm_field' => 'FirstName', 'transform' => null, 'position' => 0],
+            ['smm_field' => 'external_id', 'crm_field' => 'Social_Media_Id__c', 'transform' => null, 'position' => 1],
+            ['smm_field' => 'email', 'crm_field' => 'Email', 'transform' => 'lowercase', 'position' => 2],
+            ['smm_field' => 'network', 'crm_field' => 'Social_Network__c', 'transform' => null, 'position' => 3],
+            ['smm_field' => 'sentiment', 'crm_field' => 'Sentiment__c', 'transform' => null, 'position' => 4],
+        ],
+        'activecampaign' => [
+            ['smm_field' => 'name', 'crm_field' => 'firstName', 'transform' => null, 'position' => 0],
+            ['smm_field' => 'external_id', 'crm_field' => 'fieldValues.social_id', 'transform' => null, 'position' => 1],
+            ['smm_field' => 'email', 'crm_field' => 'email', 'transform' => 'lowercase', 'position' => 2],
+            ['smm_field' => 'network', 'crm_field' => 'fieldValues.social_network', 'transform' => null, 'position' => 3],
+            ['smm_field' => 'sentiment', 'crm_field' => 'fieldValues.sentiment', 'transform' => null, 'position' => 4],
+        ],
     ];
 
     public function __construct(

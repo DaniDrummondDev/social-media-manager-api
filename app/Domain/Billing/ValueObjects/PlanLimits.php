@@ -18,6 +18,7 @@ final readonly class PlanLimits
         public int $crmConnections,
         public int $reportsMonth,
         public int $analyticsRetentionDays,
+        public int $paidAdvertising,
     ) {}
 
     /**
@@ -37,6 +38,7 @@ final readonly class PlanLimits
             crmConnections: $data['crm_connections'] ?? 0,
             reportsMonth: $data['reports_month'] ?? 5,
             analyticsRetentionDays: $data['analytics_retention_days'] ?? 30,
+            paidAdvertising: $data['paid_advertising'] ?? 0,
         );
     }
 
@@ -52,6 +54,7 @@ final readonly class PlanLimits
             UsageResourceType::Automations => $this->automations,
             UsageResourceType::Webhooks => $this->webhooks,
             UsageResourceType::Reports => $this->reportsMonth,
+            UsageResourceType::PaidAdvertising => $this->paidAdvertising,
         };
     }
 
@@ -77,6 +80,7 @@ final readonly class PlanLimits
             'crm_connections' => $this->crmConnections,
             'reports_month' => $this->reportsMonth,
             'analytics_retention_days' => $this->analyticsRetentionDays,
+            'paid_advertising' => $this->paidAdvertising,
         ];
     }
 }

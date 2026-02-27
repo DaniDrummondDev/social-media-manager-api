@@ -84,3 +84,12 @@ Schedule::job(new \App\Infrastructure\AIIntelligence\Jobs\CleanupExpiredLearning
 // AI Intelligence: Monthly content gap analysis
 // TODO: Implement GenerateAllContentGapAnalysesJob that iterates organizations with competitor
 // queries and dispatches GenerateContentGapAnalysisJob for each. Schedule monthly on 15th at 05:00 UTC.
+
+// Paid Advertising: Sync ad status — every 30 minutes
+Schedule::job(new \App\Infrastructure\PaidAdvertising\Jobs\SyncAdStatusJob)->everyThirtyMinutes();
+
+// Paid Advertising: Sync ad metrics — hourly
+Schedule::job(new \App\Infrastructure\PaidAdvertising\Jobs\SyncAdMetricsJob)->hourly();
+
+// Paid Advertising: Refresh ad account tokens — twice daily at 02:00 and 14:00
+Schedule::job(new \App\Infrastructure\PaidAdvertising\Jobs\RefreshAdAccountTokenJob)->twiceDaily(2, 14);
