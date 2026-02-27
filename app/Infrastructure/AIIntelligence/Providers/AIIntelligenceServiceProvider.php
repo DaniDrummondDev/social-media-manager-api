@@ -11,7 +11,9 @@ use App\Application\AIIntelligence\Contracts\EmbeddingGeneratorInterface;
 use App\Application\AIIntelligence\Contracts\PredictionValidatorInterface;
 use App\Application\AIIntelligence\Contracts\SimilaritySearchInterface;
 use App\Application\AIIntelligence\Contracts\StyleProfileAnalyzerInterface;
+use App\Domain\AIIntelligence\Contracts\AdIntelligenceProviderInterface;
 use App\Domain\AIIntelligence\Contracts\CrmIntelligenceProviderInterface;
+use App\Domain\AIIntelligence\Repositories\AdPerformanceInsightRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\AudienceInsightRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\BrandSafetyCheckRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\BrandSafetyRuleRepositoryInterface;
@@ -23,6 +25,7 @@ use App\Domain\AIIntelligence\Repositories\OrgStyleProfileRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\PerformancePredictionRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\PostingTimeRecommendationRepositoryInterface;
 use App\Domain\AIIntelligence\Repositories\PredictionValidationRepositoryInterface;
+use App\Infrastructure\AIIntelligence\Repositories\EloquentAdPerformanceInsightRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentAudienceInsightRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentBrandSafetyCheckRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentBrandSafetyRuleRepository;
@@ -34,6 +37,7 @@ use App\Infrastructure\AIIntelligence\Repositories\EloquentOrgStyleProfileReposi
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPerformancePredictionRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPostingTimeRecommendationRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPredictionValidationRepository;
+use App\Infrastructure\AIIntelligence\Services\StubAdIntelligenceProvider;
 use App\Infrastructure\AIIntelligence\Services\StubAudienceInsightAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubBrandSafetyAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubCrmIntelligenceProvider;
@@ -42,10 +46,14 @@ use App\Infrastructure\AIIntelligence\Services\StubEmbeddingGenerator;
 use App\Infrastructure\AIIntelligence\Services\StubPredictionValidator;
 use App\Infrastructure\AIIntelligence\Services\StubSimilaritySearch;
 use App\Infrastructure\AIIntelligence\Services\StubStyleProfileAnalyzer;
+use App\Domain\AIIntelligence\Events\AdPerformanceAggregated;
 use App\Domain\Engagement\Events\CrmContactSynced;
 use App\Domain\Engagement\Events\CrmDealCreated;
+use App\Domain\PaidAdvertising\Events\BoostCreated;
 use App\Infrastructure\AIIntelligence\Listeners\AttributeCrmConversionOnContactSynced;
 use App\Infrastructure\AIIntelligence\Listeners\AttributeCrmConversionOnDealCreated;
+use App\Infrastructure\AIIntelligence\Listeners\EnrichAIContextOnAdPerformanceAggregated;
+use App\Infrastructure\AIIntelligence\Listeners\GenerateTargetingSuggestionsOnBoostCreated;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -72,11 +80,15 @@ final class AIIntelligenceServiceProvider extends ServiceProvider
         $this->app->bind(StyleProfileAnalyzerInterface::class, StubStyleProfileAnalyzer::class);
         $this->app->bind(CrmConversionAttributionRepositoryInterface::class, EloquentCrmConversionAttributionRepository::class);
         $this->app->bind(CrmIntelligenceProviderInterface::class, StubCrmIntelligenceProvider::class);
+        $this->app->bind(AdPerformanceInsightRepositoryInterface::class, EloquentAdPerformanceInsightRepository::class);
+        $this->app->bind(AdIntelligenceProviderInterface::class, StubAdIntelligenceProvider::class);
     }
 
     public function boot(): void
     {
         Event::listen(CrmDealCreated::class, AttributeCrmConversionOnDealCreated::class);
         Event::listen(CrmContactSynced::class, AttributeCrmConversionOnContactSynced::class);
+        Event::listen(AdPerformanceAggregated::class, EnrichAIContextOnAdPerformanceAggregated::class);
+        Event::listen(BoostCreated::class, GenerateTargetingSuggestionsOnBoostCreated::class);
     }
 }

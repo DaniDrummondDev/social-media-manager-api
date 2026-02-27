@@ -1,5 +1,6 @@
 <?php
 
+use App\Infrastructure\AIIntelligence\Controllers\AdIntelligenceController;
 use App\Infrastructure\PaidAdvertising\Controllers\AdAccountController;
 use App\Infrastructure\PaidAdvertising\Controllers\AdAnalyticsController;
 use App\Infrastructure\PaidAdvertising\Controllers\AdBoostController;
@@ -37,5 +38,9 @@ Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () 
         Route::get('ads/analytics/overview', [AdAnalyticsController::class, 'overview']);
         Route::get('ads/analytics/spending', [AdAnalyticsController::class, 'spending']);
         Route::post('ads/analytics/export', [AdAnalyticsController::class, 'export']);
+
+        // Ad Intelligence
+        Route::get('ads/intelligence/insights', [AdIntelligenceController::class, 'insights']);
+        Route::get('ads/intelligence/targeting-suggestions', [AdIntelligenceController::class, 'targetingSuggestions']);
     });
 });

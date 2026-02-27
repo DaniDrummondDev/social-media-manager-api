@@ -1,7 +1,7 @@
 {
   "_type": "export",
   "__export_format": 4,
-  "__export_date": "2026-02-24T00:00:00.000Z",
+  "__export_date": "2026-02-27T00:00:00.000Z",
   "__export_source": "insomnia.importers",
   "resources": [
     {
@@ -2218,6 +2218,1679 @@
       "description": "Retorna o relatorio de lucratividade por cliente.",
       "method": "GET",
       "url": "{{ _.base_url }}/client-reports/profitability",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_admin",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 7 — Platform Administration"
+    },
+    {
+      "_id": "req_admin_dashboard",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Admin Dashboard",
+      "description": "Retorna metricas globais do dashboard administrativo (MRR, ARR, churn, uso).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/dashboard",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_orgs_list",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "List Organizations (Admin)",
+      "description": "Lista todas as organizacoes do sistema com paginacao cursor-based.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/organizations?limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_orgs_show",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Show Organization (Admin)",
+      "description": "Retorna detalhes de uma organizacao especifica.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/organizations/{{ _.organization_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_orgs_suspend",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Suspend Organization",
+      "description": "Suspende uma organizacao. Requer role admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/organizations/{{ _.organization_id }}/suspend",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"reason\": \"Violacao dos termos de uso\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_orgs_unsuspend",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Unsuspend Organization",
+      "description": "Remove suspensao de uma organizacao. Requer role admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/organizations/{{ _.organization_id }}/unsuspend",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_orgs_delete",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Delete Organization (Admin)",
+      "description": "Exclui uma organizacao permanentemente. Requer role super_admin.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/admin/organizations/{{ _.organization_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_list",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "List Users (Admin)",
+      "description": "Lista todos os usuarios do sistema com paginacao cursor-based.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/users?limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_show",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Show User (Admin)",
+      "description": "Retorna detalhes de um usuario especifico.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/users/{{ _.user_id }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_force_verify",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Force Verify User Email",
+      "description": "Forca verificacao de email de um usuario.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/users/{{ _.user_id }}/force-verify",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_reset_password",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Reset User Password",
+      "description": "Reseta senha de um usuario e envia email de redefinicao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/users/{{ _.user_id }}/reset-password",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_ban",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Ban User",
+      "description": "Bane um usuario do sistema. Requer role admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/users/{{ _.user_id }}/ban",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"reason\": \"Violacao dos termos de uso\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_users_unban",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Unban User",
+      "description": "Remove banimento de um usuario. Requer role admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/users/{{ _.user_id }}/unban",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_plans_list",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "List Plans (Admin)",
+      "description": "Lista todos os planos do sistema. Requer role admin.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/plans",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_plans_subscribers",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "List Plan Subscribers",
+      "description": "Lista assinantes de um plano especifico. Requer role admin.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/plans/{{ _.plan_slug }}/subscribers",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_plans_create",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Create Plan",
+      "description": "Cria um novo plano. Requer role super_admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/plans",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Enterprise\",\n  \"slug\": \"enterprise\",\n  \"price_monthly_cents\": 29900,\n  \"price_yearly_cents\": 299000,\n  \"features\": [\"social_accounts\", \"campaigns\", \"analytics\", \"ai_generation\", \"paid_advertising\"],\n  \"limits\": {\"social_accounts\": 50, \"campaigns\": 100, \"ai_generations_per_month\": 1000}\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_plans_update",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Update Plan",
+      "description": "Atualiza um plano existente. Requer role super_admin.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/admin/plans/{{ _.plan_slug }}",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"price_monthly_cents\": 39900\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_plans_deactivate",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Deactivate Plan",
+      "description": "Desativa um plano. Requer role super_admin.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/admin/plans/{{ _.plan_slug }}/deactivate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_config_get",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Get System Config",
+      "description": "Retorna configuracoes do sistema. Requer role admin.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/config",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_config_update",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Update System Config",
+      "description": "Atualiza configuracoes do sistema. Requer role super_admin.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/admin/config",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"maintenance_mode\": false\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_admin_audit_log",
+      "_type": "request",
+      "parentId": "fld_admin",
+      "name": "Get Audit Log",
+      "description": "Retorna o audit log do sistema com paginacao. Requer role admin.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/admin/audit-log?limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_social_listening",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 9 — Social Listening"
+    },
+    {
+      "_id": "req_listening_queries_create",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Create Listening Query",
+      "description": "Cria uma nova query de social listening com palavras-chave e filtros.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/listening/queries",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Brand Mentions\",\n  \"keywords\": [\"marca\", \"produto\"],\n  \"platforms\": [\"instagram\", \"tiktok\"],\n  \"language\": \"pt\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_queries_list",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "List Listening Queries",
+      "description": "Lista todas as queries de listening da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/queries",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_queries_update",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Update Listening Query",
+      "description": "Atualiza uma query de listening existente.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/listening/queries/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Brand Mentions Updated\",\n  \"keywords\": [\"marca\", \"produto\", \"servico\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_queries_pause",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Pause Listening Query",
+      "description": "Pausa uma query de listening ativa.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/listening/queries/00000000-0000-0000-0000-000000000000/pause",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_queries_resume",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Resume Listening Query",
+      "description": "Retoma uma query de listening pausada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/listening/queries/00000000-0000-0000-0000-000000000000/resume",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_queries_delete",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Delete Listening Query",
+      "description": "Remove uma query de listening.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/listening/queries/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_mentions_list",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "List Mentions",
+      "description": "Lista mencoes da organizacao com filtros opcionais.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/mentions?limit=20",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_mentions_show",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Show Mention",
+      "description": "Retorna detalhes de uma mencao especifica.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/mentions/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_mentions_flag",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Flag Mention",
+      "description": "Marca uma mencao como flagged para revisao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/mentions/00000000-0000-0000-0000-000000000000/flag",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_mentions_unflag",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Unflag Mention",
+      "description": "Remove flag de uma mencao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/mentions/00000000-0000-0000-0000-000000000000/unflag",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_mentions_mark_read",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Mark Mentions as Read",
+      "description": "Marca um lote de mencoes como lidas.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/mentions/mark-read",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"mention_ids\": [\"00000000-0000-0000-0000-000000000001\", \"00000000-0000-0000-0000-000000000002\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_alerts_create",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Create Listening Alert",
+      "description": "Cria um alerta de listening com condicoes de disparo.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/listening/alerts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Negative Spike Alert\",\n  \"condition_type\": \"sentiment_spike\",\n  \"threshold\": 5,\n  \"notification_channel\": \"email\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_alerts_list",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "List Listening Alerts",
+      "description": "Lista todos os alertas de listening configurados.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/alerts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_alerts_update",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Update Listening Alert",
+      "description": "Atualiza um alerta de listening existente.",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/listening/alerts/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"threshold\": 10\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_alerts_delete",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Delete Listening Alert",
+      "description": "Remove um alerta de listening.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/listening/alerts/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_dashboard",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Listening Dashboard",
+      "description": "Retorna visao geral do dashboard de social listening.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/dashboard",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_dashboard_sentiment",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Sentiment Trend",
+      "description": "Retorna dados de tendencia de sentimento ao longo do tempo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/dashboard/sentiment-trend",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_dashboard_platforms",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Platform Breakdown",
+      "description": "Retorna distribuicao de mencoes por plataforma.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/dashboard/platform-breakdown",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_reports_create",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Create Listening Report",
+      "description": "Gera um relatorio de social listening.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/listening/reports",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Relatorio Mensal\",\n  \"period_start\": \"2026-02-01\",\n  \"period_end\": \"2026-02-28\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_reports_list",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "List Listening Reports",
+      "description": "Lista todos os relatorios de listening gerados.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/reports",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_listening_reports_show",
+      "_type": "request",
+      "parentId": "fld_social_listening",
+      "name": "Show Listening Report",
+      "description": "Retorna detalhes de um relatorio de listening especifico.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/listening/reports/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_ai_intelligence",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 10-14 — AI Intelligence"
+    },
+    {
+      "_id": "req_best_times",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Best Times",
+      "description": "Retorna os melhores horarios para publicacao baseado em historico.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/best-times",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_best_times_heatmap",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Best Times Heatmap",
+      "description": "Retorna heatmap de horarios otimos por dia da semana.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/best-times/heatmap",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_best_times_recalculate",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Recalculate Best Times",
+      "description": "Forca recalculo dos melhores horarios de publicacao.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/best-times/recalculate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_check_create",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Run Safety Check",
+      "description": "Executa verificacao de brand safety em um conteudo.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}/safety-check",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_checks_list",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "List Safety Checks",
+      "description": "Lista verificacoes de brand safety de um conteudo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}/safety-checks",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_rules_create",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Create Safety Rule",
+      "description": "Cria uma regra de brand safety personalizada.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/brand-safety/rules",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"No Competitor Mentions\",\n  \"rule_type\": \"keyword_block\",\n  \"pattern\": \"concorrente|rival\",\n  \"severity\": \"high\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_rules_list",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "List Safety Rules",
+      "description": "Lista todas as regras de brand safety da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/brand-safety/rules",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_rules_update",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Update Safety Rule",
+      "description": "Atualiza uma regra de brand safety.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/brand-safety/rules/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"severity\": \"medium\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_safety_rules_delete",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Delete Safety Rule",
+      "description": "Remove uma regra de brand safety.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/brand-safety/rules/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_calendar_suggest",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Suggest Calendar Posts",
+      "description": "Gera sugestoes de posts para o calendario baseado em IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/calendar/suggest",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"period_start\": \"2026-03-01\",\n  \"period_end\": \"2026-03-07\",\n  \"platforms\": [\"instagram\", \"tiktok\"]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_calendar_suggestions_list",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "List Calendar Suggestions",
+      "description": "Lista sugestoes de calendario geradas pela IA.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/calendar/suggestions",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_calendar_suggestions_show",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Show Calendar Suggestion",
+      "description": "Retorna detalhes de uma sugestao de calendario.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/calendar/suggestions/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_calendar_suggestions_accept",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Accept Calendar Suggestion",
+      "description": "Aceita uma sugestao de calendario e cria o conteudo correspondente.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/calendar/suggestions/00000000-0000-0000-0000-000000000000/accept",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_content_profile_generate",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Generate Content Profile",
+      "description": "Gera perfil de conteudo (Content DNA) da organizacao via IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/content-profile/generate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_content_profile_show",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Content Profile",
+      "description": "Retorna o perfil de conteudo (Content DNA) da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/content-profile",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_content_profile_themes",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Content Profile Themes",
+      "description": "Retorna os temas identificados no perfil de conteudo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/content-profile/themes",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_content_profile_recommend",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Content Recommendations",
+      "description": "Gera recomendacoes baseadas no perfil de conteudo.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/content-profile/recommend",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_predict_performance",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Predict Content Performance",
+      "description": "Gera previsao de performance para um conteudo especifico.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}/predict-performance",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_predictions_list",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "List Content Predictions",
+      "description": "Lista previsoes de performance de um conteudo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/contents/{{ _.content_id }}/predictions",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_audience_insights",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Audience Insights",
+      "description": "Retorna insights de audiencia gerados pela IA.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/audience-insights",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_audience_insights_refresh",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Refresh Audience Insights",
+      "description": "Forca recalculo dos insights de audiencia.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/audience-insights/refresh",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_gap_analysis_generate",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Generate Gap Analysis",
+      "description": "Gera analise de lacunas de conteudo via IA.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/gap-analysis/generate",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_gap_analyses_list",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "List Gap Analyses",
+      "description": "Lista todas as analises de lacunas de conteudo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/gap-analyses",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_gap_analyses_show",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Show Gap Analysis",
+      "description": "Retorna detalhes de uma analise de lacunas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/gap-analyses/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_gap_analyses_opportunities",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Gap Analysis Opportunities",
+      "description": "Retorna oportunidades identificadas em uma analise de lacunas.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/gap-analyses/00000000-0000-0000-0000-000000000000/opportunities",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_prediction_validations_create",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Create Prediction Validation",
+      "description": "Cria validacao de acuracia de previsao (AI Learning N4).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/prediction-validations",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"prediction_id\": \"00000000-0000-0000-0000-000000000000\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_prediction_accuracy",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Get Prediction Accuracy",
+      "description": "Retorna metricas de acuracia das previsoes (AI Learning N4).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ai-intelligence/prediction-accuracy",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_style_profile_create",
+      "_type": "request",
+      "parentId": "fld_ai_intelligence",
+      "name": "Create/Update Style Profile",
+      "description": "Cria ou atualiza o perfil de estilo da organizacao (AI Learning N5).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ai-intelligence/style-profile",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_crm",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 15-16 — CRM Connectors"
+    },
+    {
+      "_id": "req_crm_connect",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Initiate CRM OAuth",
+      "description": "Inicia fluxo OAuth para conectar um CRM (HubSpot, Salesforce).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/crm/connect",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"provider\": \"hubspot\",\n  \"redirect_url\": \"https://app.example.com/crm/callback\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_connect_api_key",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Connect CRM via API Key",
+      "description": "Conecta um CRM usando API key (ActiveCampaign, Salesforce).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/crm/connect-api-key",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"provider\": \"active_campaign\",\n  \"api_key\": \"your-api-key-here\",\n  \"api_url\": \"https://youraccountname.api-us1.com\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_callback",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "CRM OAuth Callback",
+      "description": "Processa callback OAuth do CRM.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/crm/callback",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"provider\": \"hubspot\",\n  \"code\": \"oauth-authorization-code\",\n  \"state\": \"csrf-state-token\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_connections_list",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "List CRM Connections",
+      "description": "Lista todas as conexoes CRM da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/crm/connections",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_connections_show",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Show CRM Connection",
+      "description": "Retorna detalhes de uma conexao CRM especifica.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_connections_test",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Test CRM Connection",
+      "description": "Testa a conectividade de uma conexao CRM.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000/test",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_connections_delete",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Delete CRM Connection",
+      "description": "Remove uma conexao CRM.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_mappings_list",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "List CRM Field Mappings",
+      "description": "Lista mapeamentos de campos de uma conexao CRM.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000/mappings",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_mappings_update",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Update CRM Field Mappings",
+      "description": "Atualiza mapeamentos de campos de uma conexao CRM.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000/mappings",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"mappings\": [\n    {\"source_field\": \"email\", \"target_field\": \"contact_email\"},\n    {\"source_field\": \"name\", \"target_field\": \"contact_name\"}\n  ]\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_mappings_reset",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Reset CRM Field Mappings",
+      "description": "Reseta mapeamentos de campos para os padroes.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000/mappings/reset",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_crm_sync_logs",
+      "_type": "request",
+      "parentId": "fld_crm",
+      "name": "Get CRM Sync Logs",
+      "description": "Retorna logs de sincronizacao de uma conexao CRM.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/crm/connections/00000000-0000-0000-0000-000000000000/logs",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "fld_paid_advertising",
+      "_type": "request_group",
+      "parentId": "wrk_social_media_manager",
+      "name": "Sprint 17-18 — Paid Advertising & Ad Intelligence"
+    },
+    {
+      "_id": "req_ads_accounts_connect",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Connect Ad Account (OAuth)",
+      "description": "Inicia fluxo OAuth para conectar conta de anuncios (Meta, Google, TikTok).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/accounts/connect",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"provider\": \"meta\",\n  \"redirect_url\": \"https://app.example.com/ads/callback\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_accounts_callback",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Ad Account OAuth Callback",
+      "description": "Processa callback OAuth da plataforma de anuncios.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/accounts/callback",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"provider\": \"meta\",\n  \"code\": \"oauth-authorization-code\",\n  \"state\": \"csrf-state-token\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_accounts_list",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "List Ad Accounts",
+      "description": "Lista todas as contas de anuncios conectadas da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/accounts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_accounts_show",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Show Ad Account",
+      "description": "Retorna detalhes de uma conta de anuncios.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/accounts/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_accounts_test",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Test Ad Account Connection",
+      "description": "Testa a conectividade de uma conta de anuncios.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/accounts/00000000-0000-0000-0000-000000000000/test",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_accounts_delete",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Delete Ad Account",
+      "description": "Remove uma conta de anuncios conectada.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/ads/accounts/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_audiences_create",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Create Ad Audience",
+      "description": "Cria uma audiencia para segmentacao de anuncios.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/audiences",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Young Professionals\",\n  \"platform\": \"meta\",\n  \"targeting\": {\n    \"age_min\": 25,\n    \"age_max\": 35,\n    \"genders\": [\"all\"],\n    \"interests\": [\"technology\", \"startups\"]\n  }\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_audiences_list",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "List Ad Audiences",
+      "description": "Lista todas as audiencias de anuncios da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/audiences",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_audiences_show",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Show Ad Audience",
+      "description": "Retorna detalhes de uma audiencia de anuncios.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/audiences/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_audiences_update",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Update Ad Audience",
+      "description": "Atualiza uma audiencia de anuncios.",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/ads/audiences/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Young Professionals Updated\",\n  \"targeting\": {\n    \"age_min\": 22,\n    \"age_max\": 38\n  }\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_audiences_delete",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Delete Ad Audience",
+      "description": "Remove uma audiencia de anuncios.",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/ads/audiences/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_interests_search",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Search Ad Interests",
+      "description": "Pesquisa interesses disponiveis para segmentacao de anuncios.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/interests/search?q=technology&platform=meta",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_boosts_create",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Create Ad Boost",
+      "description": "Cria um boost (impulsionamento) para um post publicado.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/boosts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"scheduled_post_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"ad_account_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"audience_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"budget_cents\": 5000,\n  \"currency\": \"BRL\",\n  \"duration_days\": 7\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_boosts_list",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "List Ad Boosts",
+      "description": "Lista todos os boosts da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/boosts",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_boosts_show",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Show Ad Boost",
+      "description": "Retorna detalhes de um boost especifico.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/boosts/00000000-0000-0000-0000-000000000000",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_boosts_cancel",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Cancel Ad Boost",
+      "description": "Cancela um boost ativo.",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/boosts/00000000-0000-0000-0000-000000000000/cancel",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_boosts_metrics",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Get Boost Metrics",
+      "description": "Retorna metricas de performance de um boost.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/boosts/00000000-0000-0000-0000-000000000000/metrics",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_analytics_overview",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Ad Analytics Overview",
+      "description": "Retorna visao geral das metricas de anuncios da organizacao.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/analytics/overview",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_analytics_spending",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Ad Spending Analytics",
+      "description": "Retorna dados de gastos com anuncios ao longo do tempo.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/analytics/spending",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_analytics_export",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Export Ad Analytics",
+      "description": "Exporta dados de analytics de anuncios (CSV/PDF).",
+      "method": "POST",
+      "url": "{{ _.base_url }}/ads/analytics/export",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Content-Type", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"format\": \"csv\",\n  \"period_start\": \"2026-02-01\",\n  \"period_end\": \"2026-02-28\"\n}"
+      },
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_intelligence_insights",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Get Ad Intelligence Insights",
+      "description": "Retorna insights de performance de anuncios gerados pela IA (audiencias, conteudo, correlacao).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/intelligence/insights",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_intelligence_insights_filtered",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Get Ad Insights (Filtered)",
+      "description": "Retorna insights de performance filtrados por tipo (best_audiences, best_content_for_ads, organic_vs_paid_correlation).",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/intelligence/insights?type=best_audiences",
+      "headers": [
+        { "name": "Accept", "value": "application/json" },
+        { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }
+      ],
+      "body": {},
+      "authentication": {}
+    },
+    {
+      "_id": "req_ads_intelligence_targeting",
+      "_type": "request",
+      "parentId": "fld_paid_advertising",
+      "name": "Get Targeting Suggestions",
+      "description": "Retorna sugestoes de targeting baseadas em performance historica de anuncios.",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ads/intelligence/targeting-suggestions?content_id=00000000-0000-0000-0000-000000000000",
       "headers": [
         { "name": "Accept", "value": "application/json" },
         { "name": "Authorization", "value": "Bearer {{ _.access_token }}" }

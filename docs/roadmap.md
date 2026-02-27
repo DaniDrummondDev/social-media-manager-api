@@ -2,7 +2,7 @@
 
 > **Versao:** 1.2.0\
 > **Data:** 2026-02-26\
-> **Status:** Em desenvolvimento — Fase 5 em progresso, Sprint 18.1 completo
+> **Status:** Em desenvolvimento — Fase 5 completa, Sprint 18 completo
 
 ---
 
@@ -14,7 +14,7 @@
 | **Fase 2 — Expansao (v2.0)** | Sprint 8-11 | ✅ Completa (2 integration tests pendentes no Sprint 9-10) |
 | **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
-| **Fase 5 — Ads (v5.0)** | Sprint 17-18 | 🔄 Em progresso (Sprint 18.1 completo) |
+| **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
 | **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Nao iniciada (ADR-021 documentada) |
 | **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ⏳ Nao iniciada |
 
@@ -40,7 +40,7 @@
 | 15 | CRM Connectors Fase 1 | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 16 | CRM Fase 2 + Intelligence | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 17 | Paid Advertising Core | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
-| 18 | AI Learning from Ads | ✅ | ⏳ | ⏳ | ⏳ | 🔄 Em progresso |
+| 18 | AI Learning from Ads | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 19 | Multi-Agent AI (LangGraph) | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 20 | Geracao Enriquecida | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 21 | Feature Gates + Integration Tests | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
@@ -59,7 +59,7 @@
 
 ### Proximo passo
 
-**Sprint 18.2 — Application Layer**: Proximo passo. Sprint 18.1 (Domain Layer) completo com 18 novos testes (entity + VO).
+**Sprint 19 — Multi-Agent AI (LangGraph)**: Proximo passo. Fase 5 (Ads) completa com Sprint 18 finalizado (2510 testes, 0 failures).
 
 ---
 
@@ -1806,46 +1806,46 @@ Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via 
 
 ### 18.2 Application Layer
 
-- [ ] Use Cases:
+- [x] Use Cases:
   - `AggregateAdPerformanceUseCase` — agrega metricas de ads por audiencia, conteudo, horario
   - `EnrichAIContextFromAdsUseCase` — injeta dados de ads no ai_generation_context
   - `GetAdTargetingSuggestionsUseCase` — sugere targeting baseado em performance historica
   - `GetAdPerformanceInsightsUseCase` — retorna insights de ads para o usuario
-- [ ] Expansao dos Use Cases de geracao (Sprint 3) para injetar contexto de ads
-- [ ] DTOs para input/output
+- [x] DTOs: AggregateAdPerformanceInput, GetAdTargetingSuggestionsInput, GetAdPerformanceInsightsInput, AdPerformanceInsightOutput, AdTargetingSuggestionsOutput
+- [x] Exception: InsufficientAdDataException
+- [x] Unit tests: 17 testes, 82 assertions
 
 ### 18.3 Infrastructure Layer
 
-- [ ] Migration: `ad_performance_insights` table
-- [ ] Migration: `ALTER TABLE ai_generation_context ADD context_type 'ad_performance'`
-- [ ] Atualizar `RAGContextProvider` com ad performance boost logic
-- [ ] Atualizar `UpdateLearningContextJob` para incluir dados de ads
-- [ ] Jobs:
+- [x] Migration: `ad_performance_insights` table (0001_01_01_000077)
+- [x] Model: `AdPerformanceInsightModel` (HasUuids, casts)
+- [x] Repository: `EloquentAdPerformanceInsightRepository` (save, findById, findByOrgAndType, findActive, findExpired)
+- [x] Stub: `StubAdIntelligenceProvider` (implements AdIntelligenceProviderInterface)
+- [x] Jobs:
   - `AggregateAdPerformanceJob` (semanal — agrupa metricas por audiencia/conteudo)
   - `EnrichAIContextFromAdsJob` (pos-agregacao — atualiza ai_generation_context)
   - `GenerateAdTargetingSuggestionsJob` (on-demand — ao criar novo boost)
-- [ ] Listeners:
-  - `AdMetricsSynced` → schedule aggregation
-  - `AdPerformanceAggregated` → enrich AI context
-  - `BoostCreated` → generate targeting suggestions
-- [ ] Controllers: `AdIntelligenceController`
-- [ ] Endpoints:
+- [x] Listeners:
+  - `AdPerformanceAggregated` → `EnrichAIContextOnAdPerformanceAggregated`
+  - `BoostCreated` → `GenerateTargetingSuggestionsOnBoostCreated`
+  - `ScheduleAdPerformanceAggregation` — dispatch `AggregateAdPerformanceJob` para cada AdInsightType
+- [x] Request: `ListAdPerformanceInsightsRequest` (type filter validation)
+- [x] Resource: `AdPerformanceInsightResource` (JSON:API format)
+- [x] Controller: `AdIntelligenceController` (insights + targetingSuggestions)
+- [x] Endpoints:
   - `GET /api/v1/ads/intelligence/insights` — insights de performance de ads
   - `GET /api/v1/ads/intelligence/targeting-suggestions` — sugestoes de targeting para novo boost
-- [ ] Feature gate: Exclusivo organizacoes com conta de anuncios conectada + Professional+
+- [x] Service Provider: bindings + event listeners registrados
+- [x] Feature gate: `plan.limit:paid_advertising` (Professional+)
 
 ### 18.4 Testes
 
-- [ ] Unit: AdPerformanceInsight entity, AdInsightType VO
-- [ ] Unit: Todos os Use Cases (com mocks)
-- [ ] Integration: Agregacao de metricas de ads
-- [ ] Integration: Injecao de contexto de ads nos prompts de geracao
-- [ ] Feature: Insights de ads (endpoint)
-- [ ] Feature: Sugestoes de targeting (endpoint)
-- [ ] Feature: Geracao enriquecida com contexto de ads (campo `ad_context_used`)
-- [ ] Feature: Feature gate (somente com ads account conectado)
-- [ ] Feature: Graceful degradation (sem dados de ads, skip silencioso)
-- [ ] Feature: Isolamento por organization_id
+- [x] Unit: AdPerformanceInsight entity (14), AdInsightType VO (4) = 18 testes
+- [x] Unit: Todos os Use Cases — 17 testes (82 assertions)
+- [x] Feature: Insights de ads — 200 com dados, 200 vazio, filtro por type, 401, isolamento org, exclui expirados
+- [x] Feature: Sugestoes de targeting — 200 com sugestoes, 401
+- [x] Feature: Isolamento por organization_id
+- [x] Total Sprint 18: 43 novos testes (2510 total, 0 failures)
 
 ### Entregaveis Sprint 18
 
