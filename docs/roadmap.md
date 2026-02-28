@@ -15,7 +15,7 @@
 | **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
-| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1 Setup completo) |
+| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1-19.4 completos) |
 | **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ⏳ Nao iniciada |
 
 ### Progresso detalhado
@@ -41,7 +41,7 @@
 | 16 | CRM Fase 2 + Intelligence | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 17 | Paid Advertising Core | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 18 | AI Learning from Ads | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
-| 19 | Multi-Agent AI (LangGraph) | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
+| 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ⏳ 19.1-19.4 completos |
 | 20 | Geracao Enriquecida | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 21 | Feature Gates + Integration Tests | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 
@@ -59,7 +59,7 @@
 
 ### Proximo passo
 
-**Sprint 19.4 — Social Listening Pipeline**: Proximo passo. Sprint 19.3 (Content DNA) completo — 3 agentes LangGraph, fluxo linear, 24 testes pytest. Security audit completo (9 Critical + 9 batches High/Medium/Low). 2510 testes Laravel passando.
+**Sprint 19.5 — Visual Adaptation Pipeline**: Proximo passo. Sprint 19.4 (Social Listening) completo — 4 agentes LangGraph, fluxo linear com prompts condicionais para crise, 35 testes pytest (3 pipelines). 2510 testes Laravel passando.
 
 ### Security Audit — Hardening Completo
 
@@ -1939,15 +1939,16 @@ O Sprint 19 introduz um microservico Python com LangGraph para orquestracao de p
 
 ### 19.4 Pipeline: Social Listening Intelligence
 
-- [ ] LangGraph StateGraph: `SocialListeningState`
-- [ ] Agente `MentionClassifier` — categoriza mencao (elogio, reclamacao, pergunta, crise, spam)
-- [ ] Agente `SentimentAnalyzer` — analise profunda com contexto cultural e ironia
-- [ ] Agente `ResponseStrategist` — sugere resposta contextualizada com tom adequado
-- [ ] Agente `SafetyChecker` — verifica brand safety antes de retornar
-- [ ] Tratamento diferenciado por categoria (crise = processamento profundo)
-- [ ] Endpoint: `POST /api/v1/pipelines/social-listening`
-- [ ] Callback ao Laravel com classificacao, sentimento e resposta sugerida
-- [ ] Testes: graph completo, cada categoria de mencao
+- [x] LangGraph StateGraph: `SocialListeningState` (TypedDict com append reducer para agents_executed)
+- [x] Agente `MentionClassifier` — categoriza mencao em 5 categorias (praise, complaint, question, crisis, spam) + urgency (temp=0.2)
+- [x] Agente `SentimentAnalyzer` — analise profunda com contexto cultural, deteccao de ironia, blocos condicionais crise/padrao (temp=0.3)
+- [x] Agente `ResponseStrategist` — sugere resposta contextualizada com tom adequado, estrategia por categoria (temp=0.5)
+- [x] Agente `SafetyChecker` — verifica brand safety, blacklist, promessas, risco legal, tom, dados pessoais (temp=0.1)
+- [x] Tratamento diferenciado por categoria via prompts condicionais (crise = processamento profundo, sem conditional edges)
+- [x] Endpoint: `POST /api/v1/pipelines/social-listening` (202 Accepted + job_id + background task)
+- [x] Callback ao Laravel com classificacao, sentimento, resposta sugerida e resultado safety via httpx
+- [x] Fix bug callback.py: `pipeline` parametrizado (era hardcoded `"content_creation"`)
+- [x] Testes: 11 testes (3 graph flows, 5 agentes individuais, endpoint 202, validacao input, health 3 pipelines)
 
 ### 19.5 Pipeline: Visual Adaptation Cross-Network
 
