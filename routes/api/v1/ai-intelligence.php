@@ -12,7 +12,8 @@ use App\Infrastructure\AIIntelligence\Controllers\PredictionAccuracyController;
 use App\Infrastructure\AIIntelligence\Controllers\StyleProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
+// AI Intelligence Features (Professional+ plans only)
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls', 'plan.feature:ai_intelligence'])->group(function () {
     // Best Time to Post
     Route::get('ai-intelligence/best-times', [BestTimesController::class, 'index']);
     Route::get('ai-intelligence/best-times/heatmap', [BestTimesController::class, 'heatmap']);
@@ -53,7 +54,10 @@ Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () 
     Route::get('ai-intelligence/gap-analyses', [ContentGapAnalysisController::class, 'index']);
     Route::get('ai-intelligence/gap-analyses/{id}', [ContentGapAnalysisController::class, 'show']);
     Route::get('ai-intelligence/gap-analyses/{id}/opportunities', [ContentGapAnalysisController::class, 'opportunities']);
+});
 
+// AI Learning Features (Professional+ plans only)
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls', 'plan.feature:ai_learning'])->group(function () {
     // Prediction Accuracy (AI Learning — N4)
     Route::post('ai-intelligence/prediction-validations', [PredictionAccuracyController::class, 'store']);
     Route::get('ai-intelligence/prediction-accuracy', [PredictionAccuracyController::class, 'index']);

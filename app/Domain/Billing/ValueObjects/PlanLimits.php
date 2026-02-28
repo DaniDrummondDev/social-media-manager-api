@@ -55,6 +55,7 @@ final readonly class PlanLimits
             UsageResourceType::Webhooks => $this->webhooks,
             UsageResourceType::Reports => $this->reportsMonth,
             UsageResourceType::PaidAdvertising => $this->paidAdvertising,
+            UsageResourceType::CrmConnections => $this->crmConnections,
         };
     }
 

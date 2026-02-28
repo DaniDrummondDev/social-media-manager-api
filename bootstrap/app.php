@@ -72,6 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.rls' => \App\Infrastructure\Shared\Http\Middleware\SetTenantContext::class,
             'role' => CheckRole::class,
             'plan.limit' => \App\Infrastructure\Billing\Middleware\CheckPlanLimit::class,
+            'plan.feature' => \App\Infrastructure\Billing\Middleware\CheckPlanFeature::class,
             'admin' => \App\Infrastructure\PlatformAdmin\Middleware\PlatformAdminMiddleware::class,
             'internal-only' => \App\Infrastructure\Shared\Http\Middleware\InternalOnlyMiddleware::class,
         ]);

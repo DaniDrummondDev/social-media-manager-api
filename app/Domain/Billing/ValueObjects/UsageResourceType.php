@@ -16,4 +16,5 @@ enum UsageResourceType: string
     case Webhooks = 'webhooks';
     case Reports = 'reports';
     case PaidAdvertising = 'paid_advertising';
+    case CrmConnections = 'crm_connections';
 }

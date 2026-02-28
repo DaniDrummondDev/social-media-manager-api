@@ -5,7 +5,7 @@ use App\Infrastructure\Engagement\Controllers\CrmFieldMappingController;
 use App\Infrastructure\Engagement\Controllers\CrmSyncController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'org.context', 'tenant.rls'])->group(function () {
+Route::middleware(['auth.jwt', 'org.context', 'tenant.rls', 'plan.feature:crm_native'])->group(function () {
     // CRM Connections
     Route::post('crm/connect', [CrmConnectionController::class, 'connect']);
     Route::post('crm/connect-api-key', [CrmConnectionController::class, 'connectWithApiKey']);
