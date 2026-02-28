@@ -10,6 +10,7 @@ use App\Domain\Engagement\Entities\CrmConnection;
 use App\Domain\Engagement\Repositories\CrmConnectionRepositoryInterface;
 use App\Domain\Engagement\ValueObjects\CrmConnectionStatus;
 use App\Domain\Engagement\ValueObjects\CrmProvider;
+use App\Domain\Shared\Exceptions\DomainException;
 use App\Domain\Shared\ValueObjects\Uuid;
 
 function createMockConnection(string $id): CrmConnection

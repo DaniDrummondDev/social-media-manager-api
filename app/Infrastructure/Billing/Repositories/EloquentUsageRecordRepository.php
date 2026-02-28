@@ -10,6 +10,7 @@ use App\Domain\Billing\ValueObjects\UsageResourceType;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Billing\Models\UsageRecordModel;
 use DateTimeImmutable;
+use Illuminate\Support\Facades\DB;
 
 final class EloquentUsageRecordRepository implements UsageRecordRepositoryInterface
 {
@@ -27,6 +28,22 @@ final class EloquentUsageRecordRepository implements UsageRecordRepositoryInterf
             ->where('organization_id', (string) $organizationId)
             ->where('resource_type', $resourceType->value)
             ->where('period_start', $periodStart->format('Y-m-d'))
+            ->first();
+
+        return $record ? $this->toDomain($record) : null;
+    }
+
+    public function findByOrganizationAndResourceForUpdate(
+        Uuid $organizationId,
+        UsageResourceType $resourceType,
+        DateTimeImmutable $periodStart,
+    ): ?UsageRecord {
+        /** @var UsageRecordModel|null $record */
+        $record = $this->model->newQuery()
+            ->where('organization_id', (string) $organizationId)
+            ->where('resource_type', $resourceType->value)
+            ->where('period_start', $periodStart->format('Y-m-d'))
+            ->lockForUpdate()
             ->first();
 
         return $record ? $this->toDomain($record) : null;
@@ -63,6 +80,36 @@ final class EloquentUsageRecordRepository implements UsageRecordRepositoryInterf
                 'recorded_at' => $record->recordedAt->format('Y-m-d H:i:s'),
             ],
         );
+    }
+
+    public function incrementOrCreate(
+        Uuid $organizationId,
+        UsageResourceType $resourceType,
+        int $amount,
+        DateTimeImmutable $periodStart,
+        DateTimeImmutable $periodEnd,
+    ): void {
+        DB::transaction(function () use ($organizationId, $resourceType, $amount, $periodStart, $periodEnd): void {
+            $record = $this->findByOrganizationAndResourceForUpdate(
+                $organizationId,
+                $resourceType,
+                $periodStart,
+            );
+
+            if ($record !== null) {
+                $record = $record->increment($amount);
+            } else {
+                $record = UsageRecord::create(
+                    $organizationId,
+                    $resourceType,
+                    $amount,
+                    $periodStart,
+                    $periodEnd,
+                );
+            }
+
+            $this->createOrUpdate($record);
+        });
     }
 
     private function toDomain(UsageRecordModel $model): UsageRecord

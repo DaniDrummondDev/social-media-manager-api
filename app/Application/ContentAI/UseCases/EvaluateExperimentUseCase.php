@@ -10,7 +10,7 @@ use App\Application\Shared\Contracts\EventDispatcherInterface;
 use App\Domain\ContentAI\Contracts\PromptExperimentRepositoryInterface;
 use App\Domain\ContentAI\Contracts\PromptTemplateRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainException;
 
 final class EvaluateExperimentUseCase
 {

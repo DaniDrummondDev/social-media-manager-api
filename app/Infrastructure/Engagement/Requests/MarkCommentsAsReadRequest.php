@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Infrastructure\Identity\Requests;
+namespace App\Infrastructure\Engagement\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-final class Confirm2FARequest extends FormRequest
+final class MarkCommentsAsReadRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,8 +17,8 @@ final class Confirm2FARequest extends FormRequest
     public function rules(): array
     {
         return [
-            'secret' => ['required', 'string'],
-            'otp_code' => ['required', 'string', 'size:6'],
+            'ids' => ['required', 'array', 'max:100'],
+            'ids.*' => ['required', 'uuid'],
         ];
     }
 }

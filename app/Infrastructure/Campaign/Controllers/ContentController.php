@@ -48,7 +48,10 @@ final class ContentController
         ListContentsUseCase $useCase,
         string $campaignId,
     ): JsonResponse {
-        $output = $useCase->execute($campaignId);
+        $output = $useCase->execute(
+            $request->attributes->get('auth_organization_id'),
+            $campaignId,
+        );
 
         $data = array_map(
             fn ($item) => ContentResource::fromOutput($item)->toArray(),

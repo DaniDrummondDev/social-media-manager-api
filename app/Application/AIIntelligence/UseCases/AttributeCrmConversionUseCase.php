@@ -12,7 +12,7 @@ use App\Domain\AIIntelligence\Repositories\CrmConversionAttributionRepositoryInt
 use App\Domain\AIIntelligence\ValueObjects\AttributionType;
 use App\Domain\Engagement\Repositories\CrmConnectionRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainException;
 
 final class AttributeCrmConversionUseCase
 {

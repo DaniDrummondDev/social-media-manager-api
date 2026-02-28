@@ -18,6 +18,10 @@ final class GenerateMonthlyInvoicesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 300;
+
+    public int $tries = 1;
+
     public function __construct()
     {
         $this->onQueue('client-finance');

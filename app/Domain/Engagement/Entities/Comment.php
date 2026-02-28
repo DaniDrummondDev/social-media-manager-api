@@ -95,6 +95,8 @@ final readonly class Comment
                     userId: $userId,
                     contentId: (string) $contentId,
                     provider: $provider->value,
+                    authorName: $authorName,
+                    authorExternalId: $authorExternalId,
                 ),
             ],
         );

@@ -14,6 +14,8 @@ final readonly class CommentCaptured extends DomainEvent
         string $userId,
         public string $contentId,
         public string $provider,
+        public string $authorName,
+        public ?string $authorExternalId,
     ) {
         parent::__construct($aggregateId, $organizationId, $userId);
     }

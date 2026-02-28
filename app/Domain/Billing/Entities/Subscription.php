@@ -297,6 +297,12 @@ final readonly class Subscription
 
     public function upgrade(Uuid $newPlanId): self
     {
+        if (! in_array($this->status, [SubscriptionStatus::Active, SubscriptionStatus::Trialing], true)) {
+            throw new InvalidSubscriptionTransitionException(
+                "Não é possível fazer upgrade com status '{$this->status->value}'.",
+            );
+        }
+
         $now = new DateTimeImmutable;
 
         return new self(

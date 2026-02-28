@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\Route;
 
 // Public auth routes (no authentication required)
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('2fa/verify', [AuthController::class, 'verify2fa']);
-    Route::post('refresh', [AuthController::class, 'refresh']);
-    Route::post('verify-email', [AuthController::class, 'verifyEmail']);
-    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:auth.register');
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:auth.login');
+    Route::post('2fa/verify', [AuthController::class, 'verify2fa'])->middleware('throttle:auth.2fa');
+    Route::post('refresh', [AuthController::class, 'refresh'])->middleware('throttle:auth.refresh');
+    Route::post('verify-email', [AuthController::class, 'verifyEmail'])->middleware('throttle:auth.password');
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:auth.password');
+    Route::post('reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:auth.password');
 });
 
 // Authenticated auth routes

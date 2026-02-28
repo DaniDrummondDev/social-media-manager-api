@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 final class DispatchScheduledPostsJob implements ShouldQueue
@@ -21,22 +22,36 @@ final class DispatchScheduledPostsJob implements ShouldQueue
     {
         $now = new DateTimeImmutable;
 
-        $duePosts = $repository->findDuePosts($now);
+        $dueCount = DB::transaction(function () use ($repository, $now): int {
+            $duePosts = $repository->findDuePostsForUpdate($now);
 
-        foreach ($duePosts as $post) {
-            ProcessScheduledPostJob::dispatch((string) $post->id)->onQueue('publishing');
-        }
+            foreach ($duePosts as $post) {
+                $dispatched = $post->markAsDispatched();
+                $repository->update($dispatched);
 
-        $retryablePosts = $repository->findRetryable($now);
+                ProcessScheduledPostJob::dispatch((string) $post->id)->onQueue('publishing');
+            }
 
-        foreach ($retryablePosts as $post) {
-            ProcessScheduledPostJob::dispatch((string) $post->id)->onQueue('publishing');
-        }
+            return count($duePosts);
+        });
 
-        if (count($duePosts) > 0 || count($retryablePosts) > 0) {
+        $retryCount = DB::transaction(function () use ($repository, $now): int {
+            $retryablePosts = $repository->findRetryableForUpdate($now);
+
+            foreach ($retryablePosts as $post) {
+                $dispatched = $post->markAsDispatched();
+                $repository->update($dispatched);
+
+                ProcessScheduledPostJob::dispatch((string) $post->id)->onQueue('publishing');
+            }
+
+            return count($retryablePosts);
+        });
+
+        if ($dueCount > 0 || $retryCount > 0) {
             Log::info('Dispatched scheduled posts', [
-                'due' => count($duePosts),
-                'retryable' => count($retryablePosts),
+                'due' => $dueCount,
+                'retryable' => $retryCount,
             ]);
         }
     }

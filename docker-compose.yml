@@ -9,6 +9,7 @@
 #   redis      — Cache/Queue/Rate-limiting/Sessions (:6379)
 #   horizon    — Queue workers (7 filas, 15 workers)
 #   scheduler  — Cron/scheduled tasks
+#   ai-agents  — Python/LangGraph multi-agent AI pipelines (:8001)
 #   minio      — S3-compatible storage (:9000/:9001)
 #   mailpit    — Local SMTP (:8025)
 ###############################################################################
@@ -215,6 +216,54 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    networks:
+      - social-media-net
+
+  # ---------------------------------------------------------------------------
+  # ai-agents — Python/LangGraph Multi-Agent AI Pipelines
+  #
+  # Microservice for complex multi-agent AI pipelines:
+  #   Content Creation, Content DNA, Social Listening, Visual Adaptation
+  #
+  # Communicates with Laravel via HTTP async (request → 202 → callback).
+  # Uses Redis DB 4 for LangGraph checkpoints and job status.
+  # Fallback: Laravel Prism single-shot via circuit breaker when unavailable.
+  # Reference: ADR-021
+  # ---------------------------------------------------------------------------
+  ai-agents:
+    build:
+      context: ./ai-agents
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: smm-ai-agents
+    restart: unless-stopped
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DATABASE_URL=postgresql://${DB_USERNAME:-social_media}:${DB_PASSWORD:-secret}@postgres:5432/${DB_DATABASE:-social_media_manager}
+      - REDIS_URL=redis://redis:6379/4
+      - CALLBACK_BASE_URL=http://nginx:80/api/v1/internal
+      - INTERNAL_SECRET=${AI_AGENTS_INTERNAL_SECRET:-}
+      - LOG_LEVEL=${AI_AGENTS_LOG_LEVEL:-info}
+      - WORKERS=${AI_AGENTS_WORKERS:-2}
+      - ENVIRONMENT=${APP_ENV:-local}
+    ports:
+      - "${AI_AGENTS_PORT:-8001}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./ai-agents:/app
     networks:
       - social-media-net
 

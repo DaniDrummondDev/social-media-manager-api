@@ -13,6 +13,7 @@ use App\Application\Engagement\UseCases\MarkCommentAsReadUseCase;
 use App\Application\Engagement\UseCases\ReplyCommentUseCase;
 use App\Application\Engagement\UseCases\SuggestReplyUseCase;
 use App\Infrastructure\Engagement\Requests\ListCommentsRequest;
+use App\Infrastructure\Engagement\Requests\MarkCommentsAsReadRequest;
 use App\Infrastructure\Engagement\Requests\ReplyCommentRequest;
 use App\Infrastructure\Engagement\Resources\CommentResource;
 use App\Infrastructure\Shared\Http\Resources\ApiResponse;
@@ -62,10 +63,10 @@ final class CommentController
     }
 
     public function markManyAsRead(
-        Request $request,
+        MarkCommentsAsReadRequest $request,
         MarkCommentAsReadUseCase $useCase,
     ): JsonResponse {
-        $ids = $request->input('ids', []);
+        $ids = $request->validated('ids');
 
         $useCase->execute(new MarkAsReadInput(
             organizationId: $request->attributes->get('auth_organization_id'),

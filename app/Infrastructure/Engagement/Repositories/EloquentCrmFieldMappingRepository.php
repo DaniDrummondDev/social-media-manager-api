@@ -9,6 +9,7 @@ use App\Domain\Engagement\ValueObjects\CrmFieldMapping;
 use App\Domain\Engagement\ValueObjects\CrmProvider;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Engagement\Models\CrmFieldMappingModel;
+use Illuminate\Support\Facades\DB;
 
 final class EloquentCrmFieldMappingRepository implements CrmFieldMappingRepositoryInterface
 {
@@ -73,20 +74,22 @@ final class EloquentCrmFieldMappingRepository implements CrmFieldMappingReposito
      */
     public function saveForConnection(Uuid $connectionId, array $mappings): void
     {
-        $this->model->newQuery()
-            ->where('crm_connection_id', (string) $connectionId)
-            ->delete();
+        DB::transaction(function () use ($connectionId, $mappings): void {
+            $this->model->newQuery()
+                ->where('crm_connection_id', (string) $connectionId)
+                ->delete();
 
-        foreach ($mappings as $mapping) {
-            $this->model->newQuery()->create([
-                'id' => (string) Uuid::generate(),
-                'crm_connection_id' => (string) $connectionId,
-                'smm_field' => $mapping->smmField,
-                'crm_field' => $mapping->crmField,
-                'transform' => $mapping->transform,
-                'position' => $mapping->position,
-            ]);
-        }
+            foreach ($mappings as $mapping) {
+                $this->model->newQuery()->create([
+                    'id' => (string) Uuid::generate(),
+                    'crm_connection_id' => (string) $connectionId,
+                    'smm_field' => $mapping->smmField,
+                    'crm_field' => $mapping->crmField,
+                    'transform' => $mapping->transform,
+                    'position' => $mapping->position,
+                ]);
+            }
+        });
     }
 
     public function resetToDefault(Uuid $connectionId, CrmProvider $provider): void

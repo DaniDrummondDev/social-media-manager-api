@@ -153,7 +153,7 @@ final class AuthController
     {
         $output = $useCase->execute(new Confirm2FAInput(
             userId: $request->attributes->get('auth_user_id'),
-            secret: $request->input('secret', ''),
+            secret: $request->validated('secret'),
             otpCode: $request->validated('otp_code'),
         ));
 

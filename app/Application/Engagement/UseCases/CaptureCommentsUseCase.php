@@ -10,6 +10,7 @@ use App\Domain\Engagement\Entities\Comment;
 use App\Domain\Engagement\Repositories\CommentRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Domain\SocialAccount\Repositories\SocialAccountRepositoryInterface;
+use App\Domain\Engagement\ValueObjects\Sentiment;
 use App\Domain\SocialAccount\ValueObjects\SocialProvider;
 use DateTimeImmutable;
 
@@ -64,7 +65,7 @@ final class CaptureCommentsUseCase
                 authorExternalId: $commentData['author_id'] ?? null,
                 authorProfileUrl: $commentData['author_profile_url'] ?? null,
                 text: $commentData['text'] ?? '',
-                sentiment: isset($commentData['sentiment']) ? SocialProvider::tryFrom($commentData['sentiment']) === null ? null : null : null,
+                sentiment: isset($commentData['sentiment']) ? Sentiment::tryFrom($commentData['sentiment']) : null,
                 sentimentScore: null,
                 isFromOwner: (bool) ($commentData['is_from_owner'] ?? false),
                 commentedAt: new DateTimeImmutable($commentData['created_at'] ?? 'now'),

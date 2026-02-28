@@ -10,6 +10,7 @@ use App\Domain\Organization\ValueObjects\OrganizationRole;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Organization\Models\OrganizationMemberModel;
 use DateTimeImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 final class EloquentOrganizationMemberRepository implements OrganizationMemberRepositoryInterface
 {
@@ -20,6 +21,17 @@ final class EloquentOrganizationMemberRepository implements OrganizationMemberRe
     public function create(OrganizationMember $member): void
     {
         $this->model->newQuery()->create($this->toArray($member));
+    }
+
+    public function createIfNotExists(OrganizationMember $member): bool
+    {
+        try {
+            $this->create($member);
+
+            return true;
+        } catch (UniqueConstraintViolationException) {
+            return false;
+        }
     }
 
     public function update(OrganizationMember $member): void

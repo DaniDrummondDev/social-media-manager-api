@@ -24,7 +24,7 @@ enum CrmConnectionStatus: string
     public function canTransitionTo(self $target): bool
     {
         return match ($this) {
-            self::Connected => in_array($target, [self::TokenExpired, self::Revoked, self::Error], true),
+            self::Connected => in_array($target, [self::Connected, self::TokenExpired, self::Revoked, self::Error], true),
             self::TokenExpired => in_array($target, [self::Connected, self::Revoked, self::Error], true),
             self::Error => in_array($target, [self::Connected, self::Revoked], true),
             self::Revoked => false,

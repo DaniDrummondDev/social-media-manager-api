@@ -14,6 +14,10 @@ final class WebhookEndpointModel extends Model
 
     protected $keyType = 'string';
 
+    protected $hidden = [
+        'secret',
+    ];
+
     protected $fillable = [
         'id',
         'organization_id',

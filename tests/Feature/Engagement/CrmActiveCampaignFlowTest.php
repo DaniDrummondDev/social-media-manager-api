@@ -25,7 +25,7 @@ function insertActiveCampaignConnection(string $orgId, string $userId, array $ov
         'id' => $id,
         'organization_id' => $orgId,
         'provider' => 'activecampaign',
-        'access_token' => 'ac-api-key-12345',
+        'access_token' => encryptCrmToken('ac-api-key-12345'),
         'refresh_token' => null,
         'token_expires_at' => null,
         'external_account_id' => 'activecampaign',

@@ -119,6 +119,10 @@ final readonly class Content
         ?string $body = null,
         ?array $hashtags = null,
     ): self {
+        if (! $this->status->isEditable()) {
+            throw new InvalidStatusTransitionException($this->status->value, 'editing');
+        }
+
         $now = new DateTimeImmutable;
 
         return new self(

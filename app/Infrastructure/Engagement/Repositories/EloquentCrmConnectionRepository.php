@@ -10,12 +10,14 @@ use App\Domain\Engagement\ValueObjects\CrmConnectionStatus;
 use App\Domain\Engagement\ValueObjects\CrmProvider;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Engagement\Models\CrmConnectionModel;
+use App\Infrastructure\Engagement\Services\CrmTokenEncrypter;
 use DateTimeImmutable;
 
 final class EloquentCrmConnectionRepository implements CrmConnectionRepositoryInterface
 {
     public function __construct(
         private readonly CrmConnectionModel $model,
+        private readonly CrmTokenEncrypter $encrypter,
     ) {}
 
     public function create(CrmConnection $connection): void
@@ -96,8 +98,8 @@ final class EloquentCrmConnectionRepository implements CrmConnectionRepositoryIn
             'id' => (string) $connection->id,
             'organization_id' => (string) $connection->organizationId,
             'provider' => $connection->provider->value,
-            'access_token' => $connection->accessToken,
-            'refresh_token' => $connection->refreshToken,
+            'access_token' => $connection->accessToken ? $this->encrypter->encrypt($connection->accessToken) : null,
+            'refresh_token' => $connection->refreshToken ? $this->encrypter->encrypt($connection->refreshToken) : null,
             'token_expires_at' => $connection->tokenExpiresAt?->format('Y-m-d H:i:s'),
             'external_account_id' => $connection->externalAccountId,
             'account_name' => $connection->accountName,
@@ -117,12 +119,15 @@ final class EloquentCrmConnectionRepository implements CrmConnectionRepositoryIn
         $createdAt = $model->getAttribute('created_at');
         $updatedAt = $model->getAttribute('updated_at');
 
+        $accessToken = $model->getAttribute('access_token');
+        $refreshToken = $model->getAttribute('refresh_token');
+
         return CrmConnection::reconstitute(
             id: Uuid::fromString($model->getAttribute('id')),
             organizationId: Uuid::fromString($model->getAttribute('organization_id')),
             provider: CrmProvider::from($model->getAttribute('provider')),
-            accessToken: $model->getAttribute('access_token'),
-            refreshToken: $model->getAttribute('refresh_token'),
+            accessToken: $accessToken ? $this->encrypter->decrypt($accessToken) : '',
+            refreshToken: $refreshToken ? $this->encrypter->decrypt($refreshToken) : null,
             tokenExpiresAt: $tokenExpiresAt ? new DateTimeImmutable($tokenExpiresAt->format('Y-m-d H:i:s')) : null,
             externalAccountId: $model->getAttribute('external_account_id'),
             accountName: $model->getAttribute('account_name'),

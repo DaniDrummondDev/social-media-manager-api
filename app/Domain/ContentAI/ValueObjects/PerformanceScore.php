@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\ContentAI\ValueObjects;
 
+use App\Domain\Shared\Exceptions\DomainException;
+
 final readonly class PerformanceScore
 {
     private function __construct(
@@ -28,7 +30,7 @@ final readonly class PerformanceScore
     public static function fromFloat(float $value): self
     {
         if ($value < 0.0 || $value > 100.0) {
-            throw new \DomainException('Performance score must be between 0.0 and 100.0.');
+            throw new DomainException('Performance score must be between 0.0 and 100.0.');
         }
 
         return new self($value);

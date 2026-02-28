@@ -11,6 +11,12 @@ interface OrganizationMemberRepositoryInterface
 {
     public function create(OrganizationMember $member): void;
 
+    /**
+     * Atomically insert a member. Returns false if a member with the same
+     * organization_id + user_id already exists (unique constraint violation).
+     */
+    public function createIfNotExists(OrganizationMember $member): bool;
+
     public function update(OrganizationMember $member): void;
 
     public function findByOrgAndUser(Uuid $organizationId, Uuid $userId): ?OrganizationMember;

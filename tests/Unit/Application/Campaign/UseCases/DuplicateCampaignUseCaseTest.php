@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Application\Campaign\DTOs\DuplicateCampaignInput;
 use App\Application\Campaign\UseCases\DuplicateCampaignUseCase;
 use App\Application\Shared\Contracts\EventDispatcherInterface;
+use App\Application\Shared\Contracts\TransactionManagerInterface;
 use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\Campaign\Contracts\ContentMediaRepositoryInterface;
 use App\Domain\Campaign\Contracts\ContentNetworkOverrideRepositoryInterface;
@@ -20,6 +21,8 @@ beforeEach(function () {
     $this->overrideRepository = Mockery::mock(ContentNetworkOverrideRepositoryInterface::class);
     $this->contentMediaRepository = Mockery::mock(ContentMediaRepositoryInterface::class);
     $this->eventDispatcher = Mockery::mock(EventDispatcherInterface::class);
+    $this->transactionManager = Mockery::mock(TransactionManagerInterface::class);
+    $this->transactionManager->shouldReceive('transaction')->andReturnUsing(fn (callable $cb) => $cb());
 
     $this->useCase = new DuplicateCampaignUseCase(
         $this->campaignRepository,
@@ -27,6 +30,7 @@ beforeEach(function () {
         $this->overrideRepository,
         $this->contentMediaRepository,
         $this->eventDispatcher,
+        $this->transactionManager,
     );
 });
 

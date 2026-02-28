@@ -24,7 +24,7 @@ it('allows valid transitions from connected', function () {
     expect($connected->canTransitionTo(CrmConnectionStatus::TokenExpired))->toBeTrue()
         ->and($connected->canTransitionTo(CrmConnectionStatus::Revoked))->toBeTrue()
         ->and($connected->canTransitionTo(CrmConnectionStatus::Error))->toBeTrue()
-        ->and($connected->canTransitionTo(CrmConnectionStatus::Connected))->toBeFalse();
+        ->and($connected->canTransitionTo(CrmConnectionStatus::Connected))->toBeTrue();
 });
 
 it('allows valid transitions from token_expired', function () {

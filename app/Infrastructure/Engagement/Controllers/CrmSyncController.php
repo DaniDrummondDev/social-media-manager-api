@@ -22,7 +22,7 @@ final class CrmSyncController
             organizationId: $request->attributes->get('auth_organization_id'),
             connectionId: $connectionId,
             cursor: $request->query('cursor'),
-            limit: (int) ($request->query('limit') ?? 20),
+            limit: min((int) ($request->query('limit') ?? 20), 100),
         ));
 
         $data = array_map(

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\ContentAI\ValueObjects\DiffSummary;
+use App\Domain\Shared\Exceptions\DomainException;
 
 it('creates with valid data', function () {
     $changes = [['field' => 'title', 'before' => 'Old', 'after' => 'New']];

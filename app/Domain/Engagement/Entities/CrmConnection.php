@@ -162,6 +162,8 @@ final readonly class CrmConnection
         ?string $refreshToken,
         ?DateTimeImmutable $tokenExpiresAt,
     ): self {
+        $this->ensureCanTransitionTo(CrmConnectionStatus::Connected);
+
         return new self(
             id: $this->id,
             organizationId: $this->organizationId,

@@ -13,5 +13,12 @@ interface StripeWebhookEventRepositoryInterface
      */
     public function create(string $stripeEventId, string $eventType, array $payload): void;
 
+    /**
+     * Atomically insert a webhook event. Returns false if the event already exists.
+     *
+     * @param  array<string, mixed>  $payload
+     */
+    public function createIfNotExists(string $stripeEventId, string $eventType, array $payload): bool;
+
     public function markProcessed(string $stripeEventId, ?string $errorMessage = null): void;
 }

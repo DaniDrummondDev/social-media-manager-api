@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Application\Billing\DTOs\RecordUsageInput;
 use App\Application\Billing\UseCases\RecordUsageUseCase;
-use App\Domain\Billing\Entities\UsageRecord;
 use App\Domain\Billing\Repositories\UsageRecordRepositoryInterface;
 use App\Domain\Billing\ValueObjects\UsageResourceType;
 use App\Domain\Shared\ValueObjects\Uuid;
@@ -13,16 +12,16 @@ it('creates new record when none exists', function () {
     $orgId = Uuid::generate();
 
     $usageRepo = mock(UsageRecordRepositoryInterface::class);
-    $usageRepo->shouldReceive('findByOrganizationAndResource')
+    $usageRepo->shouldReceive('incrementOrCreate')
         ->once()
-        ->andReturn(null);
-
-    $usageRepo->shouldReceive('createOrUpdate')
-        ->once()
-        ->withArgs(function (UsageRecord $record) use ($orgId) {
-            return $record->organizationId->equals($orgId)
-                && $record->resourceType === UsageResourceType::Publications
-                && $record->quantity === 1;
+        ->withArgs(function (
+            Uuid $receivedOrgId,
+            UsageResourceType $resourceType,
+            int $amount,
+        ) use ($orgId) {
+            return $receivedOrgId->equals($orgId)
+                && $resourceType === UsageResourceType::Publications
+                && $amount === 1;
         });
 
     $useCase = new RecordUsageUseCase($usageRepo);
@@ -36,27 +35,18 @@ it('creates new record when none exists', function () {
 
 it('increments existing record', function () {
     $orgId = Uuid::generate();
-    $periodStart = new DateTimeImmutable('first day of this month midnight');
-
-    $existingRecord = UsageRecord::reconstitute(
-        id: Uuid::generate(),
-        organizationId: $orgId,
-        resourceType: UsageResourceType::Publications,
-        quantity: 5,
-        periodStart: $periodStart,
-        periodEnd: new DateTimeImmutable('last day of this month 23:59:59'),
-        recordedAt: new DateTimeImmutable,
-    );
 
     $usageRepo = mock(UsageRecordRepositoryInterface::class);
-    $usageRepo->shouldReceive('findByOrganizationAndResource')
+    $usageRepo->shouldReceive('incrementOrCreate')
         ->once()
-        ->andReturn($existingRecord);
-
-    $usageRepo->shouldReceive('createOrUpdate')
-        ->once()
-        ->withArgs(function (UsageRecord $record) {
-            return $record->quantity === 8;
+        ->withArgs(function (
+            Uuid $receivedOrgId,
+            UsageResourceType $resourceType,
+            int $amount,
+        ) use ($orgId) {
+            return $receivedOrgId->equals($orgId)
+                && $resourceType === UsageResourceType::Publications
+                && $amount === 3;
         });
 
     $useCase = new RecordUsageUseCase($usageRepo);

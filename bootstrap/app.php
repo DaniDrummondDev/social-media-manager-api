@@ -4,6 +4,7 @@ use App\Infrastructure\Identity\Middleware\Authenticate;
 use App\Infrastructure\Organization\Middleware\CheckRole;
 use App\Infrastructure\Organization\Middleware\ResolveOrganizationContext;
 use App\Infrastructure\Shared\Http\Middleware\ForceJsonResponse;
+use App\Infrastructure\Shared\Http\Middleware\SecurityHeaders;
 use App\Infrastructure\Shared\Http\Middleware\SetCorrelationId;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -61,6 +62,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(prepend: [
             ForceJsonResponse::class,
             SetCorrelationId::class,
+            SecurityHeaders::class,
         ]);
 
         $middleware->alias([
@@ -168,5 +170,16 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::error($errors, 422);
+        });
+
+        // Catch-all for unhandled exceptions → 500 (generic, no internal details leaked)
+        $exceptions->render(function (\Throwable $e, Request $request) {
+            report($e);
+
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: 'INTERNAL_ERROR',
+                message: 'An unexpected error occurred.',
+                status: 500,
+            );
         });
     })->create();

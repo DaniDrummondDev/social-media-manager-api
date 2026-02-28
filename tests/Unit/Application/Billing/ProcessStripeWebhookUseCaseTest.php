@@ -8,7 +8,6 @@ use App\Application\Billing\UseCases\ProcessStripeWebhookUseCase;
 use App\Domain\Billing\Contracts\PaymentGatewayInterface;
 use App\Domain\Billing\Entities\Subscription;
 use App\Domain\Billing\Repositories\InvoiceRepositoryInterface;
-use App\Domain\Billing\Repositories\PlanRepositoryInterface;
 use App\Domain\Billing\Repositories\StripeWebhookEventRepositoryInterface;
 use App\Domain\Billing\Repositories\SubscriptionRepositoryInterface;
 use App\Domain\Billing\ValueObjects\BillingCycle;
@@ -82,8 +81,7 @@ it('processes customer.subscription.created event', function () {
     $paymentGateway->shouldReceive('constructWebhookEvent')->once()->andReturn($stripeEvent);
 
     $webhookEventRepo = mock(StripeWebhookEventRepositoryInterface::class);
-    $webhookEventRepo->shouldReceive('existsByStripeEventId')->with('evt_123')->once()->andReturn(false);
-    $webhookEventRepo->shouldReceive('create')->once();
+    $webhookEventRepo->shouldReceive('createIfNotExists')->with('evt_123', 'customer.subscription.created', $stripeEvent)->once()->andReturn(true);
     $webhookEventRepo->shouldReceive('markProcessed')->with('evt_123', null)->once();
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
@@ -91,14 +89,12 @@ it('processes customer.subscription.created event', function () {
     $subscriptionRepo->shouldReceive('update')->once();
 
     $invoiceRepo = mock(InvoiceRepositoryInterface::class);
-    $planRepo = mock(PlanRepositoryInterface::class);
 
     $useCase = new ProcessStripeWebhookUseCase(
         $paymentGateway,
         $webhookEventRepo,
         $subscriptionRepo,
         $invoiceRepo,
-        $planRepo,
     );
 
     $useCase->execute(new ProcessStripeWebhookInput(
@@ -153,8 +149,7 @@ it('processes invoice.paid event', function () {
     $paymentGateway->shouldReceive('constructWebhookEvent')->once()->andReturn($stripeEvent);
 
     $webhookEventRepo = mock(StripeWebhookEventRepositoryInterface::class);
-    $webhookEventRepo->shouldReceive('existsByStripeEventId')->with('evt_invoice_paid_1')->once()->andReturn(false);
-    $webhookEventRepo->shouldReceive('create')->once();
+    $webhookEventRepo->shouldReceive('createIfNotExists')->with('evt_invoice_paid_1', 'invoice.paid', $stripeEvent)->once()->andReturn(true);
     $webhookEventRepo->shouldReceive('markProcessed')->with('evt_invoice_paid_1', null)->once();
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
@@ -164,14 +159,11 @@ it('processes invoice.paid event', function () {
     $invoiceRepo->shouldReceive('findByExternalId')->with('in_stripe_789')->once()->andReturn(null);
     $invoiceRepo->shouldReceive('create')->once();
 
-    $planRepo = mock(PlanRepositoryInterface::class);
-
     $useCase = new ProcessStripeWebhookUseCase(
         $paymentGateway,
         $webhookEventRepo,
         $subscriptionRepo,
         $invoiceRepo,
-        $planRepo,
     );
 
     $useCase->execute(new ProcessStripeWebhookInput(
@@ -190,21 +182,18 @@ it('skips already processed event (idempotency)', function () {
     ]);
 
     $webhookEventRepo = mock(StripeWebhookEventRepositoryInterface::class);
-    $webhookEventRepo->shouldReceive('existsByStripeEventId')
-        ->with('evt_already_processed')
+    $webhookEventRepo->shouldReceive('createIfNotExists')
         ->once()
-        ->andReturn(true);
+        ->andReturn(false);
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
     $invoiceRepo = mock(InvoiceRepositoryInterface::class);
-    $planRepo = mock(PlanRepositoryInterface::class);
 
     $useCase = new ProcessStripeWebhookUseCase(
         $paymentGateway,
         $webhookEventRepo,
         $subscriptionRepo,
         $invoiceRepo,
-        $planRepo,
     );
 
     $useCase->execute(new ProcessStripeWebhookInput(
@@ -225,22 +214,19 @@ it('handles unknown event type gracefully', function () {
     $paymentGateway->shouldReceive('constructWebhookEvent')->once()->andReturn($stripeEvent);
 
     $webhookEventRepo = mock(StripeWebhookEventRepositoryInterface::class);
-    $webhookEventRepo->shouldReceive('existsByStripeEventId')->with('evt_unknown')->once()->andReturn(false);
-    $webhookEventRepo->shouldReceive('create')->once();
+    $webhookEventRepo->shouldReceive('createIfNotExists')->with('evt_unknown', 'charge.refunded', $stripeEvent)->once()->andReturn(true);
     $webhookEventRepo->shouldReceive('markProcessed')->with('evt_unknown', null)->once();
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
     $subscriptionRepo->shouldNotReceive('findByExternalId');
 
     $invoiceRepo = mock(InvoiceRepositoryInterface::class);
-    $planRepo = mock(PlanRepositoryInterface::class);
 
     $useCase = new ProcessStripeWebhookUseCase(
         $paymentGateway,
         $webhookEventRepo,
         $subscriptionRepo,
         $invoiceRepo,
-        $planRepo,
     );
 
     $useCase->execute(new ProcessStripeWebhookInput(

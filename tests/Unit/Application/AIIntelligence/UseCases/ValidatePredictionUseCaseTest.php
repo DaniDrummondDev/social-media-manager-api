@@ -14,6 +14,7 @@ use App\Domain\AIIntelligence\Repositories\PredictionValidationRepositoryInterfa
 use App\Domain\AIIntelligence\ValueObjects\PredictionAccuracy;
 use App\Domain\AIIntelligence\ValueObjects\PredictionBreakdown;
 use App\Domain\AIIntelligence\ValueObjects\PredictionScore;
+use App\Domain\Shared\Exceptions\DomainException;
 use App\Domain\Shared\ValueObjects\Uuid;
 
 beforeEach(function () {

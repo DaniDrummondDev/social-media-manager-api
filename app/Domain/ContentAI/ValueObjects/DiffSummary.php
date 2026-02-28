@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Domain\ContentAI\ValueObjects;
 
+use App\Domain\Shared\Exceptions\DomainException;
+
 final readonly class DiffSummary
 {
     /**
@@ -21,7 +23,7 @@ final readonly class DiffSummary
     public static function create(array $changes, float $changeRatio): self
     {
         if ($changeRatio < 0.0 || $changeRatio > 1.0) {
-            throw new \DomainException('Change ratio must be between 0.0 and 1.0.');
+            throw new DomainException('Change ratio must be between 0.0 and 1.0.');
         }
 
         return new self($changes, $changeRatio);

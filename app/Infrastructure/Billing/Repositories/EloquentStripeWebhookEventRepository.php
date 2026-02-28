@@ -7,6 +7,7 @@ namespace App\Infrastructure\Billing\Repositories;
 use App\Domain\Billing\Repositories\StripeWebhookEventRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Billing\Models\StripeWebhookEventModel;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 final class EloquentStripeWebhookEventRepository implements StripeWebhookEventRepositoryInterface
 {
@@ -33,6 +34,17 @@ final class EloquentStripeWebhookEventRepository implements StripeWebhookEventRe
             'processed' => false,
             'payload' => $payload,
         ]);
+    }
+
+    public function createIfNotExists(string $stripeEventId, string $eventType, array $payload): bool
+    {
+        try {
+            $this->create($stripeEventId, $eventType, $payload);
+
+            return true;
+        } catch (UniqueConstraintViolationException) {
+            return false;
+        }
     }
 
     public function markProcessed(string $stripeEventId, ?string $errorMessage = null): void

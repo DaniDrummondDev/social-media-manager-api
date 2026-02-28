@@ -30,9 +30,9 @@ final class SyncCommentAuthorToCrm
                 organizationId: $event->organizationId,
                 userId: $event->userId,
                 connectionId: (string) $connection->id,
-                authorName: $event->authorName ?? 'Unknown',
+                authorName: $event->authorName,
                 authorExternalId: $event->authorExternalId ?? $event->aggregateId,
-                network: $event->provider ?? null,
+                network: $event->provider,
             ));
         }
     }

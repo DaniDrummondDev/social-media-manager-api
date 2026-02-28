@@ -13,7 +13,7 @@ use App\Domain\AIIntelligence\Repositories\PerformancePredictionRepositoryInterf
 use App\Domain\AIIntelligence\Repositories\PredictionValidationRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
-use DomainException;
+use App\Domain\Shared\Exceptions\DomainException;
 
 final class ValidatePredictionUseCase
 {

@@ -18,6 +18,15 @@ interface UsageRecordRepositoryInterface
     ): ?UsageRecord;
 
     /**
+     * Find with SELECT ... FOR UPDATE lock for atomic read-then-write.
+     */
+    public function findByOrganizationAndResourceForUpdate(
+        Uuid $organizationId,
+        UsageResourceType $resourceType,
+        DateTimeImmutable $periodStart,
+    ): ?UsageRecord;
+
+    /**
      * @return array<UsageRecord>
      */
     public function findAllByOrganizationForPeriod(
@@ -26,4 +35,15 @@ interface UsageRecordRepositoryInterface
     ): array;
 
     public function createOrUpdate(UsageRecord $record): void;
+
+    /**
+     * Atomically increment (or create) a usage record within a transaction.
+     */
+    public function incrementOrCreate(
+        Uuid $organizationId,
+        UsageResourceType $resourceType,
+        int $amount,
+        DateTimeImmutable $periodStart,
+        DateTimeImmutable $periodEnd,
+    ): void;
 }

@@ -15,6 +15,10 @@ final class SyncAccountMetricsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 300;
+
+    public int $tries = 1;
+
     public function __construct()
     {
         $this->onQueue('analytics');
@@ -22,15 +26,15 @@ final class SyncAccountMetricsJob implements ShouldQueue
 
     public function handle(): void
     {
-        /** @var \Illuminate\Database\Eloquent\Collection<int, SocialAccountModel> $accounts */
-        $accounts = SocialAccountModel::query()
+        SocialAccountModel::query()
             ->where('status', 'connected')
             ->whereNull('deleted_at')
-            ->get();
-
-        foreach ($accounts as $account) {
-            SyncSingleAccountMetricsJob::dispatch($account->getAttribute('id'))
-                ->onQueue('analytics');
-        }
+            ->chunkById(200, function ($accounts): void {
+                /** @var \Illuminate\Database\Eloquent\Collection<int, SocialAccountModel> $accounts */
+                foreach ($accounts as $account) {
+                    SyncSingleAccountMetricsJob::dispatch($account->getAttribute('id'))
+                        ->onQueue('analytics');
+                }
+            });
     }
 }

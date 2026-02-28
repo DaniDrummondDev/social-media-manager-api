@@ -40,5 +40,9 @@
         <env name="JWT_PUBLIC_KEY" value="tests/fixtures/jwt/public.pem"/>
         <!-- Test-only 32-byte key for SocialTokenEncrypter (AES-256-GCM) -->
         <env name="SOCIAL_TOKEN_ENCRYPTION_KEY" value="dGVzdC1zb2NpYWwtdG9rZW4tZW5jcnlwdGlvbi1rZXk="/>
+        <!-- Test-only 32-byte key for CrmTokenEncrypter (AES-256-GCM) -->
+        <env name="CRM_TOKEN_ENCRYPTION_KEY" value="7QUL5hgzbCQ+nk5sejcbzWDOVwLI7ZKtNRFq7srWfYE="/>
+        <!-- Test-only Stripe webhook secret -->
+        <env name="STRIPE_WEBHOOK_SECRET" value="whsec_test_secret"/>
     </php>
 </phpunit>

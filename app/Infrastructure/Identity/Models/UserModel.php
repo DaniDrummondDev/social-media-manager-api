@@ -30,6 +30,12 @@ final class UserModel extends Model
         'last_login_ip',
     ];
 
+    protected $hidden = [
+        'password',
+        'two_factor_secret',
+        'recovery_codes',
+    ];
+
     protected function casts(): array
     {
         return [

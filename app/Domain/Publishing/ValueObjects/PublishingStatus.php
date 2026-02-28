@@ -19,7 +19,7 @@ enum PublishingStatus: string
             self::Pending => in_array($target, [self::Dispatched, self::Cancelled], true),
             self::Dispatched => $target === self::Publishing,
             self::Publishing => in_array($target, [self::Published, self::Failed], true),
-            self::Failed => $target === self::Publishing,
+            self::Failed => in_array($target, [self::Dispatched, self::Publishing], true),
             self::Published, self::Cancelled => false,
         };
     }

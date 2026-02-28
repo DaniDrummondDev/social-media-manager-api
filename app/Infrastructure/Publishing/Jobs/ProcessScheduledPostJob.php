@@ -11,12 +11,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 final class ProcessScheduledPostJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    public int $timeout = 120;
+
+    public int $tries = 3;
+
+    /** @var array<int, int> */
+    public array $backoff = [30, 120, 300];
 
     public function __construct(
         private readonly string $scheduledPostId,
@@ -26,15 +31,8 @@ final class ProcessScheduledPostJob implements ShouldQueue
 
     public function handle(ProcessScheduledPostUseCase $useCase): void
     {
-        try {
-            $useCase->execute(new ProcessScheduledPostInput(
-                scheduledPostId: $this->scheduledPostId,
-            ));
-        } catch (Throwable $e) {
-            Log::error('Failed to process scheduled post', [
-                'scheduled_post_id' => $this->scheduledPostId,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        $useCase->execute(new ProcessScheduledPostInput(
+            scheduledPostId: $this->scheduledPostId,
+        ));
     }
 }

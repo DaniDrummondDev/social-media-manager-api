@@ -16,6 +16,10 @@ final class ComputeDashboardMetricsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 300;
+
+    public int $tries = 1;
+
     private const int CACHE_TTL_SECONDS = 300;
 
     public function __construct()

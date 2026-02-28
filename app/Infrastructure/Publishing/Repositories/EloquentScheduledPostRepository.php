@@ -89,6 +89,21 @@ final class EloquentScheduledPostRepository implements ScheduledPostRepositoryIn
     /**
      * @return ScheduledPost[]
      */
+    public function findDuePostsForUpdate(DateTimeImmutable $now): array
+    {
+        $records = $this->model->newQuery()
+            ->where('status', PublishingStatus::Pending->value)
+            ->where('scheduled_at', '<=', $now->format('Y-m-d H:i:s'))
+            ->lockForUpdate()
+            ->get();
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, ScheduledPostModel> $records */
+        return $records->map(fn (ScheduledPostModel $record) => $this->toDomain($record))->all();
+    }
+
+    /**
+     * @return ScheduledPost[]
+     */
     public function findRetryable(DateTimeImmutable $now): array
     {
         $records = $this->model->newQuery()
@@ -96,6 +111,23 @@ final class EloquentScheduledPostRepository implements ScheduledPostRepositoryIn
             ->whereNotNull('next_retry_at')
             ->where('next_retry_at', '<=', $now->format('Y-m-d H:i:s'))
             ->whereColumn('attempts', '<', 'max_attempts')
+            ->get();
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, ScheduledPostModel> $records */
+        return $records->map(fn (ScheduledPostModel $record) => $this->toDomain($record))->all();
+    }
+
+    /**
+     * @return ScheduledPost[]
+     */
+    public function findRetryableForUpdate(DateTimeImmutable $now): array
+    {
+        $records = $this->model->newQuery()
+            ->where('status', PublishingStatus::Failed->value)
+            ->whereNotNull('next_retry_at')
+            ->where('next_retry_at', '<=', $now->format('Y-m-d H:i:s'))
+            ->whereColumn('attempts', '<', 'max_attempts')
+            ->lockForUpdate()
             ->get();
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, ScheduledPostModel> $records */

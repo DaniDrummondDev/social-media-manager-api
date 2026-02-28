@@ -7,6 +7,7 @@ namespace App\Application\Campaign\UseCases;
 use App\Application\Campaign\DTOs\CampaignOutput;
 use App\Application\Campaign\DTOs\DuplicateCampaignInput;
 use App\Application\Shared\Contracts\EventDispatcherInterface;
+use App\Application\Shared\Contracts\TransactionManagerInterface;
 use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\Campaign\Contracts\ContentMediaRepositoryInterface;
 use App\Domain\Campaign\Contracts\ContentNetworkOverrideRepositoryInterface;
@@ -25,6 +26,7 @@ final class DuplicateCampaignUseCase
         private readonly ContentNetworkOverrideRepositoryInterface $overrideRepository,
         private readonly ContentMediaRepositoryInterface $contentMediaRepository,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly TransactionManagerInterface $transactionManager,
     ) {}
 
     public function execute(DuplicateCampaignInput $input): CampaignOutput
@@ -37,54 +39,58 @@ final class DuplicateCampaignUseCase
 
         $newName = $input->name ?? $original->name.' (Copia)';
 
-        $newCampaign = Campaign::create(
-            organizationId: $original->organizationId,
-            createdBy: Uuid::fromString($input->userId),
-            name: $newName,
-            description: $original->description,
-            startsAt: $original->startsAt,
-            endsAt: $original->endsAt,
-            tags: $original->tags,
-        );
-
-        $this->campaignRepository->create($newCampaign);
-
         $contents = $this->contentRepository->findByCampaignId($original->id);
 
-        foreach ($contents as $content) {
-            $newContent = Content::create(
-                organizationId: $content->organizationId,
-                campaignId: $newCampaign->id,
+        $newCampaign = $this->transactionManager->transaction(function () use ($original, $input, $newName, $contents) {
+            $newCampaign = Campaign::create(
+                organizationId: $original->organizationId,
                 createdBy: Uuid::fromString($input->userId),
-                title: $content->title,
-                body: $content->body,
-                hashtags: $content->hashtags,
+                name: $newName,
+                description: $original->description,
+                startsAt: $original->startsAt,
+                endsAt: $original->endsAt,
+                tags: $original->tags,
             );
 
-            $this->contentRepository->create($newContent);
+            $this->campaignRepository->create($newCampaign);
 
-            $overrides = $this->overrideRepository->findByContentId($content->id);
-            if ($overrides !== []) {
-                $newOverrides = array_map(
-                    fn (ContentNetworkOverride $o) => ContentNetworkOverride::create(
-                        contentId: $newContent->id,
-                        provider: $o->provider,
-                        title: $o->title,
-                        body: $o->body,
-                        hashtags: $o->hashtags,
-                        metadata: $o->metadata,
-                    ),
-                    $overrides,
+            foreach ($contents as $content) {
+                $newContent = Content::create(
+                    organizationId: $content->organizationId,
+                    campaignId: $newCampaign->id,
+                    createdBy: Uuid::fromString($input->userId),
+                    title: $content->title,
+                    body: $content->body,
+                    hashtags: $content->hashtags,
                 );
-                $this->overrideRepository->createMany($newOverrides);
+
+                $this->contentRepository->create($newContent);
+
+                $overrides = $this->overrideRepository->findByContentId($content->id);
+                if ($overrides !== []) {
+                    $newOverrides = array_map(
+                        fn (ContentNetworkOverride $o) => ContentNetworkOverride::create(
+                            contentId: $newContent->id,
+                            provider: $o->provider,
+                            title: $o->title,
+                            body: $o->body,
+                            hashtags: $o->hashtags,
+                            metadata: $o->metadata,
+                        ),
+                        $overrides,
+                    );
+                    $this->overrideRepository->createMany($newOverrides);
+                }
+
+                $mediaLinks = $this->contentMediaRepository->findByContentId($content->id);
+                if ($mediaLinks !== []) {
+                    $mediaIds = array_map(fn ($link) => $link['media_id'], $mediaLinks);
+                    $this->contentMediaRepository->sync($newContent->id, $mediaIds);
+                }
             }
 
-            $mediaLinks = $this->contentMediaRepository->findByContentId($content->id);
-            if ($mediaLinks !== []) {
-                $mediaIds = array_map(fn ($link) => $link['media_id'], $mediaLinks);
-                $this->contentMediaRepository->sync($newContent->id, $mediaIds);
-            }
-        }
+            return $newCampaign;
+        });
 
         $this->eventDispatcher->dispatch(...$newCampaign->domainEvents);
 

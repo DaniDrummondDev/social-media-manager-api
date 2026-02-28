@@ -15,6 +15,10 @@ final class CaptureCommentsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $timeout = 300;
+
+    public int $tries = 1;
+
     public function __construct()
     {
         $this->onQueue('engagement');
@@ -22,14 +26,14 @@ final class CaptureCommentsJob implements ShouldQueue
 
     public function handle(): void
     {
-        $accounts = SocialAccountModel::query()
+        SocialAccountModel::query()
             ->whereNotNull('connected_at')
             ->whereNull('deleted_at')
-            ->get();
-
-        /** @var SocialAccountModel $account */
-        foreach ($accounts as $account) {
-            CaptureSingleAccountCommentsJob::dispatch($account->getAttribute('id'));
-        }
+            ->chunkById(200, function ($accounts): void {
+                /** @var SocialAccountModel $account */
+                foreach ($accounts as $account) {
+                    CaptureSingleAccountCommentsJob::dispatch($account->getAttribute('id'));
+                }
+            });
     }
 }

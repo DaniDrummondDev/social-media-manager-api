@@ -29,7 +29,11 @@ final class ProcessStripeWebhookUseCase
 
     public function execute(ProcessStripeWebhookInput $input): void
     {
-        $webhookSecret = config('services.stripe.webhook_secret', 'whsec_test');
+        $webhookSecret = config('services.stripe.webhook_secret');
+
+        if (empty($webhookSecret)) {
+            throw new \RuntimeException('STRIPE_WEBHOOK_SECRET is not configured.');
+        }
 
         $isValid = $this->paymentGateway->validateWebhookSignature(
             $input->payload,
@@ -50,11 +54,11 @@ final class ProcessStripeWebhookUseCase
         $stripeEventId = $event['id'] ?? '';
         $eventType = $event['type'] ?? '';
 
-        if ($this->webhookEventRepository->existsByStripeEventId($stripeEventId)) {
+        $inserted = $this->webhookEventRepository->createIfNotExists($stripeEventId, $eventType, $event);
+
+        if (! $inserted) {
             throw new StripeWebhookAlreadyProcessedException;
         }
-
-        $this->webhookEventRepository->create($stripeEventId, $eventType, $event);
 
         $errorMessage = null;
         try {

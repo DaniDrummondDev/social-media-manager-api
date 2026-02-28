@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Infrastructure\Engagement\Services\CrmTokenEncrypter;
+
 use App\Domain\Engagement\Entities\CrmConnection;
 use App\Domain\Engagement\ValueObjects\CrmConnectionStatus;
 use App\Domain\Engagement\ValueObjects\CrmProvider;
@@ -33,4 +35,16 @@ function createReconstitutedConnection(array $overrides = []): CrmConnection
         updatedAt: $overrides['updatedAt'] ?? new DateTimeImmutable,
         disconnectedAt: $overrides['disconnectedAt'] ?? null,
     );
+}
+
+/**
+ * Encrypt a CRM token for test fixture inserts.
+ */
+function encryptCrmToken(?string $token): ?string
+{
+    if ($token === null) {
+        return null;
+    }
+
+    return app(CrmTokenEncrypter::class)->encrypt($token);
 }

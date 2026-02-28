@@ -6,8 +6,8 @@ namespace App\Infrastructure\PaidAdvertising\Jobs;
 
 use App\Application\PaidAdvertising\DTOs\SyncAdMetricsInput;
 use App\Application\PaidAdvertising\UseCases\SyncAdMetricsUseCase;
-use App\Domain\PaidAdvertising\Repositories\AdBoostRepositoryInterface;
 use App\Domain\PaidAdvertising\ValueObjects\AdStatus;
+use App\Infrastructure\PaidAdvertising\Models\AdBoostModel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,33 +19,33 @@ final class SyncAdMetricsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 2;
+    public int $timeout = 300;
 
-    /** @var array<int> */
-    public array $backoff = [60];
+    public int $tries = 1;
 
     public function __construct()
     {
         $this->onQueue('default');
     }
 
-    public function handle(
-        AdBoostRepositoryInterface $boostRepository,
-        SyncAdMetricsUseCase $useCase,
-    ): void {
-        $activeBoosts = $boostRepository->findByStatus(AdStatus::Active);
-
-        foreach ($activeBoosts as $boost) {
-            try {
-                $useCase->execute(new SyncAdMetricsInput(
-                    boostId: (string) $boost->id,
-                ));
-            } catch (\Throwable $e) {
-                Log::warning('SyncAdMetricsJob: Failed to sync metrics for boost', [
-                    'boost_id' => (string) $boost->id,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
+    public function handle(SyncAdMetricsUseCase $useCase): void
+    {
+        AdBoostModel::query()
+            ->where('status', AdStatus::Active->value)
+            ->chunkById(200, function ($boosts) use ($useCase): void {
+                /** @var AdBoostModel $boost */
+                foreach ($boosts as $boost) {
+                    try {
+                        $useCase->execute(new SyncAdMetricsInput(
+                            boostId: (string) $boost->getAttribute('id'),
+                        ));
+                    } catch (\Throwable $e) {
+                        Log::warning('SyncAdMetricsJob: Failed to sync metrics for boost', [
+                            'boost_id' => (string) $boost->getAttribute('id'),
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+            });
     }
 }

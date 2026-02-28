@@ -14,6 +14,11 @@ final class CrmConnectionModel extends Model
 
     protected $keyType = 'string';
 
+    protected $hidden = [
+        'access_token',
+        'refresh_token',
+    ];
+
     protected $fillable = [
         'id',
         'organization_id',

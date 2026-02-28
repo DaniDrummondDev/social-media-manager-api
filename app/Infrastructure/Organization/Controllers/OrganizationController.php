@@ -13,6 +13,7 @@ use App\Application\Organization\UseCases\SwitchOrganizationUseCase;
 use App\Application\Organization\UseCases\UpdateOrganizationUseCase;
 use App\Infrastructure\Identity\Resources\AuthTokensResource;
 use App\Infrastructure\Organization\Requests\CreateOrganizationRequest;
+use App\Infrastructure\Organization\Requests\SwitchOrganizationRequest;
 use App\Infrastructure\Organization\Requests\UpdateOrganizationRequest;
 use App\Infrastructure\Organization\Resources\OrganizationResource;
 use App\Infrastructure\Shared\Http\Resources\ApiResponse;
@@ -63,11 +64,11 @@ final class OrganizationController
         return ApiResponse::success(OrganizationResource::fromOutput($output)->toArray());
     }
 
-    public function switchOrganization(Request $request, SwitchOrganizationUseCase $useCase): JsonResponse
+    public function switchOrganization(SwitchOrganizationRequest $request, SwitchOrganizationUseCase $useCase): JsonResponse
     {
         $output = $useCase->execute(new SwitchOrganizationInput(
             userId: $request->attributes->get('auth_user_id'),
-            organizationId: $request->input('organization_id'),
+            organizationId: $request->validated('organization_id'),
         ));
 
         return ApiResponse::success(AuthTokensResource::fromOutput($output)->toArray());

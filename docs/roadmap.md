@@ -15,7 +15,7 @@
 | **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
-| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Nao iniciada (ADR-021 documentada) |
+| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1 Setup completo) |
 | **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ⏳ Nao iniciada |
 
 ### Progresso detalhado
@@ -59,7 +59,33 @@
 
 ### Proximo passo
 
-**Sprint 19 — Multi-Agent AI (LangGraph)**: Proximo passo. Fase 5 (Ads) completa com Sprint 18 finalizado (2510 testes, 0 failures).
+**Sprint 19.4 — Social Listening Pipeline**: Proximo passo. Sprint 19.3 (Content DNA) completo — 3 agentes LangGraph, fluxo linear, 24 testes pytest. Security audit completo (9 Critical + 9 batches High/Medium/Low). 2510 testes Laravel passando.
+
+### Security Audit — Hardening Completo
+
+Auditoria de seguranca abrangendo OWASP API Security Top 10, performance, bugs de logica e best practices. Todas as correcoes validadas com 2510 testes passando.
+
+**Critical (9 itens):**
+- [x] C1: Exception handler generico (catch-all \Throwable → 500 sem leak de detalhes)
+- [x] C2: Idempotencia Stripe webhooks (`createIfNotExists` atomico)
+- [x] C3: Validacao `STRIPE_WEBHOOK_SECRET` obrigatoria
+- [x] C4: IDOR em endpoints CRM (`organization_id` scope)
+- [x] C5: SQL injection em `SyncUsageRecordsJob` (`whereRaw` → Eloquent builder)
+- [x] C6: Idempotencia `RecordUsageUseCase` (`incrementOrCreate` atomico)
+- [x] C7: 2FA secret em `$hidden` no `UserModel`
+- [x] C8: CRM tokens encryption (AES-256-GCM via `CrmTokenEncrypter`)
+- [x] C9: `SyncUsageRecordsJob` refactor (chunkById + RESOURCE_MAP)
+
+**High (26 itens — 9 batches):**
+- [x] B1: `$hidden` em 4 models (SocialAccount, CrmConnection, Webhook, AdAccount)
+- [x] B2: SPL `DomainException` → `App\Domain\Shared\Exceptions\DomainException` (6 arquivos)
+- [x] B3: Input validation (2 FormRequests novos, limit cap 100, 2FA secret)
+- [x] B4: Domain bugs (sentiment fix, Subscription::upgrade guard, Content::update guard, CrmConnection::refreshTokens guard, Stripe empty ID validation)
+- [x] B5: Race conditions (AcceptInvite TOCTOU via `createIfNotExists`, retryable posts `lockForUpdate`)
+- [x] B6: Transactions (`TransactionManagerInterface`, DuplicateCampaign wrap, ProcessScheduledPost null check, CommentCaptured event data)
+- [x] B7: Security middleware (SecurityHeaders, SSRF protection em webhooks)
+- [x] B8: Job hardening (`$timeout/$tries/$backoff` em 23 jobs, `chunkById` em 3 fan-outs)
+- [x] B9: BOLA fix `ListContentsUseCase` (organization ownership verification)
 
 ---
 
@@ -1721,9 +1747,9 @@ Os sprints 17 e 18 adicionam a capacidade de impulsionar conteudo publicado via 
 - [x] DTOs para input/output de cada use case (22 inputs + 10 outputs)
 - [x] Application Contracts: `AdPlatformFactoryInterface`, `AdOAuthStateServiceInterface`, `AdTokenEncryptorInterface`, `AdReportExporterInterface`
 - [x] Application Exceptions: `AdAccountAuthorizationException`, `BoostNotFoundException`, `AdOAuthStateInvalidException`, `DuplicateAudienceNameException`, `AdAccountNotOperationalException`
-- [ ] Listeners:
-  - `BoostCreated` → `CreateAdBoostJob`
-  - `AdMetricsSynced` → `AggregateAdPerformanceJob` (para Sprint 18)
+- [x] Listeners:
+  - `BoostCreated` → `DispatchBoostSubmission` → `CreateAdBoostJob`
+  - `AdMetricsSynced` → `ScheduleAdPerformanceAggregation` → `AggregateAdPerformanceJob` (para Sprint 18)
 
 ### 17.3 Infrastructure Layer
 
@@ -1877,39 +1903,39 @@ O Sprint 19 introduz um microservico Python com LangGraph para orquestracao de p
 
 ### 19.1 Microservico Python — Setup
 
-- [ ] Criar diretorio `ai-agents/` com estrutura do projeto Python
-- [ ] `Dockerfile` multi-stage (Python 3.12-slim, appuser com UID/GID dinamico)
-- [ ] `requirements.txt` (langgraph, langchain, fastapi, uvicorn, httpx, asyncpg, redis, structlog)
-- [ ] `docker-compose.yml`: adicionar servico `ai-agents` na rede `social-media-net`
-- [ ] FastAPI app com health check (`/health`, `/ready`)
-- [ ] Configuracao via env vars (API keys, DATABASE_URL, REDIS_URL, CALLBACK_BASE_URL)
-- [ ] Redis DB 4 para checkpoints e job status do LangGraph
-- [ ] Logs estruturados em JSON (compativel com padrao Laravel)
-- [ ] Testes: health check, conectividade Redis/PostgreSQL
+- [x] Criar diretorio `ai-agents/` com estrutura do projeto Python
+- [x] `Dockerfile` multi-stage (Python 3.12-slim, appuser com UID/GID dinamico)
+- [x] `requirements.txt` (langgraph, langchain, fastapi, uvicorn, httpx, asyncpg, redis, structlog)
+- [x] `docker-compose.yml`: adicionar servico `ai-agents` na rede `social-media-net`
+- [x] FastAPI app com health check (`/health`, `/ready`)
+- [x] Configuracao via env vars (API keys, DATABASE_URL, REDIS_URL, CALLBACK_BASE_URL)
+- [x] Redis DB 4 para checkpoints e job status do LangGraph
+- [x] Logs estruturados em JSON (compativel com padrao Laravel)
+- [x] Testes: health check, conectividade Redis/PostgreSQL (5 testes pytest)
 
 ### 19.2 Pipeline: Content Creation
 
-- [ ] LangGraph StateGraph: `ContentCreationState`
-- [ ] Agente `Planner` — define tom, estrutura, publico, CTA, constraints
-- [ ] Agente `Writer` — gera conteudo seguindo briefing do Planner
-- [ ] Agente `Reviewer` — verifica brand safety, tom, guidelines, qualidade
-- [ ] Agente `Optimizer` — otimiza por rede social (hashtags, CTA, tamanho, midia)
-- [ ] Conditional edge: Reviewer reprovado → Writer retry (max 2 retries)
-- [ ] Injecao de contexto: style_profile (ADR-017 N5), rag_examples (ADR-017 N2)
-- [ ] Endpoint: `POST /api/v1/pipelines/content-creation`
-- [ ] Callback ao Laravel com resultado final + metadata (tokens, custo, duracao)
-- [ ] Testes: graph completo, retry loop, fallback
+- [x] LangGraph StateGraph: `ContentCreationState` (TypedDict com Annotated reducer)
+- [x] Agente `Planner` — define tom, estrutura, publico, CTA, constraints (structured output ContentBrief)
+- [x] Agente `Writer` — gera conteudo seguindo briefing do Planner (incorpora feedback em retry)
+- [x] Agente `Reviewer` — verifica brand safety, tom, guidelines, qualidade (structured output ReviewResult)
+- [x] Agente `Optimizer` — otimiza por rede social (hashtags, CTA, tamanho, midia) — specs: instagram, tiktok, youtube
+- [x] Conditional edge: Reviewer reprovado → Writer retry (max 2 retries, force forward apos max)
+- [x] Injecao de contexto: style_profile (ADR-017 N5), rag_examples (ADR-017 N2)
+- [x] Endpoint: `POST /api/v1/pipelines/content-creation` (202 Accepted + job_id + background task)
+- [x] Callback ao Laravel com resultado final + metadata (tokens, custo, duracao) via httpx
+- [x] Testes: 11 testes (graph completo, retry loop, max retries, agentes individuais, endpoint, validacao)
 
 ### 19.3 Pipeline: Content DNA Deep Analysis
 
-- [ ] LangGraph StateGraph: `ContentDNAState`
-- [ ] Agente `StyleAnalyzer` — analisa tom, vocabulario, estrutura, padroes
-- [ ] Agente `EngagementAnalyzer` — correlaciona metricas com padroes de conteudo
-- [ ] Agente `ProfileSynthesizer` — combina analises em perfil multidimensional
-- [ ] Injecao de dados: conteudos publicados, metricas, embeddings da organizacao
-- [ ] Endpoint: `POST /api/v1/pipelines/content-dna`
-- [ ] Callback ao Laravel com perfil enriquecido
-- [ ] Testes: graph completo, dados insuficientes
+- [x] LangGraph StateGraph: `ContentDNAState` (TypedDict com append reducer)
+- [x] Agente `StyleAnalyzer` — analisa tom, vocabulario, estrutura, padroes (structured output StylePatterns)
+- [x] Agente `EngagementAnalyzer` — correlaciona metricas com padroes de conteudo (structured output EngagementCorrelations)
+- [x] Agente `ProfileSynthesizer` — combina analises em perfil multidimensional (structured output DNAProfile com confidence)
+- [x] Injecao de dados: conteudos publicados, metricas, style profile existente (via request body)
+- [x] Endpoint: `POST /api/v1/pipelines/content-dna` (202 Accepted + job_id + background task)
+- [x] Callback ao Laravel com perfil enriquecido via httpx
+- [x] Testes: 8 testes (graph completo, 3 agentes individuais, dados insuficientes, endpoint, validacao, health)
 
 ### 19.4 Pipeline: Social Listening Intelligence
 

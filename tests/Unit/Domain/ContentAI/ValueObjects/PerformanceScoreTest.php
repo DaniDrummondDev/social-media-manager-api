@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Domain\ContentAI\ValueObjects\PerformanceScore;
+use App\Domain\Shared\Exceptions\DomainException;
 
 it('calculates performance score with formula', function () {
     // Formula: (accepted + edited × 0.7) / total_uses × 100

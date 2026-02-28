@@ -11,6 +11,7 @@ use App\Domain\ContentAI\Contracts\PromptTemplateRepositoryInterface;
 use App\Domain\ContentAI\Entities\PromptExperiment;
 use App\Domain\ContentAI\Entities\PromptTemplate;
 use App\Domain\ContentAI\ValueObjects\ExperimentStatus;
+use App\Domain\Shared\Exceptions\DomainException;
 use App\Domain\Shared\ValueObjects\Uuid;
 
 beforeEach(function () {

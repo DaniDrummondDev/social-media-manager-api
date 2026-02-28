@@ -43,12 +43,6 @@ final class AcceptInviteUseCase
 
         $accepted = $invite->accept();
 
-        $existingMember = $this->memberRepository->findByOrgAndUser($invite->organizationId, $userId);
-
-        if ($existingMember !== null) {
-            throw new MemberAlreadyExistsException;
-        }
-
         $member = OrganizationMember::create(
             organizationId: $invite->organizationId,
             userId: $userId,
@@ -57,7 +51,13 @@ final class AcceptInviteUseCase
         );
 
         $this->inviteRepository->update($accepted);
-        $this->memberRepository->create($member);
+
+        $created = $this->memberRepository->createIfNotExists($member);
+
+        if (! $created) {
+            throw new MemberAlreadyExistsException;
+        }
+
         $this->eventDispatcher->dispatch(...$member->domainEvents);
 
         return OrganizationMemberOutput::fromEntity($member);

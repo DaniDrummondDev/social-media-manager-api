@@ -104,7 +104,7 @@ final class AutomationRuleController
             organizationId: $request->attributes->get('auth_organization_id'),
             ruleId: $id,
             cursor: $request->query('cursor'),
-            limit: (int) ($request->query('limit') ?? 20),
+            limit: min((int) ($request->query('limit') ?? 20), 100),
         ));
 
         $data = array_map(

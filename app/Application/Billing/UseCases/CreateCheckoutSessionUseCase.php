@@ -48,11 +48,19 @@ final class CreateCheckoutSessionUseCase
         $cycle = BillingCycle::from($input->billingCycle);
         $priceId = $plan->getStripePriceId($cycle);
 
+        if ($priceId === null || $priceId === '') {
+            throw new \RuntimeException('Plan has no Stripe price configured for this billing cycle.');
+        }
+
         $customerId = $subscription->externalCustomerId ?? '';
+
+        if ($customerId === '') {
+            throw new \RuntimeException('Organization has no Stripe customer ID.');
+        }
 
         $session = $this->paymentGateway->createCheckoutSession(
             customerId: $customerId,
-            priceId: $priceId ?? '',
+            priceId: $priceId,
             successUrl: $input->successUrl,
             cancelUrl: $input->cancelUrl,
             metadata: [

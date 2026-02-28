@@ -30,10 +30,11 @@ it('allows valid transitions from publishing', function () {
         ->and($publishing->canTransitionTo(PublishingStatus::Pending))->toBeFalse();
 });
 
-it('allows retry transition from failed to publishing', function () {
+it('allows retry transitions from failed', function () {
     $failed = PublishingStatus::Failed;
 
-    expect($failed->canTransitionTo(PublishingStatus::Publishing))->toBeTrue()
+    expect($failed->canTransitionTo(PublishingStatus::Dispatched))->toBeTrue()
+        ->and($failed->canTransitionTo(PublishingStatus::Publishing))->toBeTrue()
         ->and($failed->canTransitionTo(PublishingStatus::Pending))->toBeFalse()
         ->and($failed->canTransitionTo(PublishingStatus::Published))->toBeFalse();
 });

@@ -41,6 +41,25 @@ final class ProcessScheduledPostUseCase
         $this->scheduledPostRepository->update($post);
 
         $account = $this->socialAccountRepository->findById($post->socialAccountId);
+
+        if ($account === null) {
+            $post = $post->markAsFailed(new PublishError(
+                code: 'ACCOUNT_NOT_FOUND',
+                message: "Social account '{$post->socialAccountId}' not found.",
+                isPermanent: true,
+            ));
+
+            $this->scheduledPostRepository->update($post);
+            $this->eventDispatcher->dispatch(...$post->domainEvents);
+
+            return ScheduledPostOutput::fromEntity(
+                post: $post,
+                provider: null,
+                username: null,
+                contentTitle: null,
+            );
+        }
+
         $content = $this->contentRepository->findById($post->contentId);
 
         $publisher = $this->publisherFactory->make($account->provider);

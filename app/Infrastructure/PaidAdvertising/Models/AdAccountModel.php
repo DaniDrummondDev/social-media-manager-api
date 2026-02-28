@@ -14,6 +14,11 @@ final class AdAccountModel extends Model
 
     protected $keyType = 'string';
 
+    protected $hidden = [
+        'encrypted_access_token',
+        'encrypted_refresh_token',
+    ];
+
     protected $fillable = [
         'id',
         'organization_id',

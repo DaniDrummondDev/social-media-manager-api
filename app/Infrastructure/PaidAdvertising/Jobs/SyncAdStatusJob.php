@@ -20,10 +20,12 @@ final class SyncAdStatusJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 2;
+    public int $timeout = 120;
 
-    /** @var array<int> */
-    public array $backoff = [60];
+    public int $tries = 3;
+
+    /** @var array<int, int> */
+    public array $backoff = [30, 120, 300];
 
     public function __construct()
     {

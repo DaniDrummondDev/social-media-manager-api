@@ -8,6 +8,7 @@ use App\Application\ContentAI\UseCases\CreatePromptExperimentUseCase;
 use App\Domain\ContentAI\Contracts\PromptExperimentRepositoryInterface;
 use App\Domain\ContentAI\Contracts\PromptTemplateRepositoryInterface;
 use App\Domain\ContentAI\Entities\PromptTemplate;
+use App\Domain\Shared\Exceptions\DomainException;
 use App\Domain\Shared\ValueObjects\Uuid;
 
 beforeEach(function () {

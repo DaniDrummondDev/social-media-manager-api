@@ -52,4 +52,18 @@ return [
         'state_ttl' => 600, // 10 minutes in seconds
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Token Encryption
+    |--------------------------------------------------------------------------
+    |
+    | AES-256-GCM encryption key for CRM tokens at rest.
+    | Must be 32 bytes, base64 encoded.
+    |
+    */
+
+    'encryption' => [
+        'key' => env('CRM_TOKEN_ENCRYPTION_KEY'),
+    ],
+
 ];

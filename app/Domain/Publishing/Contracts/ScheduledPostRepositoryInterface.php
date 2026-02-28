@@ -34,9 +34,23 @@ interface ScheduledPostRepositoryInterface
     public function findDuePosts(DateTimeImmutable $now): array;
 
     /**
+     * Find due posts with a SELECT ... FOR UPDATE lock to prevent double-dispatch.
+     *
+     * @return ScheduledPost[]
+     */
+    public function findDuePostsForUpdate(DateTimeImmutable $now): array;
+
+    /**
      * @return ScheduledPost[]
      */
     public function findRetryable(DateTimeImmutable $now): array;
+
+    /**
+     * Find retryable posts with a SELECT ... FOR UPDATE lock to prevent double-dispatch.
+     *
+     * @return ScheduledPost[]
+     */
+    public function findRetryableForUpdate(DateTimeImmutable $now): array;
 
     /**
      * @return ScheduledPost[]
