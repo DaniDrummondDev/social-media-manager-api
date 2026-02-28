@@ -55,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     require __DIR__.'/../routes/api/v1/ai-intelligence.php';
                     require __DIR__.'/../routes/api/v1/crm.php';
                     require __DIR__.'/../routes/api/v1/ads.php';
+                    require __DIR__.'/../routes/api/v1/internal.php';
                 });
         },
     )
@@ -72,6 +73,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => CheckRole::class,
             'plan.limit' => \App\Infrastructure\Billing\Middleware\CheckPlanLimit::class,
             'admin' => \App\Infrastructure\PlatformAdmin\Middleware\PlatformAdminMiddleware::class,
+            'internal-only' => \App\Infrastructure\Shared\Http\Middleware\InternalOnlyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

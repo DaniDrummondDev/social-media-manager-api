@@ -7,7 +7,9 @@ namespace App\Infrastructure\AIIntelligence\Providers;
 use App\Application\AIIntelligence\Contracts\AudienceInsightAnalyzerInterface;
 use App\Application\AIIntelligence\Contracts\BrandSafetyAnalyzerInterface;
 use App\Application\AIIntelligence\Contracts\ContentGapAnalyzerInterface;
+use App\Application\AIIntelligence\Contracts\ContentProfileAnalyzerInterface;
 use App\Application\AIIntelligence\Contracts\EmbeddingGeneratorInterface;
+use App\Application\AIIntelligence\Contracts\MentionAnalyzerInterface;
 use App\Application\AIIntelligence\Contracts\PredictionValidatorInterface;
 use App\Application\AIIntelligence\Contracts\SimilaritySearchInterface;
 use App\Application\AIIntelligence\Contracts\StyleProfileAnalyzerInterface;
@@ -37,6 +39,8 @@ use App\Infrastructure\AIIntelligence\Repositories\EloquentOrgStyleProfileReposi
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPerformancePredictionRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPostingTimeRecommendationRepository;
 use App\Infrastructure\AIIntelligence\Repositories\EloquentPredictionValidationRepository;
+use App\Infrastructure\AIIntelligence\Services\LangGraphContentProfiler;
+use App\Infrastructure\AIIntelligence\Services\LangGraphMentionAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubAdIntelligenceProvider;
 use App\Infrastructure\AIIntelligence\Services\StubAudienceInsightAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubBrandSafetyAnalyzer;
@@ -82,6 +86,8 @@ final class AIIntelligenceServiceProvider extends ServiceProvider
         $this->app->bind(CrmIntelligenceProviderInterface::class, StubCrmIntelligenceProvider::class);
         $this->app->bind(AdPerformanceInsightRepositoryInterface::class, EloquentAdPerformanceInsightRepository::class);
         $this->app->bind(AdIntelligenceProviderInterface::class, StubAdIntelligenceProvider::class);
+        $this->app->bind(ContentProfileAnalyzerInterface::class, LangGraphContentProfiler::class);
+        $this->app->bind(MentionAnalyzerInterface::class, LangGraphMentionAnalyzer::class);
     }
 
     public function boot(): void

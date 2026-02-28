@@ -15,7 +15,7 @@
 | **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
-| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1-19.5 completos) |
+| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1-19.6 completos) |
 | **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ⏳ Nao iniciada |
 
 ### Progresso detalhado
@@ -41,7 +41,7 @@
 | 16 | CRM Fase 2 + Intelligence | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 17 | Paid Advertising Core | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 18 | AI Learning from Ads | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
-| 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ⏳ 19.1-19.5 completos |
+| 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ⏳ 19.1-19.6 completos |
 | 20 | Geracao Enriquecida | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 21 | Feature Gates + Integration Tests | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 
@@ -1965,18 +1965,18 @@ O Sprint 19 introduz um microservico Python com LangGraph para orquestracao de p
 
 ### 19.6 Integracao Laravel
 
-- [ ] Novo adapter: `LangGraphTextGenerator implements TextGeneratorInterface`
-- [ ] Novo adapter: `LangGraphContentProfiler implements ContentProfileAnalyzerInterface`
-- [ ] Novo adapter: `LangGraphMentionAnalyzer implements MentionAnalyzerInterface`
-- [ ] Novo adapter: `LangGraphVisualAdapter implements VisualAdapterInterface`
-- [ ] Circuit breaker por pipeline (`circuit:ai_agents:{pipeline}` em Redis)
-- [ ] Fallback automatico para Prism single-shot quando circuit open
-- [ ] Rota interna: `POST /api/v1/internal/agent-callback` (middleware `internal-only`)
-- [ ] Middleware `internal-only`: valida IP rede Docker + header `X-Internal-Secret`
-- [ ] Feature gate: Content Creation + Visual Adaptation = Professional+ (3-5/dia) / Agency (ilimitado)
-- [ ] Feature gate: Content DNA Deep + Social Listening = Agency only
-- [ ] Cost tracking: metadata de tokens/custo registrado em `ai_generations`
-- [ ] Provider config: novo provider `langgraph` em `ai_settings.provider_config`
+- [x] Novo adapter: `LangGraphTextGenerator implements TextGeneratorInterface`
+- [x] Novo adapter: `LangGraphContentProfiler implements ContentProfileAnalyzerInterface`
+- [x] Novo adapter: `LangGraphMentionAnalyzer implements MentionAnalyzerInterface`
+- [x] Novo adapter: `LangGraphVisualAdapter implements VisualAdapterInterface`
+- [x] Circuit breaker por pipeline (`circuit:ai_agents:{pipeline}` em Redis)
+- [x] Fallback automatico para Prism single-shot quando circuit open
+- [x] Rota interna: `POST /api/v1/internal/agent-callback` (middleware `internal-only`)
+- [x] Middleware `internal-only`: valida IP rede Docker + header `X-Internal-Secret`
+- [x] Feature gate: Content Creation + Visual Adaptation = Professional+ (3-5/dia) / Agency (ilimitado)
+- [x] Feature gate: Content DNA Deep + Social Listening = Agency only
+- [x] Cost tracking: metadata de tokens/custo registrado em `ai_generations`
+- [x] Provider config: novo provider `langgraph` em `ai_settings.provider_config`
 
 ### 19.7 Testes
 

@@ -7,6 +7,7 @@ namespace App\Infrastructure\ContentAI\Providers;
 use App\Application\ContentAI\Contracts\PromptTemplateResolverInterface;
 use App\Application\ContentAI\Contracts\RAGContextProviderInterface;
 use App\Application\ContentAI\Contracts\TextGeneratorInterface;
+use App\Application\ContentAI\Contracts\VisualAdapterInterface;
 use App\Domain\ContentAI\Contracts\AIGenerationRepositoryInterface;
 use App\Domain\ContentAI\Contracts\AISettingsRepositoryInterface;
 use App\Domain\ContentAI\Contracts\GenerationFeedbackRepositoryInterface;
@@ -17,9 +18,13 @@ use App\Infrastructure\ContentAI\Repositories\EloquentAISettingsRepository;
 use App\Infrastructure\ContentAI\Repositories\EloquentGenerationFeedbackRepository;
 use App\Infrastructure\ContentAI\Repositories\EloquentPromptExperimentRepository;
 use App\Infrastructure\ContentAI\Repositories\EloquentPromptTemplateRepository;
+use App\Infrastructure\ContentAI\Services\LangGraphTextGenerator;
+use App\Infrastructure\ContentAI\Services\LangGraphVisualAdapter;
 use App\Infrastructure\ContentAI\Services\PrismTextGeneratorService;
 use App\Infrastructure\ContentAI\Services\StubPromptTemplateResolver;
 use App\Infrastructure\ContentAI\Services\StubRAGContextProvider;
+use App\Infrastructure\Shared\Contracts\LangGraphClientInterface;
+use App\Infrastructure\Shared\Services\AiAgentsPlanGate;
 use Illuminate\Support\ServiceProvider;
 
 final class ContentAIServiceProvider extends ServiceProvider
@@ -28,7 +33,14 @@ final class ContentAIServiceProvider extends ServiceProvider
     {
         $this->app->bind(AIGenerationRepositoryInterface::class, EloquentAIGenerationRepository::class);
         $this->app->bind(AISettingsRepositoryInterface::class, EloquentAISettingsRepository::class);
-        $this->app->bind(TextGeneratorInterface::class, PrismTextGeneratorService::class);
+        $this->app->bind(TextGeneratorInterface::class, function ($app) {
+            return new LangGraphTextGenerator(
+                client: $app->make(LangGraphClientInterface::class),
+                fallback: $app->make(PrismTextGeneratorService::class),
+                planGate: $app->make(AiAgentsPlanGate::class),
+            );
+        });
+        $this->app->bind(VisualAdapterInterface::class, LangGraphVisualAdapter::class);
         $this->app->bind(GenerationFeedbackRepositoryInterface::class, EloquentGenerationFeedbackRepository::class);
         $this->app->bind(PromptTemplateRepositoryInterface::class, EloquentPromptTemplateRepository::class);
         $this->app->bind(PromptExperimentRepositoryInterface::class, EloquentPromptExperimentRepository::class);
