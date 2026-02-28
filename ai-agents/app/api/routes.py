@@ -19,6 +19,7 @@ from app.api.schemas import (
     JobStatusResponse,
     ReadinessResponse,
     SocialListeningRequest,
+    VisualAdaptationRequest,
 )
 from app.shared.logging import get_logger
 
@@ -26,7 +27,7 @@ router = APIRouter()
 
 VERSION = "0.1.0"
 
-REGISTERED_PIPELINES: list[str] = ["content_creation", "content_dna", "social_listening"]
+REGISTERED_PIPELINES: list[str] = ["content_creation", "content_dna", "social_listening", "visual_adaptation"]
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +199,43 @@ async def analyze_social_listening(
 
     asyncio.create_task(
         _run_social_listening(body, job_id, redis_client),
+    )
+
+    return JobAcceptedResponse(job_id=job_id)
+
+
+# ---------------------------------------------------------------------------
+# Visual Adaptation Pipeline
+# ---------------------------------------------------------------------------
+
+
+@router.post(
+    "/api/v1/pipelines/visual-adaptation",
+    response_model=JobAcceptedResponse,
+    status_code=202,
+)
+async def adapt_visual(
+    body: VisualAdaptationRequest,
+    request: Request,
+) -> JobAcceptedResponse:
+    """Accept a visual-adaptation pipeline request and process it in the background."""
+    job_id = str(uuid.uuid4())
+    logger = get_logger(
+        pipeline="visual_adaptation",
+        correlation_id=body.correlation_id,
+        organization_id=body.organization_id,
+    )
+    logger.info("Pipeline job accepted", job_id=job_id)
+
+    redis_client = request.app.state.redis
+    await redis_client.set(
+        f"job:{job_id}",
+        json.dumps({"status": "running", "result": None}),
+        ex=3600,
+    )
+
+    asyncio.create_task(
+        _run_visual_adaptation(body, job_id, redis_client),
     )
 
     return JobAcceptedResponse(job_id=job_id)
@@ -465,6 +503,103 @@ async def _run_social_listening(
             correlation_id=body.correlation_id,
             job_id=job_id,
             pipeline="social_listening",
+            status="failed",
+            metadata={"duration_ms": duration_ms},
+        )
+
+
+async def _run_visual_adaptation(
+    body: VisualAdaptationRequest,
+    job_id: str,
+    redis_client: Any,
+) -> None:
+    """Execute the visual-adaptation graph and send the callback."""
+    from app.agents.visual_adaptation.graph import build_visual_adaptation_graph
+    from app.services.callback import send_callback
+
+    logger = get_logger(
+        pipeline="visual_adaptation",
+        correlation_id=body.correlation_id,
+        organization_id=body.organization_id,
+    )
+
+    start_time = time.monotonic()
+
+    try:
+        graph = build_visual_adaptation_graph()
+        result = await graph.ainvoke({
+            "organization_id": body.organization_id,
+            "image_url": body.image_url,
+            "target_networks": body.target_networks,
+            "brand_guidelines": body.brand_guidelines,
+            "semantic_map": None,
+            "crop_plans": None,
+            "adapted_images": None,
+            "quality_results": None,
+            "quality_passed": False,
+            "quality_feedback": None,
+            "retry_count": 0,
+            "callback_url": body.callback_url,
+            "correlation_id": body.correlation_id,
+            "total_tokens": 0,
+            "total_cost": 0.0,
+            "agents_executed": [],
+        })
+
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+
+        # Build result for callback — strip base64 from primary result
+        pipeline_result = {
+            "adapted_images": {
+                k: {key: val for key, val in v.items() if key != "base64"}
+                for k, v in (result.get("adapted_images") or {}).items()
+            },
+            "adapted_images_base64": result.get("adapted_images"),
+            "quality_results": result.get("quality_results"),
+            "semantic_map": result.get("semantic_map"),
+        }
+
+        await redis_client.set(
+            f"job:{job_id}",
+            json.dumps({"status": "completed", "result": pipeline_result}),
+            ex=3600,
+        )
+
+        metadata = {
+            "total_tokens": result.get("total_tokens", 0),
+            "total_cost": result.get("total_cost", 0.0),
+            "agents_executed": result.get("agents_executed", []),
+            "retry_count": result.get("retry_count", 0),
+            "duration_ms": duration_ms,
+        }
+
+        await send_callback(
+            callback_url=body.callback_url,
+            correlation_id=body.correlation_id,
+            job_id=job_id,
+            pipeline="visual_adaptation",
+            status="completed",
+            result=pipeline_result,
+            metadata=metadata,
+        )
+
+        logger.info("Pipeline completed", job_id=job_id, duration_ms=duration_ms)
+
+    except Exception:
+        duration_ms = int((time.monotonic() - start_time) * 1000)
+        logger.exception("Pipeline failed", job_id=job_id, duration_ms=duration_ms)
+
+        await redis_client.set(
+            f"job:{job_id}",
+            json.dumps({"status": "failed", "result": None}),
+            ex=3600,
+        )
+
+        await send_callback(
+            callback_url=body.callback_url,
+            correlation_id=body.correlation_id,
+            job_id=job_id,
+            pipeline="visual_adaptation",
             status="failed",
             metadata={"duration_ms": duration_ms},
         )

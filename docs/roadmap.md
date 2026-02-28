@@ -15,7 +15,7 @@
 | **Fase 3 — IA Avancada (v3.0)** | Sprint 12-14 | ✅ Completa (pendencias integration tests + expansao geracao) |
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
-| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1-19.4 completos) |
+| **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ⏳ Em progresso (19.1-19.5 completos) |
 | **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ⏳ Nao iniciada |
 
 ### Progresso detalhado
@@ -41,7 +41,7 @@
 | 16 | CRM Fase 2 + Intelligence | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 17 | Paid Advertising Core | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 18 | AI Learning from Ads | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
-| 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ⏳ 19.1-19.4 completos |
+| 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ⏳ 19.1-19.5 completos |
 | 20 | Geracao Enriquecida | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 | 21 | Feature Gates + Integration Tests | ⏳ | ⏳ | ⏳ | ⏳ | ⏳ Nao iniciado |
 
@@ -59,7 +59,7 @@
 
 ### Proximo passo
 
-**Sprint 19.5 — Visual Adaptation Pipeline**: Proximo passo. Sprint 19.4 (Social Listening) completo — 4 agentes LangGraph, fluxo linear com prompts condicionais para crise, 35 testes pytest (3 pipelines). 2510 testes Laravel passando.
+**Sprint 19.6 — Integracao Laravel**: Proximo passo. Sprint 19.5 (Visual Adaptation) completo — 4 agentes LangGraph, conditional edge com retry (max 2), multimodal LLM + Pillow, 47 testes pytest (4 pipelines). 2510 testes Laravel passando.
 
 ### Security Audit — Hardening Completo
 
@@ -1952,16 +1952,16 @@ O Sprint 19 introduz um microservico Python com LangGraph para orquestracao de p
 
 ### 19.5 Pipeline: Visual Adaptation Cross-Network
 
-- [ ] LangGraph StateGraph: `VisualAdaptationState`
-- [ ] Agente `VisionAnalyzer` — LLM multimodal analisa sujeito, composicao, texto, safe zones
-- [ ] Agente `CropStrategist` — define estrategia de corte por rede (1:1, 4:5, 9:16, 16:9)
-- [ ] Agentes `NetworkAdapters` (paralelo) — executa crop/resize via Pillow por rede alvo
-- [ ] Agente `QualityChecker` — LLM multimodal valida sujeito visivel, texto legivel, composicao
-- [ ] Conditional edge: QualityChecker reprovado → CropStrategist retry (max 2)
-- [ ] Specs por rede: Instagram (1:1, 4:5, 9:16), TikTok (9:16 + safe zones), YouTube (16:9 thumb)
-- [ ] Endpoint: `POST /api/v1/pipelines/visual-adaptation`
-- [ ] Callback ao Laravel com URLs das imagens adaptadas + quality scores
-- [ ] Testes: graph completo, cada formato de rede, quality rejection + retry
+- [x] LangGraph StateGraph: `VisualAdaptationState` (TypedDict com append reducer, retry_count + quality_feedback para retry loop)
+- [x] Agente `VisionAnalyzer` — LLM multimodal (HumanMessage com image_url) analisa sujeito, composicao, texto, safe zones (temp=0.2)
+- [x] Agente `CropStrategist` — define estrategia de corte por rede com NETWORK_SPECS expandido, retry_feedback_block condicional (temp=0.3)
+- [x] Agente `NetworkAdapters` — Pillow crop/resize real (nao LLM), download via httpx, base64 output, Image.LANCZOS
+- [x] Agente `QualityChecker` — LLM multimodal valida cada adaptacao via base64 data URI, force forward apos max retries (temp=0.1)
+- [x] Conditional edge: QualityChecker reprovado → CropStrategist retry (max 2), mesmo padrao reviewer→writer
+- [x] Specs por rede: Instagram (1:1 1080x1080, 4:5 1080x1350, 9:16 1080x1920), TikTok (9:16 1080x1920), YouTube (16:9 1280x720)
+- [x] Endpoint: `POST /api/v1/pipelines/visual-adaptation` (202 Accepted + job_id + background task)
+- [x] Callback ao Laravel com adapted_images (base64 + metadata) + quality_results + semantic_map via httpx
+- [x] Testes: 12 testes (3 graph flows incl. retry/force-forward, 6 agentes individuais, endpoint 202, validacao, health 4 pipelines)
 
 ### 19.6 Integracao Laravel
 

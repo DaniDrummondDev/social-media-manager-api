@@ -93,6 +93,24 @@ class SocialListeningRequest(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Visual Adaptation Pipeline
+# ---------------------------------------------------------------------------
+
+
+class VisualAdaptationRequest(BaseModel):
+    """Request body for POST /api/v1/pipelines/visual-adaptation."""
+
+    organization_id: str
+    correlation_id: str
+    callback_url: str
+    image_url: str
+    target_networks: list[str] = Field(
+        description="Target platforms: instagram, tiktok, youtube",
+    )
+    brand_guidelines: dict[str, Any] | None = None
+
+
+# ---------------------------------------------------------------------------
 # Jobs
 # ---------------------------------------------------------------------------
 
