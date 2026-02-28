@@ -17,4 +17,16 @@ interface PredictionValidatorInterface
         string $provider,
         float $engagementRate,
     ): int;
+
+    /**
+     * Validate a prediction against actual metrics.
+     *
+     * Compares the predicted engagement with actual results and updates
+     * the prediction validation record with accuracy metrics.
+     */
+    public function validate(
+        string $organizationId,
+        string $contentId,
+        string $scheduledPostId,
+    ): void;
 }

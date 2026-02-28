@@ -16,4 +16,20 @@ final readonly class AudienceInsightAnalysisResult
         public ?int $tokensInput,
         public ?int $tokensOutput,
     ) {}
+
+    public static function empty(): self
+    {
+        return new self(
+            insightData: [],
+            confidenceScore: null,
+            modelUsed: null,
+            tokensInput: null,
+            tokensOutput: null,
+        );
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->insightData === [] || isset($this->insightData['message']);
+    }
 }

@@ -42,22 +42,32 @@ use App\Infrastructure\AIIntelligence\Repositories\EloquentPredictionValidationR
 use App\Infrastructure\AIIntelligence\Services\LangGraphContentProfiler;
 use App\Infrastructure\AIIntelligence\Services\LangGraphMentionAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubAdIntelligenceProvider;
-use App\Infrastructure\AIIntelligence\Services\StubAudienceInsightAnalyzer;
+use App\Infrastructure\AIIntelligence\Services\EloquentAudienceInsightAnalyzer;
+use App\Infrastructure\AIIntelligence\Services\EloquentStyleProfileAnalyzer;
+use App\Infrastructure\AIIntelligence\Services\PrismEmbeddingGenerator;
+use App\Infrastructure\AIIntelligence\Services\PrismSentimentAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubBrandSafetyAnalyzer;
 use App\Infrastructure\AIIntelligence\Services\StubCrmIntelligenceProvider;
 use App\Infrastructure\AIIntelligence\Services\StubContentGapAnalyzer;
-use App\Infrastructure\AIIntelligence\Services\StubEmbeddingGenerator;
 use App\Infrastructure\AIIntelligence\Services\StubPredictionValidator;
 use App\Infrastructure\AIIntelligence\Services\StubSimilaritySearch;
-use App\Infrastructure\AIIntelligence\Services\StubStyleProfileAnalyzer;
+use App\Application\Shared\Contracts\SentimentAnalyzerInterface;
 use App\Domain\AIIntelligence\Events\AdPerformanceAggregated;
+use App\Domain\AIIntelligence\Events\OrgStyleProfileGenerated;
+use App\Domain\Analytics\Events\MetricsSynced;
+use App\Domain\ContentAI\Events\PromptExperimentCompleted;
 use App\Domain\Engagement\Events\CrmContactSynced;
 use App\Domain\Engagement\Events\CrmDealCreated;
 use App\Domain\PaidAdvertising\Events\BoostCreated;
+use App\Domain\Publishing\Events\PostPublished;
+use App\Infrastructure\AIIntelligence\Listeners\ActivateWinningTemplate;
 use App\Infrastructure\AIIntelligence\Listeners\AttributeCrmConversionOnContactSynced;
 use App\Infrastructure\AIIntelligence\Listeners\AttributeCrmConversionOnDealCreated;
 use App\Infrastructure\AIIntelligence\Listeners\EnrichAIContextOnAdPerformanceAggregated;
 use App\Infrastructure\AIIntelligence\Listeners\GenerateTargetingSuggestionsOnBoostCreated;
+use App\Infrastructure\AIIntelligence\Listeners\SchedulePredictionValidation;
+use App\Infrastructure\AIIntelligence\Listeners\TriggerPredictionValidation;
+use App\Infrastructure\AIIntelligence\Listeners\UpdateGenerationContext;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -72,16 +82,17 @@ final class AIIntelligenceServiceProvider extends ServiceProvider
         $this->app->bind(CalendarSuggestionRepositoryInterface::class, EloquentCalendarSuggestionRepository::class);
         $this->app->bind(ContentProfileRepositoryInterface::class, EloquentContentProfileRepository::class);
         $this->app->bind(PerformancePredictionRepositoryInterface::class, EloquentPerformancePredictionRepository::class);
-        $this->app->bind(EmbeddingGeneratorInterface::class, StubEmbeddingGenerator::class);
+        $this->app->bind(EmbeddingGeneratorInterface::class, PrismEmbeddingGenerator::class);
         $this->app->bind(SimilaritySearchInterface::class, StubSimilaritySearch::class);
         $this->app->bind(AudienceInsightRepositoryInterface::class, EloquentAudienceInsightRepository::class);
         $this->app->bind(ContentGapAnalysisRepositoryInterface::class, EloquentContentGapAnalysisRepository::class);
-        $this->app->bind(AudienceInsightAnalyzerInterface::class, StubAudienceInsightAnalyzer::class);
+        $this->app->bind(AudienceInsightAnalyzerInterface::class, EloquentAudienceInsightAnalyzer::class);
         $this->app->bind(ContentGapAnalyzerInterface::class, StubContentGapAnalyzer::class);
         $this->app->bind(PredictionValidationRepositoryInterface::class, EloquentPredictionValidationRepository::class);
         $this->app->bind(OrgStyleProfileRepositoryInterface::class, EloquentOrgStyleProfileRepository::class);
         $this->app->bind(PredictionValidatorInterface::class, StubPredictionValidator::class);
-        $this->app->bind(StyleProfileAnalyzerInterface::class, StubStyleProfileAnalyzer::class);
+        $this->app->bind(StyleProfileAnalyzerInterface::class, EloquentStyleProfileAnalyzer::class);
+        $this->app->bind(SentimentAnalyzerInterface::class, PrismSentimentAnalyzer::class);
         $this->app->bind(CrmConversionAttributionRepositoryInterface::class, EloquentCrmConversionAttributionRepository::class);
         $this->app->bind(CrmIntelligenceProviderInterface::class, StubCrmIntelligenceProvider::class);
         $this->app->bind(AdPerformanceInsightRepositoryInterface::class, EloquentAdPerformanceInsightRepository::class);
@@ -92,9 +103,16 @@ final class AIIntelligenceServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // CRM & Ad Intelligence listeners
         Event::listen(CrmDealCreated::class, AttributeCrmConversionOnDealCreated::class);
         Event::listen(CrmContactSynced::class, AttributeCrmConversionOnContactSynced::class);
         Event::listen(AdPerformanceAggregated::class, EnrichAIContextOnAdPerformanceAggregated::class);
         Event::listen(BoostCreated::class, GenerateTargetingSuggestionsOnBoostCreated::class);
+
+        // Sprint 20: AI Learning Loop listeners
+        Event::listen(PostPublished::class, SchedulePredictionValidation::class);
+        Event::listen(MetricsSynced::class, TriggerPredictionValidation::class);
+        Event::listen(PromptExperimentCompleted::class, ActivateWinningTemplate::class);
+        Event::listen(OrgStyleProfileGenerated::class, UpdateGenerationContext::class);
     }
 }

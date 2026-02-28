@@ -14,4 +14,18 @@ final readonly class RAGContextResult
         public string $formattedExamples,
         public int $tokenCount,
     ) {}
+
+    public static function empty(): self
+    {
+        return new self(
+            contentIds: [],
+            formattedExamples: '',
+            tokenCount: 0,
+        );
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->contentIds === [];
+    }
 }

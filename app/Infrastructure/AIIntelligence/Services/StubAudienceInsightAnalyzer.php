@@ -10,7 +10,11 @@ use App\Domain\AIIntelligence\ValueObjects\InsightType;
 
 final class StubAudienceInsightAnalyzer implements AudienceInsightAnalyzerInterface
 {
-    public function analyze(array $comments, InsightType $type): AudienceInsightAnalysisResult
+    public function analyze(
+        array $comments,
+        InsightType $type,
+        ?string $organizationId = null,
+    ): AudienceInsightAnalysisResult
     {
         $insightData = match ($type) {
             InsightType::PreferredTopics => [

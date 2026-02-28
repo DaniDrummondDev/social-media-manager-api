@@ -25,13 +25,15 @@ final class LangGraphTextGenerator implements TextGeneratorInterface
         ?string $socialNetwork = null,
         ?string $tone = null,
         ?string $language = null,
+        ?string $organizationId = null,
     ): TextGenerationResult {
         return $this->dispatchOrFallback(
-            fn () => $this->fallback->generateTitle($topic, $socialNetwork, $tone, $language),
+            fn () => $this->fallback->generateTitle($topic, $socialNetwork, $tone, $language, $organizationId),
             topic: $topic,
             provider: $socialNetwork ?? 'instagram_feed',
             tone: $tone ?? 'professional',
             language: $language ?? 'pt-BR',
+            organizationId: $organizationId,
         );
     }
 
@@ -44,14 +46,16 @@ final class LangGraphTextGenerator implements TextGeneratorInterface
         ?string $tone = null,
         array $keywords = [],
         ?string $language = null,
+        ?string $organizationId = null,
     ): TextGenerationResult {
         return $this->dispatchOrFallback(
-            fn () => $this->fallback->generateDescription($topic, $socialNetwork, $tone, $keywords, $language),
+            fn () => $this->fallback->generateDescription($topic, $socialNetwork, $tone, $keywords, $language, $organizationId),
             topic: $topic,
             provider: $socialNetwork ?? 'instagram_feed',
             tone: $tone ?? 'professional',
             keywords: $keywords,
             language: $language ?? 'pt-BR',
+            organizationId: $organizationId,
         );
     }
 
@@ -59,11 +63,13 @@ final class LangGraphTextGenerator implements TextGeneratorInterface
         string $topic,
         ?string $niche = null,
         ?string $socialNetwork = null,
+        ?string $organizationId = null,
     ): TextGenerationResult {
         return $this->dispatchOrFallback(
-            fn () => $this->fallback->generateHashtags($topic, $niche, $socialNetwork),
+            fn () => $this->fallback->generateHashtags($topic, $niche, $socialNetwork, $organizationId),
             topic: $topic,
             provider: $socialNetwork ?? 'instagram_feed',
+            organizationId: $organizationId,
         );
     }
 
@@ -77,14 +83,16 @@ final class LangGraphTextGenerator implements TextGeneratorInterface
         ?string $tone = null,
         array $keywords = [],
         ?string $language = null,
+        ?string $organizationId = null,
     ): TextGenerationResult {
         return $this->dispatchOrFallback(
-            fn () => $this->fallback->generateFullContent($topic, $socialNetworks, $tone, $keywords, $language),
+            fn () => $this->fallback->generateFullContent($topic, $socialNetworks, $tone, $keywords, $language, $organizationId),
             topic: $topic,
             provider: $socialNetworks[0] ?? 'instagram_feed',
             tone: $tone ?? 'professional',
             keywords: $keywords,
             language: $language ?? 'pt-BR',
+            organizationId: $organizationId,
         );
     }
 

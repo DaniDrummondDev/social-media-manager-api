@@ -22,4 +22,22 @@ final readonly class StyleAnalysisResult
         public ?string $styleSummary,
         public int $sampleSize,
     ) {}
+
+    public static function empty(): self
+    {
+        return new self(
+            tonePreferences: ['preferred' => 'neutral', 'avoids' => []],
+            lengthPreferences: ['avg_preferred_length' => 200, 'shortens_by_pct' => 0.0],
+            vocabularyPreferences: ['added_words' => [], 'removed_words' => []],
+            structurePreferences: ['uses_emojis' => false, 'uses_questions' => false],
+            hashtagPreferences: ['avg_count' => 5, 'style' => 'standard'],
+            styleSummary: null,
+            sampleSize: 0,
+        );
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->sampleSize === 0;
+    }
 }

@@ -16,4 +16,12 @@ final class StubPredictionValidator implements PredictionValidatorInterface
         // Stub: simple linear normalization (0-10% engagement → 0-100 score)
         return min(100, max(0, (int) round($engagementRate * 10)));
     }
+
+    public function validate(
+        string $organizationId,
+        string $contentId,
+        string $scheduledPostId,
+    ): void {
+        // Stub: no-op validation
+    }
 }
