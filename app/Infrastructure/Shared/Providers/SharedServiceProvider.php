@@ -20,6 +20,9 @@ use App\Infrastructure\Shared\Services\LaravelEventDispatcher;
 use App\Infrastructure\Shared\Services\Sha256HashService;
 use App\Infrastructure\Shared\Services\StubSentimentAnalyzer;
 use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\OpenApi;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Routing\Route;
 use Illuminate\Support\ServiceProvider;
 
 final class SharedServiceProvider extends ServiceProvider
@@ -44,6 +47,22 @@ final class SharedServiceProvider extends ServiceProvider
         if (! class_exists(Scramble::class)) {
             return;
         }
+
+        Scramble::routes(function (Route $route): bool {
+            $uri = $route->uri();
+
+            if (str_contains($uri, 'internal/')) {
+                return false;
+            }
+
+            return str_starts_with($uri, 'api/v1');
+        });
+
+        Scramble::afterOpenApiGenerated(function (OpenApi $openApi): void {
+            $openApi->secure(
+                SecurityScheme::http('bearer', 'JWT'),
+            );
+        });
 
         Scramble::registerExtensions([
             ApiResponseExtension::class,

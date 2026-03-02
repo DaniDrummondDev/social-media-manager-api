@@ -16,7 +16,7 @@ final class JwtSecurityExtension extends OperationExtension
         $middlewares = $routeInfo->route->middleware();
 
         if (in_array('auth.jwt', $middlewares, true)) {
-            $operation->addSecurity(new SecurityRequirement('bearer'));
+            $operation->addSecurity(new SecurityRequirement('http'));
         }
     }
 }

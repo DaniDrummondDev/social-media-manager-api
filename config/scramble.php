@@ -2,94 +2,65 @@
 
 declare(strict_types=1);
 
+use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | API Path
+    |--------------------------------------------------------------------------
+    */
+    'api_path' => 'api/v1',
+
+    'api_domain' => null,
+
+    'export_path' => 'api.json',
+
     /*
     |--------------------------------------------------------------------------
     | API Information
     |--------------------------------------------------------------------------
     */
     'info' => [
-        'title' => 'Social Media Manager API',
         'version' => '1.0.0',
         'description' => 'API SaaS para agendamento e gestão de conteúdo em redes sociais.',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | API Path
+    | UI Configuration
     |--------------------------------------------------------------------------
-    |
-    | The path prefix for API routes to document.
-    |
     */
-    'api_path' => 'api/v1',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Enable/Disable Documentation
-    |--------------------------------------------------------------------------
-    |
-    | Disable in production for security.
-    |
-    */
-    'enabled' => env('SCRAMBLE_ENABLED', env('APP_ENV') !== 'production'),
+    'ui' => [
+        'title' => 'Social Media Manager API',
+        'theme' => 'light',
+        'hide_try_it' => false,
+        'hide_schemas' => false,
+        'logo' => '',
+        'try_it_credentials_policy' => 'include',
+        'layout' => 'responsive',
+    ],
 
     /*
     |--------------------------------------------------------------------------
     | Server Configuration
     |--------------------------------------------------------------------------
-    */
-    'servers' => [
-        [
-            'url' => env('APP_URL').'/api/v1',
-            'description' => env('APP_ENV', 'local'),
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Security Schemes
-    |--------------------------------------------------------------------------
-    */
-    'security' => [
-        'bearer' => [
-            'type' => 'http',
-            'scheme' => 'bearer',
-            'bearerFormat' => 'JWT',
-        ],
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Route Filter
-    |--------------------------------------------------------------------------
     |
-    | Filter which routes to include in the documentation.
+    | When null, server URL is auto-generated from api_path + api_domain.
+    | Format: 'Label' => 'path-or-url'
     |
     */
-    'routes' => function (\Illuminate\Routing\Route $route): bool {
-        $uri = $route->uri();
-
-        // Exclude internal routes
-        if (str_contains($uri, 'internal/')) {
-            return false;
-        }
-
-        return str_starts_with($uri, 'api/v1');
-    },
+    'servers' => null,
 
     /*
     |--------------------------------------------------------------------------
-    | UI and JSON Paths
+    | Middleware
     |--------------------------------------------------------------------------
     */
-    'ui_path' => 'docs/api',
-    'json_path' => 'docs/api.json',
+    'middleware' => [
+        'web',
+        RestrictedDocsAccess::class,
+    ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Theme
-    |--------------------------------------------------------------------------
-    */
-    'theme' => 'light',
+    'extensions' => [],
 ];

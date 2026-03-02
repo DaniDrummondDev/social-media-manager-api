@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 describe('OpenAPI Specification', function () {
     beforeEach(function () {
+        app()->detectEnvironment(fn () => 'local');
+
         $response = $this->get('/docs/api.json');
         if ($response->status() !== 200) {
             $this->markTestSkipped('Scramble API spec endpoint not available');
@@ -21,9 +23,10 @@ describe('OpenAPI Specification', function () {
     });
 
     it('includes JWT security scheme', function () {
-        expect($this->spec['components']['securitySchemes'] ?? [])->toHaveKey('bearer');
-        expect($this->spec['components']['securitySchemes']['bearer']['type'])->toBe('http');
-        expect($this->spec['components']['securitySchemes']['bearer']['scheme'])->toBe('bearer');
+        expect($this->spec['components']['securitySchemes'] ?? [])->toHaveKey('http');
+        expect($this->spec['components']['securitySchemes']['http']['type'])->toBe('http');
+        expect($this->spec['components']['securitySchemes']['http']['scheme'])->toBe('bearer');
+        expect($this->spec['components']['securitySchemes']['http']['bearerFormat'])->toBe('JWT');
     });
 
     it('includes documented paths', function () {

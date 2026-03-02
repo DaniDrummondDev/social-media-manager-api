@@ -40,12 +40,12 @@ final class RouteTagExtension extends OperationExtension
 
         foreach (self::TAGS as $pattern => $tag) {
             if (str_contains($uri, $pattern)) {
-                $operation->addTag($tag);
+                $operation->setTags([$tag]);
 
                 return;
             }
         }
 
-        $operation->addTag('General');
+        $operation->setTags(['General']);
     }
 }
