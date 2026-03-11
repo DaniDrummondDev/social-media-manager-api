@@ -9,6 +9,7 @@ use App\Application\Campaign\DTOs\UpdateCampaignInput;
 use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\Campaign\Exceptions\CampaignNotFoundException;
 use App\Domain\Campaign\Exceptions\DuplicateCampaignNameException;
+use App\Domain\Campaign\ValueObjects\CampaignBrief;
 use App\Domain\Campaign\ValueObjects\CampaignStatus;
 use App\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
@@ -37,6 +38,19 @@ final class UpdateCampaignUseCase
             }
         }
 
+        $brief = null;
+        if ($input->clearBrief) {
+            $brief = new CampaignBrief(null, null, null, null);
+        } elseif ($input->briefText !== null || $input->briefTargetAudience !== null || $input->briefRestrictions !== null || $input->briefCta !== null) {
+            $inputBrief = new CampaignBrief(
+                text: $input->briefText,
+                targetAudience: $input->briefTargetAudience,
+                restrictions: $input->briefRestrictions,
+                cta: $input->briefCta,
+            );
+            $brief = $campaign->brief !== null ? $campaign->brief->mergeWith($inputBrief) : $inputBrief;
+        }
+
         $campaign = $campaign->update(
             name: $input->name,
             description: $input->description,
@@ -44,6 +58,7 @@ final class UpdateCampaignUseCase
             endsAt: $input->endsAt !== null ? new DateTimeImmutable($input->endsAt) : null,
             tags: $input->tags,
             status: $input->status !== null ? CampaignStatus::from($input->status) : null,
+            brief: $brief,
         );
 
         $this->campaignRepository->update($campaign);
