@@ -36,6 +36,10 @@ final class CampaignController
             startsAt: $request->validated('starts_at'),
             endsAt: $request->validated('ends_at'),
             tags: $request->validated('tags', []),
+            briefText: $request->validated('brief_text'),
+            briefTargetAudience: $request->validated('brief_target_audience'),
+            briefRestrictions: $request->validated('brief_restrictions'),
+            briefCta: $request->validated('brief_cta'),
         ));
 
         return ApiResponse::success(
@@ -83,6 +87,11 @@ final class CampaignController
             endsAt: $request->validated('ends_at'),
             tags: $request->validated('tags'),
             status: $request->validated('status'),
+            briefText: $request->validated('brief_text'),
+            briefTargetAudience: $request->validated('brief_target_audience'),
+            briefRestrictions: $request->validated('brief_restrictions'),
+            briefCta: $request->validated('brief_cta'),
+            clearBrief: (bool) $request->validated('clear_brief', false),
         ));
 
         return ApiResponse::success(CampaignResource::fromOutput($output)->toArray());
