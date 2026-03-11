@@ -7,6 +7,7 @@ namespace App\Application\ContentAI\UseCases;
 use App\Application\ContentAI\Contracts\TextGeneratorInterface;
 use App\Application\ContentAI\DTOs\AIGenerationOutput;
 use App\Application\ContentAI\DTOs\GenerateTitleInput;
+use App\Application\ContentAI\Services\BriefContextResolver;
 use App\Application\Shared\Contracts\EventDispatcherInterface;
 use App\Domain\ContentAI\Contracts\AIGenerationRepositoryInterface;
 use App\Domain\ContentAI\Entities\AIGeneration;
@@ -20,12 +21,20 @@ final class GenerateTitleUseCase
         private readonly TextGeneratorInterface $textGenerator,
         private readonly AIGenerationRepositoryInterface $generationRepository,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly BriefContextResolver $briefContextResolver,
     ) {}
 
     public function execute(GenerateTitleInput $input): AIGenerationOutput
     {
+        $topic = $this->briefContextResolver->resolve(
+            $input->generationMode,
+            $input->campaignId,
+            $input->organizationId,
+            $input->topic,
+        );
+
         $result = $this->textGenerator->generateTitle(
-            topic: $input->topic,
+            topic: $topic,
             socialNetwork: $input->socialNetwork,
             tone: $input->tone,
             language: $input->language,
@@ -40,6 +49,8 @@ final class GenerateTitleUseCase
                 'social_network' => $input->socialNetwork,
                 'tone' => $input->tone,
                 'language' => $input->language,
+                'generation_mode' => $input->generationMode,
+                'campaign_id' => $input->campaignId,
             ],
             output: $result->output,
             usage: new AIUsage(

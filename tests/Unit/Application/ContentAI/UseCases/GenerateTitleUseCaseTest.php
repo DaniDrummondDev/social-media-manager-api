@@ -5,8 +5,10 @@ declare(strict_types=1);
 use App\Application\ContentAI\Contracts\TextGeneratorInterface;
 use App\Application\ContentAI\DTOs\GenerateTitleInput;
 use App\Application\ContentAI\DTOs\TextGenerationResult;
+use App\Application\ContentAI\Services\BriefContextResolver;
 use App\Application\ContentAI\UseCases\GenerateTitleUseCase;
 use App\Application\Shared\Contracts\EventDispatcherInterface;
+use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\ContentAI\Contracts\AIGenerationRepositoryInterface;
 use App\Domain\Shared\ValueObjects\Uuid;
 
@@ -15,10 +17,14 @@ beforeEach(function () {
     $this->generationRepository = Mockery::mock(AIGenerationRepositoryInterface::class);
     $this->eventDispatcher = Mockery::mock(EventDispatcherInterface::class);
 
+    $campaignRepo = Mockery::mock(CampaignRepositoryInterface::class);
+    $this->briefContextResolver = new BriefContextResolver($campaignRepo);
+
     $this->useCase = new GenerateTitleUseCase(
         $this->textGenerator,
         $this->generationRepository,
         $this->eventDispatcher,
+        $this->briefContextResolver,
     );
 });
 

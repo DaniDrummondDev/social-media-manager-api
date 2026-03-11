@@ -13,10 +13,12 @@ final readonly class GenerateFullContentInput
     public function __construct(
         public string $organizationId,
         public string $userId,
-        public string $topic,
-        public array $socialNetworks,
+        public string $topic = '',
+        public array $socialNetworks = [],
         public ?string $tone = null,
         public array $keywords = [],
         public ?string $language = null,
+        public ?string $campaignId = null,
+        public string $generationMode = 'fields_only',
     ) {}
 }

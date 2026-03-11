@@ -9,8 +9,10 @@ final readonly class GenerateHashtagsInput
     public function __construct(
         public string $organizationId,
         public string $userId,
-        public string $topic,
+        public string $topic = '',
         public ?string $niche = null,
         public ?string $socialNetwork = null,
+        public ?string $campaignId = null,
+        public string $generationMode = 'fields_only',
     ) {}
 }

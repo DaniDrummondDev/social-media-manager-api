@@ -35,10 +35,12 @@ final class AIController
         $output = $useCase->execute(new GenerateTitleInput(
             organizationId: $request->attributes->get('auth_organization_id'),
             userId: $request->attributes->get('auth_user_id'),
-            topic: $request->validated('topic'),
+            topic: $request->validated('topic', ''),
             socialNetwork: $request->validated('social_network'),
             tone: $request->validated('tone'),
             language: $request->validated('language'),
+            campaignId: $request->validated('campaign_id'),
+            generationMode: $request->validated('generation_mode', 'fields_only'),
         ));
 
         return ApiResponse::success(AIGenerationResource::fromOutput($output)->toArray());
@@ -51,11 +53,13 @@ final class AIController
         $output = $useCase->execute(new GenerateDescriptionInput(
             organizationId: $request->attributes->get('auth_organization_id'),
             userId: $request->attributes->get('auth_user_id'),
-            topic: $request->validated('topic'),
+            topic: $request->validated('topic', ''),
             socialNetwork: $request->validated('social_network'),
             tone: $request->validated('tone'),
             keywords: $request->validated('keywords', []),
             language: $request->validated('language'),
+            campaignId: $request->validated('campaign_id'),
+            generationMode: $request->validated('generation_mode', 'fields_only'),
         ));
 
         return ApiResponse::success(AIGenerationResource::fromOutput($output)->toArray());
@@ -68,9 +72,11 @@ final class AIController
         $output = $useCase->execute(new GenerateHashtagsInput(
             organizationId: $request->attributes->get('auth_organization_id'),
             userId: $request->attributes->get('auth_user_id'),
-            topic: $request->validated('topic'),
+            topic: $request->validated('topic', ''),
             niche: $request->validated('niche'),
             socialNetwork: $request->validated('social_network'),
+            campaignId: $request->validated('campaign_id'),
+            generationMode: $request->validated('generation_mode', 'fields_only'),
         ));
 
         return ApiResponse::success(AIGenerationResource::fromOutput($output)->toArray());
@@ -83,11 +89,13 @@ final class AIController
         $output = $useCase->execute(new GenerateFullContentInput(
             organizationId: $request->attributes->get('auth_organization_id'),
             userId: $request->attributes->get('auth_user_id'),
-            topic: $request->validated('topic'),
+            topic: $request->validated('topic', ''),
             socialNetworks: $request->validated('social_networks'),
             tone: $request->validated('tone'),
             keywords: $request->validated('keywords', []),
             language: $request->validated('language'),
+            campaignId: $request->validated('campaign_id'),
+            generationMode: $request->validated('generation_mode', 'fields_only'),
         ));
 
         return ApiResponse::success(AIGenerationResource::fromOutput($output)->toArray());
