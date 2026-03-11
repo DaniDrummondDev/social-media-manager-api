@@ -18,5 +18,10 @@ final readonly class UpdateCampaignInput
         public ?string $endsAt = null,
         public ?array $tags = null,
         public ?string $status = null,
+        public ?string $briefText = null,
+        public ?string $briefTargetAudience = null,
+        public ?string $briefRestrictions = null,
+        public ?string $briefCta = null,
+        public bool $clearBrief = false,
     ) {}
 }
