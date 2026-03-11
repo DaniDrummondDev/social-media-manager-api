@@ -2,7 +2,7 @@
 
 > **Versao:** 1.3.0\
 > **Data:** 2026-02-28\
-> **Status:** Em desenvolvimento — Fase 7 completa, Sprint 21 completo
+> **Status:** Em desenvolvimento — Fase 7 completa, Sprint 22 completo
 
 ---
 
@@ -16,7 +16,7 @@
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
 | **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ✅ Completa (19.1-19.6) |
-| **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ✅ Completa |
+| **Fase 7 — Consolidacao (v7.0)** | Sprint 20-22 | ✅ Completa |
 
 ### Progresso detalhado
 
@@ -44,8 +44,9 @@
 | 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 20 | Geracao Enriquecida | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 21 | Feature Gates + Integration Tests | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 22 | Campaign Brief + AI Generation Modes | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 
-> Todos os sprints completados com testes de integracao implementados. Total: 2728 testes passando.
+> Todos os sprints completados com testes de integracao implementados. Total: 2844 testes passando.
 
 ### Seguranca — Row-Level Security (RLS)
 
