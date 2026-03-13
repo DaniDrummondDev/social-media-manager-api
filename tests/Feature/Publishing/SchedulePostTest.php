@@ -173,7 +173,7 @@ it('rejects schedule with past date — 422', function () {
     $response->assertStatus(422);
 });
 
-it('rejects schedule for non-existent content — 422', function () {
+it('rejects schedule for non-existent content — 404', function () {
     $fakeContentId = (string) Str::uuid();
     $scheduledAt = now()->addHour()->format('Y-m-d\TH:i:s\Z');
 
@@ -185,7 +185,7 @@ it('rejects schedule for non-existent content — 422', function () {
         ],
     );
 
-    $response->assertStatus(422);
+    $response->assertStatus(404);
 });
 
 it('rejects schedule for draft content — 422', function () {

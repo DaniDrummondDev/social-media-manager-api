@@ -16,7 +16,7 @@ interface AIGenerationRepositoryInterface
     /**
      * @return AIGeneration[]
      */
-    public function findByOrganizationId(Uuid $organizationId, ?string $type = null): array;
+    public function findByOrganizationId(Uuid $organizationId, ?string $type = null, int $limit = 100): array;
 
     public function countByOrganizationAndMonth(Uuid $organizationId, int $year, int $month): int;
 

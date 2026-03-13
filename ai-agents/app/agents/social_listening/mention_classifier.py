@@ -10,6 +10,7 @@ from app.agents.social_listening.prompts import MENTION_CLASSIFIER_SYSTEM_PROMPT
 from app.agents.social_listening.state import SocialListeningState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 
 class MentionClassification(BaseModel):
@@ -61,11 +62,14 @@ async def mention_classifier_node(state: SocialListeningState) -> dict[str, Any]
 
     human_message = "\n".join(parts)
 
-    llm = get_llm(temperature=0.2).with_structured_output(MentionClassification)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.2, callbacks=[tracker]).with_structured_output(MentionClassification)
     classification: MentionClassification = await llm.ainvoke([
         ("system", MENTION_CLASSIFIER_SYSTEM_PROMPT),
         ("human", human_message),
     ])
+
+    token_cost = estimate_cost(tracker.usage)
 
     logger.info(
         "MentionClassifier finished",
@@ -73,11 +77,13 @@ async def mention_classifier_node(state: SocialListeningState) -> dict[str, Any]
         confidence=classification.confidence,
         is_crisis=classification.is_crisis,
         urgency=classification.urgency_level,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "classification": classification.model_dump(),
         "agents_executed": ["mention_classifier"],
-        "total_tokens": 0,
-        "total_cost": 0.0,
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

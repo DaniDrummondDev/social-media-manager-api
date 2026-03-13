@@ -10,6 +10,7 @@ from app.agents.social_listening.prompts import SAFETY_CHECKER_SYSTEM_PROMPT
 from app.agents.social_listening.state import SocialListeningState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 
 class SafetyCheckResult(BaseModel):
@@ -61,11 +62,14 @@ async def safety_checker_node(state: SocialListeningState) -> dict[str, Any]:
 
     human_message = "\n".join(parts)
 
-    llm = get_llm(temperature=0.1).with_structured_output(SafetyCheckResult)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.1, callbacks=[tracker]).with_structured_output(SafetyCheckResult)
     result: SafetyCheckResult = await llm.ainvoke([
         ("system", SAFETY_CHECKER_SYSTEM_PROMPT),
         ("human", human_message),
     ])
+
+    token_cost = estimate_cost(tracker.usage)
 
     logger.info(
         "SafetyChecker finished",
@@ -73,9 +77,13 @@ async def safety_checker_node(state: SocialListeningState) -> dict[str, Any]:
         risk_level=result.risk_level,
         recommendation=result.recommendation,
         issues_count=len(result.flagged_issues),
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "safety_result": result.model_dump(),
         "agents_executed": ["safety_checker"],
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

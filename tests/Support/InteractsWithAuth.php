@@ -26,7 +26,7 @@ trait InteractsWithAuth
     protected function createUserInDb(array $overrides = []): array
     {
         $id = $overrides['id'] ?? (string) Str::uuid();
-        $plainPassword = $overrides['plain_password'] ?? 'SecureP@ss1';
+        $plainPassword = $overrides['plain_password'] ?? 'SecureP@ss123!';
 
         $attrs = array_merge([
             'id' => $id,

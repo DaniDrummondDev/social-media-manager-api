@@ -75,6 +75,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'plan.feature' => \App\Infrastructure\Billing\Middleware\CheckPlanFeature::class,
             'admin' => \App\Infrastructure\PlatformAdmin\Middleware\PlatformAdminMiddleware::class,
             'internal-only' => \App\Infrastructure\Shared\Http\Middleware\InternalOnlyMiddleware::class,
+            // SECURITY FIX (ADMIN-001): Add IP whitelist middleware
+            'ip.whitelist' => \App\Infrastructure\Shared\Http\Middleware\IpWhitelist::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -111,6 +113,57 @@ return Application::configure(basePath: dirname(__DIR__))
                 code: $e->errorCode,
                 message: $e->getMessage(),
                 status: 402,
+            );
+        });
+
+        // Domain-layer NotFoundException → 404 (must be before generic DomainException)
+        $exceptions->render(function (\App\Domain\Campaign\Exceptions\CampaignNotFoundException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: 'Resource not found.',
+                status: 404,
+            );
+        });
+
+        $exceptions->render(function (\App\Domain\Campaign\Exceptions\ContentNotFoundException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: 'Resource not found.',
+                status: 404,
+            );
+        });
+
+        // Application-layer NotFoundException → 404 (must be before generic ApplicationException)
+        $exceptions->render(function (\App\Application\SocialAccount\Exceptions\SocialAccountNotFoundException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: 'Resource not found.',
+                status: 404,
+            );
+        });
+
+        $exceptions->render(function (\App\Application\Engagement\Exceptions\AutomationRuleNotFoundException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: 'Resource not found.',
+                status: 404,
+            );
+        });
+
+        $exceptions->render(function (\App\Application\Publishing\Exceptions\ScheduledPostNotFoundException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: 'Resource not found.',
+                status: 404,
+            );
+        });
+
+        // SocialAccount authorization → 403
+        $exceptions->render(function (\App\Application\SocialAccount\Exceptions\SocialAccountAuthorizationException $e, Request $request) {
+            return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
+                code: $e->errorCode,
+                message: $e->getMessage(),
+                status: 403,
             );
         });
 
@@ -175,9 +228,32 @@ return Application::configure(basePath: dirname(__DIR__))
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::error($errors, 422);
         });
 
+        // SECURITY FIX (LOG-001): Sanitize exceptions before logging
         // Catch-all for unhandled exceptions → 500 (generic, no internal details leaked)
         $exceptions->render(function (\Throwable $e, Request $request) {
-            report($e);
+            // Sanitize exception data before reporting
+            $sanitizedException = $e;
+            $sensitiveKeys = ['password', 'token', 'secret', 'api_key', 'authorization', 'cookie'];
+            
+            $context = [
+                'url' => $request->fullUrl(),
+                'method' => $request->method(),
+                'user_id' => $request->attributes->get('auth_user_id'),
+                'organization_id' => $request->attributes->get('auth_organization_id'),
+                'correlation_id' => $request->attributes->get('correlation_id'),
+            ];
+            
+            // Filter sensitive data from request inputs
+            $inputs = $request->all();
+            foreach ($sensitiveKeys as $key) {
+                if (isset($inputs[$key])) {
+                    $inputs[$key] = '[REDACTED]';
+                }
+            }
+            $context['inputs'] = $inputs;
+            
+            report($sanitizedException);
+            \Log::error('Unhandled exception', $context);
 
             return \App\Infrastructure\Shared\Http\Resources\ApiResponse::fail(
                 code: 'INTERNAL_ERROR',

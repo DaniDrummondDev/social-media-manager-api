@@ -11,6 +11,7 @@ from app.agents.visual_adaptation.prompts import QUALITY_CHECKER_SYSTEM_PROMPT
 from app.agents.visual_adaptation.state import VisualAdaptationState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 MAX_RETRIES = 2
 
@@ -79,11 +80,14 @@ async def quality_checker_node(state: VisualAdaptationState) -> dict[str, Any]:
 
     message = HumanMessage(content=content_parts)
 
-    llm = get_llm(temperature=0.1).with_structured_output(QualityCheckOutput)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.1, callbacks=[tracker]).with_structured_output(QualityCheckOutput)
     output: QualityCheckOutput = await llm.ainvoke([
         ("system", QUALITY_CHECKER_SYSTEM_PROMPT),
         message,
     ])
+
+    token_cost = estimate_cost(tracker.usage)
 
     # Retry logic — same pattern as content_creation reviewer
     new_retry_count = state["retry_count"] + (0 if output.overall_passed else 1)
@@ -96,6 +100,8 @@ async def quality_checker_node(state: VisualAdaptationState) -> dict[str, Any]:
         quality_passed=quality_passed,
         forced=forced,
         retry_count=new_retry_count,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
@@ -104,8 +110,8 @@ async def quality_checker_node(state: VisualAdaptationState) -> dict[str, Any]:
         "quality_feedback": output.overall_feedback,
         "retry_count": new_retry_count,
         "agents_executed": ["quality_checker"],
-        "total_tokens": 0,
-        "total_cost": 0.0,
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }
 
 

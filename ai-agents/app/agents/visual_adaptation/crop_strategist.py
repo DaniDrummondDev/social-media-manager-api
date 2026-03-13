@@ -14,6 +14,7 @@ from app.agents.visual_adaptation.prompts import (
 from app.agents.visual_adaptation.state import VisualAdaptationState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 # ---------------------------------------------------------------------------
 # Network format specifications
@@ -112,21 +113,26 @@ async def crop_strategist_node(state: VisualAdaptationState) -> dict[str, Any]:
 
     human_message = "\n\n".join(parts)
 
-    llm = get_llm(temperature=0.3).with_structured_output(CropStrategyOutput)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.3, callbacks=[tracker]).with_structured_output(CropStrategyOutput)
     output: CropStrategyOutput = await llm.ainvoke([
         ("system", system_prompt),
         ("human", human_message),
     ])
 
+    token_cost = estimate_cost(tracker.usage)
+
     logger.info(
         "CropStrategist finished",
         num_plans=len(output.plans),
         overall_strategy=output.overall_strategy,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "crop_plans": [plan.model_dump() for plan in output.plans],
         "agents_executed": ["crop_strategist"],
-        "total_tokens": 0,
-        "total_cost": 0.0,
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

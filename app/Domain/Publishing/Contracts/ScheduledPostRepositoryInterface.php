@@ -26,31 +26,32 @@ interface ScheduledPostRepositoryInterface
         ?string $campaignId = null,
         ?DateTimeImmutable $from = null,
         ?DateTimeImmutable $to = null,
+        int $limit = 500,
     ): array;
 
     /**
      * @return ScheduledPost[]
      */
-    public function findDuePosts(DateTimeImmutable $now): array;
+    public function findDuePosts(DateTimeImmutable $now, int $limit = 100): array;
 
     /**
      * Find due posts with a SELECT ... FOR UPDATE lock to prevent double-dispatch.
      *
      * @return ScheduledPost[]
      */
-    public function findDuePostsForUpdate(DateTimeImmutable $now): array;
+    public function findDuePostsForUpdate(DateTimeImmutable $now, int $limit = 100): array;
 
     /**
      * @return ScheduledPost[]
      */
-    public function findRetryable(DateTimeImmutable $now): array;
+    public function findRetryable(DateTimeImmutable $now, int $limit = 50): array;
 
     /**
      * Find retryable posts with a SELECT ... FOR UPDATE lock to prevent double-dispatch.
      *
      * @return ScheduledPost[]
      */
-    public function findRetryableForUpdate(DateTimeImmutable $now): array;
+    public function findRetryableForUpdate(DateTimeImmutable $now, int $limit = 50): array;
 
     /**
      * @return ScheduledPost[]

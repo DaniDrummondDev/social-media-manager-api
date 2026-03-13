@@ -127,7 +127,7 @@ class TokenEncryptionService
 | 2FA secret (TOTP) | AES-256-GCM | Segredo do autenticador |
 | Recovery codes (2FA) | AES-256-GCM | Recuperação de 2FA |
 | Webhook secrets | AES-256-GCM | Assinatura de webhooks |
-| Senhas | bcrypt (hash, não criptografia) | Irreversível por design |
+| Senhas | Argon2id (hash, não criptografia) | Irreversível por design, memory-hard + CPU-hard |
 
 ### Regras de segurança
 

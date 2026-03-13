@@ -23,9 +23,11 @@ final class CreateContentRequest extends FormRequest
             'body' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'hashtags' => ['sometimes', 'array', 'max:30'],
             'hashtags.*' => ['string', 'min:1', 'max:100'],
-            'media_ids' => ['sometimes', 'array'],
+            // SECURITY FIX (VALIDATION-001): Add max limit to prevent DoS attacks
+            'media_ids' => ['sometimes', 'array', 'max:20'],
             'media_ids.*' => ['string', 'uuid'],
-            'network_overrides' => ['sometimes', 'array'],
+            // SECURITY FIX (VALIDATION-001): Add max limit to prevent DoS attacks
+            'network_overrides' => ['sometimes', 'array', 'max:10'],
             'network_overrides.*.provider' => ['required', 'string', 'in:instagram,tiktok,youtube'],
             'network_overrides.*.title' => ['sometimes', 'nullable', 'string', 'max:500'],
             'network_overrides.*.body' => ['sometimes', 'nullable', 'string', 'max:5000'],

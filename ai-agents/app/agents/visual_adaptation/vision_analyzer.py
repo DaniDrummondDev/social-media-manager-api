@@ -11,6 +11,7 @@ from app.agents.visual_adaptation.prompts import VISION_ANALYZER_SYSTEM_PROMPT
 from app.agents.visual_adaptation.state import VisualAdaptationState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 
 class SemanticMap(BaseModel):
@@ -53,21 +54,26 @@ async def vision_analyzer_node(state: VisualAdaptationState) -> dict[str, Any]:
         {"type": "image_url", "image_url": {"url": state["image_url"]}},
     ])
 
-    llm = get_llm(temperature=0.2).with_structured_output(SemanticMap)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.2, callbacks=[tracker]).with_structured_output(SemanticMap)
     result: SemanticMap = await llm.ainvoke([
         ("system", VISION_ANALYZER_SYSTEM_PROMPT),
         message,
     ])
 
+    token_cost = estimate_cost(tracker.usage)
+
     logger.info(
         "VisionAnalyzer finished",
         subject_position=result.subject_position,
         composition_type=result.composition_type,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "semantic_map": result.model_dump(),
         "agents_executed": ["vision_analyzer"],
-        "total_tokens": 0,
-        "total_cost": 0.0,
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

@@ -6,6 +6,11 @@ import operator
 from typing import Annotated, Any, TypedDict
 
 
+def _sum_reducer(a: int | float, b: int | float) -> int | float:
+    """Reducer that sums numeric values from parallel branches."""
+    return (a or 0) + (b or 0)
+
+
 class SocialListeningState(TypedDict):
     """Typed state that flows through the Social Listening Intelligence graph.
 
@@ -34,6 +39,6 @@ class SocialListeningState(TypedDict):
     # -- Metadata -----------------------------------------------------------
     callback_url: str
     correlation_id: str
-    total_tokens: int
-    total_cost: float
+    total_tokens: Annotated[int, _sum_reducer]
+    total_cost: Annotated[float, _sum_reducer]
     agents_executed: Annotated[list[str], operator.add]

@@ -14,6 +14,7 @@ use App\Application\Shared\Contracts\EventDispatcherInterface;
 use App\Application\Shared\Contracts\HashServiceInterface;
 use App\Domain\Identity\Repositories\UserRepositoryInterface;
 use App\Domain\Identity\ValueObjects\Email;
+use App\Domain\Identity\ValueObjects\HashedPassword;
 use App\Domain\Identity\ValueObjects\UserStatus;
 use App\Domain\Shared\ValueObjects\Uuid;
 
@@ -37,6 +38,11 @@ final class LoginUseCase
 
         if ($user->status !== UserStatus::Active) {
             throw new AuthenticationException('Account is not active');
+        }
+
+        if ($user->password->needsRehash()) {
+            $rehashed = $user->changePassword(HashedPassword::fromPlainText($input->password));
+            $this->userRepository->update($rehashed->releaseEvents());
         }
 
         if ($user->twoFactorEnabled) {

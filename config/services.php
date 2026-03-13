@@ -37,6 +37,7 @@ return [
 
     'stripe' => [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'trial_days' => (int) env('STRIPE_TRIAL_DAYS', 14),
     ],
 
 ];

@@ -57,11 +57,11 @@ it('returns 200 with content analytics', function () {
         ]);
 });
 
-it('returns 422 when content not found', function () {
+it('returns 404 when content not found', function () {
     $fakeId = (string) Str::uuid();
     $response = $this->getJson("/api/v1/analytics/contents/{$fakeId}", $this->headers);
 
-    $response->assertStatus(422);
+    $response->assertStatus(404);
 });
 
 it('returns 422 for content in another org', function () {
@@ -103,7 +103,8 @@ it('returns 422 for content in another org', function () {
         'updated_at' => now()->toDateTimeString(),
     ]);
 
+    // Content from another org should return 404 (not found in tenant scope)
     $response = $this->getJson("/api/v1/analytics/contents/{$otherContentId}", $this->headers);
 
-    $response->assertStatus(422);
+    $response->assertStatus(404);
 });

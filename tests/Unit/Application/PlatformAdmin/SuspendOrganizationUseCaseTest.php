@@ -85,3 +85,24 @@ it('throws InsufficientAdminPrivilegeException when role is support', function (
         null,
     );
 })->throws(InsufficientAdminPrivilegeException::class);
+
+it('throws AdminOrganizationNotFoundException when organization does not exist', function () {
+    $queryService = Mockery::mock(PlatformQueryServiceInterface::class);
+    $auditService = Mockery::mock(AuditServiceInterface::class);
+
+    $orgId = '00000000-0000-4000-a000-000000000099';
+
+    $queryService->shouldReceive('getOrganizationDetail')
+        ->with($orgId)
+        ->once()
+        ->andReturn(null);
+
+    $useCase = new SuspendOrganizationUseCase($queryService, $auditService);
+    $useCase->execute(
+        new SuspendOrganizationInput($orgId, 'Reason'),
+        PlatformRole::SuperAdmin,
+        'admin-id',
+        '127.0.0.1',
+        null,
+    );
+})->throws(App\Application\PlatformAdmin\Exceptions\AdminOrganizationNotFoundException::class);

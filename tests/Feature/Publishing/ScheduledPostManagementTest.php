@@ -165,12 +165,12 @@ it('shows scheduled post — 200', function () {
         ->assertJsonPath('data.attributes.status', 'pending');
 });
 
-it('returns 422 for non-existent scheduled post — show', function () {
+it('returns 404 for non-existent scheduled post — show', function () {
     $fakeId = (string) Str::uuid();
 
     $response = $this->withHeaders($this->headers)->getJson("/api/v1/scheduled-posts/{$fakeId}");
 
-    $response->assertStatus(422);
+    $response->assertStatus(404);
 });
 
 it('cancels scheduled post — 200', function () {

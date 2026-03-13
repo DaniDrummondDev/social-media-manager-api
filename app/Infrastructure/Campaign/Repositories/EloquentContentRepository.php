@@ -41,12 +41,13 @@ final class EloquentContentRepository implements ContentRepositoryInterface
     /**
      * @return Content[]
      */
-    public function findByCampaignId(Uuid $campaignId): array
+    public function findByCampaignId(Uuid $campaignId, int $limit = 500): array
     {
         $records = $this->model->newQuery()
             ->where('campaign_id', (string) $campaignId)
             ->whereNull('deleted_at')
             ->orderByDesc('created_at')
+            ->limit($limit)
             ->get();
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, ContentModel> $records */

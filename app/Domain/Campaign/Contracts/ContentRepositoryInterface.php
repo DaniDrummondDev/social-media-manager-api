@@ -18,7 +18,7 @@ interface ContentRepositoryInterface
     /**
      * @return Content[]
      */
-    public function findByCampaignId(Uuid $campaignId): array;
+    public function findByCampaignId(Uuid $campaignId, int $limit = 500): array;
 
     public function delete(Uuid $id): void;
 

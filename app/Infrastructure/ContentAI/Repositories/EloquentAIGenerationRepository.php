@@ -35,7 +35,7 @@ final class EloquentAIGenerationRepository implements AIGenerationRepositoryInte
     /**
      * @return AIGeneration[]
      */
-    public function findByOrganizationId(Uuid $organizationId, ?string $type = null): array
+    public function findByOrganizationId(Uuid $organizationId, ?string $type = null, int $limit = 100): array
     {
         $query = $this->model->newQuery()
             ->where('organization_id', (string) $organizationId);
@@ -44,7 +44,7 @@ final class EloquentAIGenerationRepository implements AIGenerationRepositoryInte
             $query->where('type', $type);
         }
 
-        $records = $query->orderByDesc('created_at')->get();
+        $records = $query->orderByDesc('created_at')->limit($limit)->get();
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, AIGenerationModel> $records */
         return $records->map(fn (AIGenerationModel $record) => $this->toDomain($record))->all();

@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->setUpAuth();
     $this->app->singleton(TwoFactorServiceInterface::class, FakeTwoFactorService::class);
     $this->fakeTotp = app(TwoFactorServiceInterface::class);
-    $this->user = $this->createUserInDb(['email' => '2fa@example.com', 'plain_password' => 'SecureP@ss1']);
+    $this->user = $this->createUserInDb(['email' => '2fa@example.com', 'plain_password' => 'SecureP@ss123!']);
 });
 
 function enable2faForUser(string $userId, FakeTwoFactorService $service): void
@@ -59,7 +59,7 @@ it('disables 2fa with correct password', function () {
     $headers = $this->authHeaders($this->user['id'], '', $this->user['email']);
 
     $response = $this->withHeaders($headers)->postJson('/api/v1/auth/2fa/disable', [
-        'password' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
     ]);
 
     $response->assertOk();
@@ -70,7 +70,7 @@ it('verifies 2fa login with temp token', function () {
 
     $loginResponse = $this->postJson('/api/v1/auth/login', [
         'email' => '2fa@example.com',
-        'password' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
     ]);
 
     $tempToken = $loginResponse->json('data.temp_token');
@@ -89,7 +89,7 @@ it('rejects 2fa verify with wrong code', function () {
 
     $loginResponse = $this->postJson('/api/v1/auth/login', [
         'email' => '2fa@example.com',
-        'password' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
     ]);
 
     $tempToken = $loginResponse->json('data.temp_token');
@@ -110,7 +110,7 @@ it('requires authentication to enable 2fa', function () {
 
 it('requires authentication to disable 2fa', function () {
     $response = $this->postJson('/api/v1/auth/2fa/disable', [
-        'password' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
     ]);
 
     $response->assertStatus(401);

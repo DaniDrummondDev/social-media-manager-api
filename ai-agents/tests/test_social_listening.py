@@ -1,4 +1,9 @@
-"""Tests for the Social Listening Intelligence pipeline."""
+"""Tests for the Social Listening Intelligence pipeline.
+
+Security Features:
+- All endpoint tests use X-Internal-Secret authentication
+- Organization IDs are valid UUIDs
+"""
 
 from __future__ import annotations
 
@@ -16,6 +21,10 @@ from app.agents.social_listening.safety_checker import SafetyCheckResult
 from app.agents.social_listening.sentiment_analyzer import DeepSentimentAnalysis
 from app.agents.social_listening.state import SocialListeningState
 from app.api.routes import router
+from app.config import Settings
+
+TEST_INTERNAL_SECRET = "test-internal-secret-for-unit-tests-only-32chars"
+TEST_ORGANIZATION_ID = "550e8400-e29b-41d4-a716-446655440000"
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +108,7 @@ def _sample_safety_fail() -> SafetyCheckResult:
 def _base_state() -> SocialListeningState:
     """Minimal valid state for the Social Listening graph."""
     return {
-        "organization_id": "org-789",
+        "organization_id": TEST_ORGANIZATION_ID,
         "mention": {
             "id": "mention-001",
             "content": "Adorei o produto da @marca! Qualidade incrivel.",
@@ -122,7 +131,7 @@ def _base_state() -> SocialListeningState:
         "sentiment_analysis": None,
         "suggested_response": None,
         "safety_result": None,
-        "callback_url": "http://localhost/callback",
+        "callback_url": "http://nginx/callback",
         "correlation_id": "corr-sl-001",
         "total_tokens": 0,
         "total_cost": 0.0,
@@ -140,18 +149,34 @@ def _mock_llm_structured(structured_return):
 
 
 @pytest.fixture
-def test_app() -> FastAPI:
+def test_settings() -> Settings:
+    """Create test settings with internal_secret configured."""
+    return Settings(
+        internal_secret=TEST_INTERNAL_SECRET,
+        environment="development",
+        openai_api_key="sk-test-key",
+        anthropic_api_key="sk-ant-test-key",
+    )
+
+
+@pytest.fixture
+def test_app(test_settings: Settings) -> FastAPI:
     """Minimal FastAPI app with mocked Redis."""
     application = FastAPI()
     application.include_router(router)
 
-    mock_redis = AsyncMock()
+    mock_redis = MagicMock()
     mock_redis.ping = AsyncMock(return_value=True)
     mock_redis.set = AsyncMock(return_value=True)
     mock_redis.get = AsyncMock(return_value=json.dumps({
         "status": "running",
         "result": None,
+        "organization_id": TEST_ORGANIZATION_ID,
     }))
+    mock_redis.zremrangebyscore = AsyncMock(return_value=0)
+    mock_redis.zcard = AsyncMock(return_value=0)
+    mock_redis.zadd = AsyncMock(return_value=1)
+    mock_redis.expire = AsyncMock(return_value=True)
     application.state.redis = mock_redis
 
     mock_conn = AsyncMock()
@@ -167,7 +192,17 @@ def test_app() -> FastAPI:
 
 
 @pytest.fixture
+def auth_client(test_app: FastAPI, test_settings: Settings) -> TestClient:
+    """Create authenticated test client."""
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        client = TestClient(test_app)
+        client.headers["X-Internal-Secret"] = TEST_INTERNAL_SECRET
+        return client
+
+
+@pytest.fixture
 def client(test_app: FastAPI) -> TestClient:
+    """Create unauthenticated test client."""
     return TestClient(test_app)
 
 
@@ -420,54 +455,91 @@ async def test_irony_detected_in_sentiment(
 # ---------------------------------------------------------------------------
 
 
-def test_social_listening_endpoint_returns_202(client: TestClient) -> None:
+def test_social_listening_endpoint_requires_auth(client: TestClient, test_settings: Settings) -> None:
+    """POST /api/v1/pipelines/social-listening returns 401 without auth."""
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = client.post(
+            "/api/v1/pipelines/social-listening",
+            json={
+                "organization_id": TEST_ORGANIZATION_ID,
+                "correlation_id": "corr-sl-001",
+                "callback_url": "http://nginx/callback",
+                "mention": {
+                    "id": "mention-001",
+                    "content": "Great product!",
+                    "platform": "twitter",
+                    "author_username": "user123",
+                    "author_display_name": "User",
+                    "author_follower_count": 500,
+                    "url": "https://twitter.com/status/123",
+                    "published_at": "2026-02-25T10:00:00Z",
+                },
+                "brand_context": {
+                    "brand_name": "TestBrand",
+                    "industry": "tech",
+                    "guidelines": "Be friendly",
+                    "tone_preferences": "professional",
+                    "blacklisted_words": [],
+                },
+            },
+        )
+
+        assert response.status_code == 401
+
+
+def test_social_listening_endpoint_returns_202(auth_client: TestClient, test_settings: Settings) -> None:
     """POST /api/v1/pipelines/social-listening returns 202 with job_id."""
-    response = client.post(
-        "/api/v1/pipelines/social-listening",
-        json={
-            "organization_id": "org-789",
-            "correlation_id": "corr-sl-001",
-            "callback_url": "http://localhost/callback",
-            "mention": {
-                "id": "mention-001",
-                "content": "Great product!",
-                "platform": "twitter",
-                "author_username": "user123",
-                "author_display_name": "User",
-                "author_follower_count": 500,
-                "url": "https://twitter.com/status/123",
-                "published_at": "2026-02-25T10:00:00Z",
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = auth_client.post(
+            "/api/v1/pipelines/social-listening",
+            json={
+                "organization_id": TEST_ORGANIZATION_ID,
+                "correlation_id": "corr-sl-001",
+                "callback_url": "http://nginx/callback",
+                "mention": {
+                    "id": "mention-001",
+                    "content": "Great product!",
+                    "platform": "twitter",
+                    "author_username": "user123",
+                    "author_display_name": "User",
+                    "author_follower_count": 500,
+                    "url": "https://twitter.com/status/123",
+                    "published_at": "2026-02-25T10:00:00Z",
+                },
+                "brand_context": {
+                    "brand_name": "TestBrand",
+                    "industry": "tech",
+                    "guidelines": "Be friendly",
+                    "tone_preferences": "professional",
+                    "blacklisted_words": [],
+                },
             },
-            "brand_context": {
-                "brand_name": "TestBrand",
-                "industry": "tech",
-                "guidelines": "Be friendly",
-                "tone_preferences": "professional",
-                "blacklisted_words": [],
-            },
-        },
-    )
+        )
 
-    assert response.status_code == 202
-    data = response.json()
-    assert "job_id" in data
+        assert response.status_code == 202
+        data = response.json()
+        assert "job_id" in data
+        # Job ID now includes org hash prefix
+        assert "_" in data["job_id"]
 
 
-def test_social_listening_endpoint_validates_input(client: TestClient) -> None:
+def test_social_listening_endpoint_validates_input(auth_client: TestClient, test_settings: Settings) -> None:
     """POST /api/v1/pipelines/social-listening rejects missing required fields."""
-    response = client.post(
-        "/api/v1/pipelines/social-listening",
-        json={"organization_id": "org-789"},
-    )
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = auth_client.post(
+            "/api/v1/pipelines/social-listening",
+            json={"organization_id": TEST_ORGANIZATION_ID},
+        )
 
-    assert response.status_code == 422
+        assert response.status_code == 422
 
 
-def test_health_shows_social_listening_registered(client: TestClient) -> None:
-    """GET /health lists social_listening in registered pipelines."""
+def test_health_public_endpoint(client: TestClient) -> None:
+    """GET /health is public and hides pipeline list for security."""
     response = client.get("/health")
     data = response.json()
 
-    assert "social_listening" in data["pipelines"]
-    assert "content_creation" in data["pipelines"]
-    assert "content_dna" in data["pipelines"]
+    assert response.status_code == 200
+    assert data["status"] == "healthy"
+    # Public endpoint hides pipelines for security
+    assert data["pipelines"] == []

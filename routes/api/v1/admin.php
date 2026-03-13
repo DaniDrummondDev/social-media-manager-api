@@ -10,7 +10,8 @@ use App\Infrastructure\PlatformAdmin\Controllers\AdminPlanController;
 use App\Infrastructure\PlatformAdmin\Controllers\AdminUserController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth.jwt', 'admin'])->prefix('admin')->group(function () {
+// SECURITY FIX (ADMIN-001): Add IP whitelist middleware to admin routes
+Route::middleware(['auth.jwt', 'ip.whitelist', 'admin'])->prefix('admin')->group(function () {
     // Dashboard — all admin roles
     Route::get('dashboard', [AdminDashboardController::class, 'dashboard']);
 
