@@ -132,3 +132,39 @@ it('returns false when plan not found', function () {
 
     expect($this->gate->canAccess((string) $orgId, 'content_creation'))->toBeFalse();
 });
+
+it('allows agency plan for content_dna pipeline', function () {
+    $orgId = Uuid::generate();
+    $plan = createMockPlan('agency');
+    $subscription = createMockSubscription($plan->id, $orgId);
+
+    config(['ai-agents.plan_access.content_dna' => ['agency']]);
+
+    $this->subscriptionRepo->shouldReceive('findActiveByOrganization')
+        ->with(Mockery::on(fn (Uuid $id) => (string) $id === (string) $orgId))
+        ->once()
+        ->andReturn($subscription);
+
+    $this->planRepo->shouldReceive('findById')
+        ->with($subscription->planId)->once()->andReturn($plan);
+
+    expect($this->gate->canAccess((string) $orgId, 'content_dna'))->toBeTrue();
+});
+
+it('denies professional plan for content_dna pipeline', function () {
+    $orgId = Uuid::generate();
+    $plan = createMockPlan('professional');
+    $subscription = createMockSubscription($plan->id, $orgId);
+
+    config(['ai-agents.plan_access.content_dna' => ['agency']]);
+
+    $this->subscriptionRepo->shouldReceive('findActiveByOrganization')
+        ->with(Mockery::on(fn (Uuid $id) => (string) $id === (string) $orgId))
+        ->once()
+        ->andReturn($subscription);
+
+    $this->planRepo->shouldReceive('findById')
+        ->with($subscription->planId)->once()->andReturn($plan);
+
+    expect($this->gate->canAccess((string) $orgId, 'content_dna'))->toBeFalse();
+});

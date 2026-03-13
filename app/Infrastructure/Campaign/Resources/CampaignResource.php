@@ -23,6 +23,10 @@ final readonly class CampaignResource
         private ?array $stats,
         private string $createdAt,
         private string $updatedAt,
+        private ?string $briefText,
+        private ?string $briefTargetAudience,
+        private ?string $briefRestrictions,
+        private ?string $briefCta,
     ) {}
 
     public static function fromOutput(CampaignOutput $output): self
@@ -38,6 +42,10 @@ final readonly class CampaignResource
             stats: $output->stats,
             createdAt: $output->createdAt,
             updatedAt: $output->updatedAt,
+            briefText: $output->briefText,
+            briefTargetAudience: $output->briefTargetAudience,
+            briefRestrictions: $output->briefRestrictions,
+            briefCta: $output->briefCta,
         );
     }
 
@@ -56,6 +64,12 @@ final readonly class CampaignResource
                 'ends_at' => $this->endsAt,
                 'status' => $this->status,
                 'tags' => $this->tags,
+                'brief' => [
+                    'text' => $this->briefText,
+                    'target_audience' => $this->briefTargetAudience,
+                    'restrictions' => $this->briefRestrictions,
+                    'cta' => $this->briefCta,
+                ],
                 'created_at' => $this->createdAt,
                 'updated_at' => $this->updatedAt,
             ],

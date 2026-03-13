@@ -118,7 +118,7 @@ it('deletes content — 200', function () {
         ->assertJsonPath('data.message', 'Conteúdo excluído com sucesso.');
 });
 
-it('rejects content for non-existent campaign — 422', function () {
+it('rejects content for non-existent campaign — 404', function () {
     $fakeId = (string) Str::uuid();
 
     $response = $this->withHeaders($this->headers)
@@ -126,8 +126,7 @@ it('rejects content for non-existent campaign — 422', function () {
             'title' => 'Test',
         ]);
 
-    $response->assertStatus(422)
-        ->assertJsonPath('errors.0.code', 'CAMPAIGN_NOT_FOUND');
+    $response->assertStatus(404);
 });
 
 it('rejects unauthenticated — 401', function () {
@@ -155,8 +154,8 @@ it('isolates content by organization', function () {
 
     $contentId = insertContent($otherCampaignId, $otherOrg['org']['id'], $otherUser['id']);
 
-    // Try to access from current user's org
+    // Try to access from current user's org - should return 404 (not found in tenant scope)
     $response = $this->withHeaders($this->headers)->getJson("/api/v1/contents/{$contentId}");
 
-    $response->assertStatus(422);
+    $response->assertStatus(404);
 });

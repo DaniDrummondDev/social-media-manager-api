@@ -17,5 +17,9 @@ final readonly class CreateCampaignInput
         public ?string $startsAt = null,
         public ?string $endsAt = null,
         public array $tags = [],
+        public ?string $briefText = null,
+        public ?string $briefTargetAudience = null,
+        public ?string $briefRestrictions = null,
+        public ?string $briefCta = null,
     ) {}
 }

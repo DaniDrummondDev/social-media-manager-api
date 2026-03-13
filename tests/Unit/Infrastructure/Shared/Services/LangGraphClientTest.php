@@ -122,3 +122,28 @@ it('throws request exception and records failure on HTTP error', function () {
         'topic' => 'AI Marketing',
     ]);
 })->throws(AiAgentsRequestException::class);
+
+it('throws request exception when job status is failed', function () {
+    $this->circuitBreaker->shouldReceive('isOpen')
+        ->with('content_creation')->once()->andReturnFalse();
+    $this->circuitBreaker->shouldReceive('recordFailure')
+        ->with('content_creation')->once();
+
+    Http::fake([
+        'http://ai-agents:8000/api/v1/pipelines/content-creation' => Http::response([
+            'job_id' => 'test-job-failed',
+        ], 202),
+        'http://ai-agents:8000/api/v1/jobs/test-job-failed' => Http::response([
+            'job_id' => 'test-job-failed',
+            'status' => 'failed',
+            'error' => 'LLM quota exceeded',
+        ]),
+    ]);
+
+    config(['ai-agents.poll_interval_ms' => 50]);
+
+    $this->client->dispatch('content_creation', [
+        'organization_id' => 'org-123',
+        'topic' => 'AI Marketing',
+    ]);
+})->throws(AiAgentsRequestException::class);

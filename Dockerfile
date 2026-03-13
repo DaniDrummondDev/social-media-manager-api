@@ -34,6 +34,7 @@ RUN apk add --no-cache \
     freetype-dev \
     libzip-dev \
     icu-dev \
+    argon2-dev \
     linux-headers \
     $PHPIZE_DEPS
 

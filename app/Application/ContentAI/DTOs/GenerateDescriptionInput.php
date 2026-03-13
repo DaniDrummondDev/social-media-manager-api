@@ -12,10 +12,12 @@ final readonly class GenerateDescriptionInput
     public function __construct(
         public string $organizationId,
         public string $userId,
-        public string $topic,
+        public string $topic = '',
         public ?string $socialNetwork = null,
         public ?string $tone = null,
         public array $keywords = [],
         public ?string $language = null,
+        public ?string $campaignId = null,
+        public string $generationMode = 'fields_only',
     ) {}
 }

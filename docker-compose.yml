@@ -12,11 +12,20 @@
 #   ai-agents  — Python/LangGraph multi-agent AI pipelines (:8001)
 #   minio      — S3-compatible storage (:9000/:9001)
 #   mailpit    — Local SMTP (:8025)
+#   db-backup  — Automated PostgreSQL backups
+#
+# Networks:
+#   frontend   — Public-facing services (nginx, minio console)
+#   backend    — Internal services (app, postgres, redis)
+#   ai         — AI services isolated network
+#   egress     — Outbound internet access (external APIs: OpenAI, Anthropic, Stripe)
+#   smm-shared — Cross-project communication (frontend ↔ API via nginx)
 ###############################################################################
 
 services:
   # ---------------------------------------------------------------------------
   # app — PHP 8.4-FPM (Laravel Application)
+  # SECURITY: Internal backend + egress for external API calls (OpenAI, Stripe)
   # ---------------------------------------------------------------------------
   app:
     build:
@@ -45,10 +54,13 @@ services:
       retries: 3
       start_period: 30s
     networks:
-      - social-media-net
+      - backend
+      - egress
 
   # ---------------------------------------------------------------------------
   # nginx — Reverse Proxy
+  # SECURITY: Exposed to frontend + shared network, connects to backend services
+  # NOTE: smm-shared network allows cross-project communication (e.g., frontend)
   # ---------------------------------------------------------------------------
   nginx:
     image: nginx:1.27-alpine
@@ -63,29 +75,37 @@ services:
       app:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/ping || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ping || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
     networks:
-      - social-media-net
+      - frontend
+      - backend
+      - smm-shared
 
   # ---------------------------------------------------------------------------
   # postgres — PostgreSQL 17 + pgvector
+  # SECURITY: Port NOT exposed to host (internal backend network only)
+  # SECURITY: scram-sha-256 password encryption (H8)
+  # NOTE: SSL not needed - network is internal (isolated from host)
   # ---------------------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg17
     container_name: smm-postgres
     restart: unless-stopped
-    ports:
-      - "5432:5432"
+    # SECURITY: Removed external port exposure
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/01-extensions.sql:ro
     environment:
       POSTGRES_DB: ${DB_DATABASE:-social_media_manager}
       POSTGRES_USER: ${DB_USERNAME:-social_media}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    command: ["postgres", "-c", "password_encryption=scram-sha-256"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-social_media} -d ${DB_DATABASE:-social_media_manager}"]
       interval: 10s
@@ -93,20 +113,27 @@ services:
       retries: 5
       start_period: 10s
     networks:
-      - social-media-net
+      - backend
+      - ai-network
 
   # ---------------------------------------------------------------------------
   # pgbouncer — Connection Pooling (transaction mode)
+  # SECURITY: Port NOT exposed to host (internal backend network only)
   # ---------------------------------------------------------------------------
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: smm-pgbouncer
     restart: unless-stopped
-    ports:
-      - "6432:6432"
+    # SECURITY: Removed external port exposure
+    # ports:
+    #   - "6432:6432"
     volumes:
       - ./docker/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
-      - ./docker/pgbouncer/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+      - ./docker/pgbouncer/entrypoint.sh:/entrypoint.sh:ro
+    environment:
+      DB_USERNAME: ${DB_USERNAME:-social_media}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
     depends_on:
       postgres:
         condition: service_healthy
@@ -116,34 +143,43 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - social-media-net
+      - backend
 
   # ---------------------------------------------------------------------------
   # redis — Cache (DB0), Queues (DB1), Rate-limiting (DB2), Sessions (DB3)
+  # SECURITY: Authentication required, port NOT exposed to host
+  # SECURITY: Accessible from backend and AI networks
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
     container_name: smm-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    # SECURITY: Removed external port exposure
+    # ports:
+    #   - "6379:6379"
     volumes:
       - redis_data:/data
     command: >
       redis-server
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
       --appendonly yes
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
+      --rename-command FLUSHALL ""
+      --rename-command FLUSHDB ""
+      --rename-command DEBUG ""
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
     networks:
-      - social-media-net
+      - backend
+      - ai-network
 
   # ---------------------------------------------------------------------------
   # horizon — Laravel Horizon (Queue Workers)
+  # SECURITY: Internal backend + egress for jobs that call external APIs
   #
   # Manages 7 queues with 15 total workers:
   #   publishing:3, high:2, default:3, analytics-sync:2,
@@ -178,12 +214,14 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 60s
     networks:
-      - social-media-net
+      - backend
+      - egress
 
   # ---------------------------------------------------------------------------
   # scheduler — Laravel Task Scheduler
+  # SECURITY: Internal backend + egress for scheduled tasks that call external APIs
   #
   # Runs 13+ scheduled commands:
   #   - Every minute: DispatchScheduledPosts
@@ -216,11 +254,19 @@ services:
         condition: service_healthy
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep -q 'schedule:work' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
-      - social-media-net
+      - backend
+      - egress
 
   # ---------------------------------------------------------------------------
   # ai-agents — Python/LangGraph Multi-Agent AI Pipelines
+  # SECURITY: Isolated AI network + backend for data access + egress for LLM APIs
   #
   # Microservice for complex multi-agent AI pipelines:
   #   Content Creation, Content DNA, Social Listening, Visual Adaptation
@@ -229,6 +275,7 @@ services:
   # Uses Redis DB 4 for LangGraph checkpoints and job status.
   # Fallback: Laravel Prism single-shot via circuit breaker when unavailable.
   # Reference: ADR-021
+  # SECURITY: Internal secret required for authentication
   # ---------------------------------------------------------------------------
   ai-agents:
     build:
@@ -242,10 +289,10 @@ services:
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - DATABASE_URL=postgresql://${DB_USERNAME:-social_media}:${DB_PASSWORD:-secret}@postgres:5432/${DB_DATABASE:-social_media_manager}
-      - REDIS_URL=redis://redis:6379/4
+      - DATABASE_URL=postgresql://${DB_USERNAME:-social_media}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE:-social_media_manager}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/4
       - CALLBACK_BASE_URL=http://nginx:80/api/v1/internal
-      - INTERNAL_SECRET=${AI_AGENTS_INTERNAL_SECRET:-}
+      - INTERNAL_SECRET=${AI_AGENTS_INTERNAL_SECRET:?AI_AGENTS_INTERNAL_SECRET is required}
       - LOG_LEVEL=${AI_AGENTS_LOG_LEVEL:-info}
       - WORKERS=${AI_AGENTS_WORKERS:-2}
       - ENVIRONMENT=${APP_ENV:-local}
@@ -265,10 +312,14 @@ services:
     volumes:
       - ./ai-agents:/app
     networks:
-      - social-media-net
+      - ai-network
+      - backend
+      - egress
 
   # ---------------------------------------------------------------------------
   # minio — S3-compatible Object Storage (media, reports, exports)
+  # SECURITY: Credentials required, no defaults allowed
+  # SECURITY: Console on frontend, API on backend
   # ---------------------------------------------------------------------------
   minio:
     image: minio/minio
@@ -280,8 +331,8 @@ services:
     volumes:
       - minio_data:/data
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?MINIO_ROOT_USER is required}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD is required}
     command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD-SHELL", "mc ready local || exit 1"]
@@ -290,10 +341,12 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - social-media-net
+      - frontend
+      - backend
 
   # ---------------------------------------------------------------------------
   # mailpit — Local SMTP for email testing
+  # SECURITY: Frontend for web UI, backend for SMTP
   # ---------------------------------------------------------------------------
   mailpit:
     image: axllent/mailpit
@@ -308,7 +361,40 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - social-media-net
+      - frontend
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # db-backup — Automated PostgreSQL Backups (H6)
+  # SECURITY: Runs daily backups with 7-day retention
+  # ---------------------------------------------------------------------------
+  db-backup:
+    image: prodrigestivill/postgres-backup-local:17
+    container_name: smm-db-backup
+    restart: unless-stopped
+    volumes:
+      - backup_data:/backups
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${DB_DATABASE:-social_media_manager}
+      - POSTGRES_USER=${DB_USERNAME:-social_media}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:?DB_PASSWORD is required}
+      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+      - SCHEDULE=@daily
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+    networks:
+      - backend
 
 # =============================================================================
 # Volumes
@@ -322,10 +408,34 @@ volumes:
     driver: local
   minio_data:
     driver: local
+  backup_data:
+    driver: local
 
 # =============================================================================
-# Networks
+# Networks — Segmented for Security (H7)
 # =============================================================================
 networks:
-  social-media-net:
+  # Frontend network — only services that need external access
+  frontend:
     driver: bridge
+
+  # Backend network — internal services only
+  backend:
+    driver: bridge
+    internal: true
+
+  # AI network — isolated for AI services
+  ai-network:
+    driver: bridge
+    internal: true
+
+  # Egress network — outbound internet access for external API calls
+  # NOT internal: allows DNS resolution and HTTPS to OpenAI, Anthropic, Stripe, etc.
+  # No ports exposed to host — only outbound traffic
+  egress:
+    driver: bridge
+
+  # Shared network — cross-project communication (frontend ↔ API)
+  smm-shared:
+    external: true
+    name: smm-shared

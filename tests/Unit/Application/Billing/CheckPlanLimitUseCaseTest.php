@@ -18,7 +18,7 @@ use App\Domain\Billing\ValueObjects\SubscriptionStatus;
 use App\Domain\Billing\ValueObjects\UsageResourceType;
 use App\Domain\Shared\ValueObjects\Uuid;
 
-function createTestPlan(Uuid $planId, array $limitsData = []): Plan
+function createPlanLimitTestPlan(Uuid $planId, array $limitsData = []): Plan
 {
     $now = new DateTimeImmutable;
 
@@ -40,7 +40,7 @@ function createTestPlan(Uuid $planId, array $limitsData = []): Plan
     );
 }
 
-function createTestSubscription(Uuid $orgId, Uuid $planId): Subscription
+function createPlanLimitTestSubscription(Uuid $orgId, Uuid $planId): Subscription
 {
     $now = new DateTimeImmutable;
 
@@ -67,8 +67,8 @@ function createTestSubscription(Uuid $orgId, Uuid $planId): Subscription
 it('returns true when usage is within limit', function () {
     $orgId = Uuid::generate();
     $planId = Uuid::generate();
-    $subscription = createTestSubscription($orgId, $planId);
-    $plan = createTestPlan($planId, ['publications_month' => 30]);
+    $subscription = createPlanLimitTestSubscription($orgId, $planId);
+    $plan = createPlanLimitTestPlan($planId, ['publications_month' => 30]);
 
     $periodStart = new DateTimeImmutable('first day of this month midnight');
     $usageRecord = UsageRecord::reconstitute(
@@ -103,8 +103,8 @@ it('returns true when usage is within limit', function () {
 it('returns false when usage is at limit (not exceeded but equal)', function () {
     $orgId = Uuid::generate();
     $planId = Uuid::generate();
-    $subscription = createTestSubscription($orgId, $planId);
-    $plan = createTestPlan($planId, ['publications_month' => 30]);
+    $subscription = createPlanLimitTestSubscription($orgId, $planId);
+    $plan = createPlanLimitTestPlan($planId, ['publications_month' => 30]);
 
     $periodStart = new DateTimeImmutable('first day of this month midnight');
     $usageRecord = UsageRecord::reconstitute(
@@ -139,8 +139,8 @@ it('returns false when usage is at limit (not exceeded but equal)', function () 
 it('returns true when limit is unlimited (-1)', function () {
     $orgId = Uuid::generate();
     $planId = Uuid::generate();
-    $subscription = createTestSubscription($orgId, $planId);
-    $plan = createTestPlan($planId, ['publications_month' => -1]);
+    $subscription = createPlanLimitTestSubscription($orgId, $planId);
+    $plan = createPlanLimitTestPlan($planId, ['publications_month' => -1]);
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
     $subscriptionRepo->shouldReceive('findActiveByOrganization')->once()->andReturn($subscription);
@@ -164,8 +164,8 @@ it('returns true when limit is unlimited (-1)', function () {
 it('returns true when no usage record exists (quantity 0)', function () {
     $orgId = Uuid::generate();
     $planId = Uuid::generate();
-    $subscription = createTestSubscription($orgId, $planId);
-    $plan = createTestPlan($planId, ['publications_month' => 30]);
+    $subscription = createPlanLimitTestSubscription($orgId, $planId);
+    $plan = createPlanLimitTestPlan($planId, ['publications_month' => 30]);
 
     $subscriptionRepo = mock(SubscriptionRepositoryInterface::class);
     $subscriptionRepo->shouldReceive('findActiveByOrganization')->once()->andReturn($subscription);
@@ -189,8 +189,8 @@ it('returns true when no usage record exists (quantity 0)', function () {
 it('returns false when usage exceeds limit', function () {
     $orgId = Uuid::generate();
     $planId = Uuid::generate();
-    $subscription = createTestSubscription($orgId, $planId);
-    $plan = createTestPlan($planId, ['publications_month' => 30]);
+    $subscription = createPlanLimitTestSubscription($orgId, $planId);
+    $plan = createPlanLimitTestPlan($planId, ['publications_month' => 30]);
 
     $periodStart = new DateTimeImmutable('first day of this month midnight');
     $usageRecord = UsageRecord::reconstitute(

@@ -24,6 +24,10 @@ final readonly class CampaignOutput
         public ?array $stats,
         public string $createdAt,
         public string $updatedAt,
+        public ?string $briefText = null,
+        public ?string $briefTargetAudience = null,
+        public ?string $briefRestrictions = null,
+        public ?string $briefCta = null,
     ) {}
 
     /**
@@ -43,6 +47,10 @@ final readonly class CampaignOutput
             stats: $stats,
             createdAt: $campaign->createdAt->format('c'),
             updatedAt: $campaign->updatedAt->format('c'),
+            briefText: $campaign->brief?->text,
+            briefTargetAudience: $campaign->brief?->targetAudience,
+            briefRestrictions: $campaign->brief?->restrictions,
+            briefCta: $campaign->brief?->cta,
         );
     }
 }

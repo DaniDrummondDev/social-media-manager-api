@@ -25,6 +25,10 @@ final class CreateCampaignRequest extends FormRequest
             'ends_at' => ['sometimes', 'nullable', 'date', 'date_format:Y-m-d\TH:i:s\Z', 'after:starts_at'],
             'tags' => ['sometimes', 'array', 'max:20'],
             'tags.*' => ['string', 'min:1', 'max:50'],
+            'brief_text' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'brief_target_audience' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'brief_restrictions' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'brief_cta' => ['sometimes', 'nullable', 'string', 'max:500'],
         ];
     }
 }

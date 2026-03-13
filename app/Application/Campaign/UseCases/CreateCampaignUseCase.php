@@ -10,6 +10,7 @@ use App\Application\Shared\Contracts\EventDispatcherInterface;
 use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\Campaign\Entities\Campaign;
 use App\Domain\Campaign\Exceptions\DuplicateCampaignNameException;
+use App\Domain\Campaign\ValueObjects\CampaignBrief;
 use App\Domain\Shared\ValueObjects\Uuid;
 use DateTimeImmutable;
 
@@ -29,6 +30,16 @@ final class CreateCampaignUseCase
             throw new DuplicateCampaignNameException($input->name);
         }
 
+        $brief = null;
+        if ($input->briefText !== null || $input->briefTargetAudience !== null || $input->briefRestrictions !== null || $input->briefCta !== null) {
+            $brief = new CampaignBrief(
+                text: $input->briefText,
+                targetAudience: $input->briefTargetAudience,
+                restrictions: $input->briefRestrictions,
+                cta: $input->briefCta,
+            );
+        }
+
         $campaign = Campaign::create(
             organizationId: Uuid::fromString($input->organizationId),
             createdBy: Uuid::fromString($input->userId),
@@ -37,6 +48,7 @@ final class CreateCampaignUseCase
             startsAt: $input->startsAt !== null ? new DateTimeImmutable($input->startsAt) : null,
             endsAt: $input->endsAt !== null ? new DateTimeImmutable($input->endsAt) : null,
             tags: $input->tags,
+            brief: $brief,
         );
 
         $this->campaignRepository->create($campaign);

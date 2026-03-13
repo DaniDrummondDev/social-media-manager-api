@@ -50,6 +50,7 @@ final class DuplicateCampaignUseCase
                 startsAt: $original->startsAt,
                 endsAt: $original->endsAt,
                 tags: $original->tags,
+                brief: $original->brief,
             );
 
             $this->campaignRepository->create($newCampaign);

@@ -67,27 +67,34 @@ final class EloquentAccountMetricRepository implements AccountMetricRepositoryIn
      */
     public function getAccountSummary(Uuid $socialAccountId, MetricPeriod $period): array
     {
-        $result = DB::table('account_metrics')
-            ->where('social_account_id', (string) $socialAccountId)
-            ->where('date', '>=', $period->from->format('Y-m-d'))
-            ->where('date', '<=', $period->to->format('Y-m-d'))
-            ->selectRaw('
-                COALESCE(SUM(followers_gained), 0) as total_followers_gained,
-                COALESCE(SUM(followers_lost), 0) as total_followers_lost,
-                COALESCE(SUM(profile_views), 0) as total_profile_views,
-                COALESCE(SUM(reach), 0) as total_reach,
-                COALESCE(SUM(impressions), 0) as total_impressions
-            ')
-            ->first();
+        $accountIdStr = (string) $socialAccountId;
+        $fromDate = $period->from->format('Y-m-d');
+        $toDate = $period->to->format('Y-m-d');
 
-        /** @var AccountMetricModel|null $latest */
-        $latest = $this->model->newQuery()
-            ->where('social_account_id', (string) $socialAccountId)
-            ->orderByDesc('date')
+        // Single query with subquery for latest followers_count
+        // Eliminates N+1 by combining aggregation and latest lookup
+        $result = DB::table('account_metrics as am')
+            ->where('am.social_account_id', $accountIdStr)
+            ->where('am.date', '>=', $fromDate)
+            ->where('am.date', '<=', $toDate)
+            ->selectRaw('
+                COALESCE(SUM(am.followers_gained), 0) as total_followers_gained,
+                COALESCE(SUM(am.followers_lost), 0) as total_followers_lost,
+                COALESCE(SUM(am.profile_views), 0) as total_profile_views,
+                COALESCE(SUM(am.reach), 0) as total_reach,
+                COALESCE(SUM(am.impressions), 0) as total_impressions,
+                (
+                    SELECT followers_count
+                    FROM account_metrics
+                    WHERE social_account_id = ?
+                    ORDER BY date DESC
+                    LIMIT 1
+                ) as followers_count
+            ', [$accountIdStr])
             ->first();
 
         $summaryArray = (array) $result;
-        $summaryArray['followers_count'] = $latest ? (int) $latest->getAttribute('followers_count') : 0;
+        $summaryArray['followers_count'] = (int) ($summaryArray['followers_count'] ?? 0);
 
         return $summaryArray;
     }

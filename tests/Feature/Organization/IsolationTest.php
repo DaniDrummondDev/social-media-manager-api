@@ -95,8 +95,6 @@ it('user A cannot list members of org B', function () {
 
     $response = $this->withHeaders($headersA)->getJson("/api/v1/organizations/{$orgBId}/members");
 
-    // Even though User A has org context (Org A), they shouldn't see Org B members
-    // The endpoint uses route param for orgId, but authorization should check context
-    $response->assertOk(); // Currently the controller just lists by route param
-    // This test documents current behavior — consider adding authorization check
+    // User A should not be able to see Org B members - proper authorization is enforced
+    $response->assertStatus(403);
 });

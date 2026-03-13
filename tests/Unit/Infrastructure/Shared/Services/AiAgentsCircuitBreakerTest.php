@@ -78,3 +78,51 @@ it('resets circuit on success', function () {
 
     $this->circuitBreaker->recordSuccess('content_creation');
 });
+
+it('closes circuit when open_until expires (half-open transition)', function () {
+    $cache = Mockery::mock();
+    Cache::shouldReceive('store')->with('redis')->andReturn($cache);
+    $cache->shouldReceive('get')
+        ->with('circuit:ai_agents:content_creation:open_until')
+        ->andReturn(time() - 10); // expired 10 seconds ago
+
+    expect($this->circuitBreaker->isOpen('content_creation'))->toBeFalse();
+});
+
+it('resets after success following half-open state', function () {
+    $cache = Mockery::mock();
+    Cache::shouldReceive('store')->with('redis')->andReturn($cache);
+
+    // Circuit was open but expired (half-open)
+    $cache->shouldReceive('get')
+        ->with('circuit:ai_agents:content_creation:open_until')
+        ->andReturn(time() - 10);
+
+    expect($this->circuitBreaker->isOpen('content_creation'))->toBeFalse();
+
+    // Success resets everything
+    $cache->shouldReceive('forget')
+        ->with('circuit:ai_agents:content_creation:failures')->once();
+    $cache->shouldReceive('forget')
+        ->with('circuit:ai_agents:content_creation:open_until')->once();
+
+    $this->circuitBreaker->recordSuccess('content_creation');
+});
+
+it('isolates circuit state between different pipelines', function () {
+    $cache = Mockery::mock();
+    Cache::shouldReceive('store')->with('redis')->andReturn($cache);
+
+    // content_creation is open
+    $cache->shouldReceive('get')
+        ->with('circuit:ai_agents:content_creation:open_until')
+        ->andReturn(time() + 120);
+
+    // visual_adaptation is not open
+    $cache->shouldReceive('get')
+        ->with('circuit:ai_agents:visual_adaptation:open_until')
+        ->andReturnNull();
+
+    expect($this->circuitBreaker->isOpen('content_creation'))->toBeTrue()
+        ->and($this->circuitBreaker->isOpen('visual_adaptation'))->toBeFalse();
+});

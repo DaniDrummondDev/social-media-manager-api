@@ -29,16 +29,8 @@ final class JwtAuthTokenService implements AuthTokenServiceInterface
         /** @var array<string, mixed> $config */
         $config = config('jwt');
 
-        $privateKeyPath = base_path($config['keys']['private']);
-        $publicKeyPath = base_path($config['keys']['public']);
-
-        $this->privateKey = is_file($privateKeyPath)
-            ? (string) file_get_contents($privateKeyPath)
-            : $config['keys']['private'];
-
-        $this->publicKey = is_file($publicKeyPath)
-            ? (string) file_get_contents($publicKeyPath)
-            : $config['keys']['public'];
+        $this->privateKey = $this->resolveKey($config['keys']['private']);
+        $this->publicKey = $this->resolveKey($config['keys']['public']);
 
         $this->algo = $config['algo'];
         $this->ttl = (int) $config['ttl'];
@@ -104,6 +96,11 @@ final class JwtAuthTokenService implements AuthTokenServiceInterface
             return null;
         }
 
+        // SECURITY FIX (JWT-001): Validate 'iss' claim
+        if (!isset($payload['iss']) || $payload['iss'] !== $this->issuer) {
+            return null;
+        }
+
         if (($payload['token_type'] ?? '') !== 'access') {
             return null;
         }
@@ -148,6 +145,11 @@ final class JwtAuthTokenService implements AuthTokenServiceInterface
         $payload = $this->decode($token);
 
         if ($payload === null) {
+            return null;
+        }
+
+        // SECURITY FIX (JWT-001): Validate 'iss' claim for temp tokens
+        if (!isset($payload['iss']) || $payload['iss'] !== $this->issuer) {
             return null;
         }
 
@@ -219,6 +221,27 @@ final class JwtAuthTokenService implements AuthTokenServiceInterface
         }
 
         return (bool) Redis::connection('cache')->command('exists', [$this->blacklistPrefix.$jti]);
+    }
+
+    private function resolveKey(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        $path = base_path($value);
+
+        if (strlen($path) < 4096 && is_file($path)) {
+            return (string) file_get_contents($path);
+        }
+
+        $decoded = base64_decode($value, true);
+
+        if ($decoded !== false && str_contains($decoded, '-----BEGIN')) {
+            return $decoded;
+        }
+
+        return $value;
     }
 
     private function base64UrlEncode(string $data): string

@@ -31,6 +31,17 @@ final class MemberController
         OrganizationMemberRepositoryInterface $memberRepository,
         string $organizationId,
     ): JsonResponse {
+        // SECURITY FIX (IDOR-002): Validate that user has access to this organization
+        $authOrgId = $request->attributes->get('auth_organization_id');
+        
+        if ($authOrgId === null || $authOrgId !== $organizationId) {
+            return ApiResponse::fail(
+                code: 'AUTHORIZATION_ERROR',
+                message: 'You do not have access to this organization.',
+                status: 403
+            );
+        }
+
         $members = $memberRepository->listByOrganization(Uuid::fromString($organizationId));
 
         $data = array_map(

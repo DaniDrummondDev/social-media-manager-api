@@ -18,12 +18,12 @@ interface AutomationRuleRepositoryInterface
     /**
      * @return array<AutomationRule>
      */
-    public function findActiveByOrganizationId(Uuid $organizationId): array;
+    public function findActiveByOrganizationId(Uuid $organizationId, int $limit = 100): array;
 
     /**
      * @return array<AutomationRule>
      */
-    public function findByOrganizationId(Uuid $organizationId): array;
+    public function findByOrganizationId(Uuid $organizationId, int $limit = 100): array;
 
     public function delete(Uuid $id): void;
 

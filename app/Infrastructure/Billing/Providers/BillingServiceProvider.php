@@ -15,6 +15,7 @@ use App\Infrastructure\Billing\Repositories\EloquentPlanRepository;
 use App\Infrastructure\Billing\Repositories\EloquentStripeWebhookEventRepository;
 use App\Infrastructure\Billing\Repositories\EloquentSubscriptionRepository;
 use App\Infrastructure\Billing\Repositories\EloquentUsageRecordRepository;
+use App\Application\Billing\UseCases\CreateCheckoutSessionUseCase;
 use App\Infrastructure\Billing\Services\StubPaymentGateway;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,5 +29,9 @@ final class BillingServiceProvider extends ServiceProvider
         $this->app->bind(UsageRecordRepositoryInterface::class, EloquentUsageRecordRepository::class);
         $this->app->bind(StripeWebhookEventRepositoryInterface::class, EloquentStripeWebhookEventRepository::class);
         $this->app->bind(PaymentGatewayInterface::class, StubPaymentGateway::class);
+
+        $this->app->when(CreateCheckoutSessionUseCase::class)
+            ->needs('$trialPeriodDays')
+            ->give(fn () => config('services.stripe.trial_days'));
     }
 }

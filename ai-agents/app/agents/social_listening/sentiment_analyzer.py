@@ -14,6 +14,7 @@ from app.agents.social_listening.prompts import (
 from app.agents.social_listening.state import SocialListeningState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 
 class DeepSentimentAnalysis(BaseModel):
@@ -70,11 +71,14 @@ async def sentiment_analyzer_node(state: SocialListeningState) -> dict[str, Any]
 
     human_message = "\n".join(parts)
 
-    llm = get_llm(temperature=0.3).with_structured_output(DeepSentimentAnalysis)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.3, callbacks=[tracker]).with_structured_output(DeepSentimentAnalysis)
     analysis: DeepSentimentAnalysis = await llm.ainvoke([
         ("system", system_prompt),
         ("human", human_message),
     ])
+
+    token_cost = estimate_cost(tracker.usage)
 
     logger.info(
         "SentimentAnalyzer finished",
@@ -82,9 +86,13 @@ async def sentiment_analyzer_node(state: SocialListeningState) -> dict[str, Any]
         score=analysis.sentiment_score,
         irony=analysis.irony_detected,
         intensity=analysis.intensity,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "sentiment_analysis": analysis.model_dump(),
         "agents_executed": ["sentiment_analyzer"],
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

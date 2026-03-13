@@ -14,6 +14,7 @@ from app.agents.social_listening.prompts import (
 from app.agents.social_listening.state import SocialListeningState
 from app.services.llm import get_llm
 from app.shared.logging import get_logger
+from app.shared.token_tracker import TokenTrackingCallback, estimate_cost
 
 
 class SuggestedResponse(BaseModel):
@@ -77,11 +78,14 @@ async def response_strategist_node(state: SocialListeningState) -> dict[str, Any
 
     human_message = "\n".join(parts)
 
-    llm = get_llm(temperature=0.5).with_structured_output(SuggestedResponse)
+    tracker = TokenTrackingCallback()
+    llm = get_llm(temperature=0.5, callbacks=[tracker]).with_structured_output(SuggestedResponse)
     response: SuggestedResponse = await llm.ainvoke([
         ("system", system_prompt),
         ("human", human_message),
     ])
+
+    token_cost = estimate_cost(tracker.usage)
 
     logger.info(
         "ResponseStrategist finished",
@@ -89,9 +93,13 @@ async def response_strategist_node(state: SocialListeningState) -> dict[str, Any
         strategy=response.strategy,
         escalation=response.escalation_needed,
         priority=response.response_priority,
+        tokens=tracker.usage.total_tokens,
+        cost_usd=token_cost,
     )
 
     return {
         "suggested_response": response.model_dump(),
         "agents_executed": ["response_strategist"],
+        "total_tokens": tracker.usage.total_tokens,
+        "total_cost": token_cost,
     }

@@ -94,14 +94,13 @@ it('disconnects social account', function () {
     $response->assertNoContent();
 });
 
-it('returns 422 for non-existent account disconnect', function () {
+it('returns 404 for non-existent account disconnect', function () {
     $fakeId = (string) Str::uuid();
 
     $response = $this->withHeaders($this->headers)
         ->deleteJson("/api/v1/social-accounts/{$fakeId}");
 
-    $response->assertStatus(422)
-        ->assertJsonPath('errors.0.code', 'SOCIAL_ACCOUNT_NOT_FOUND');
+    $response->assertStatus(404);
 });
 
 it('checks account health', function () {
@@ -134,10 +133,11 @@ it('prevents access to other org accounts', function () {
     $accountId = insertSocialAccount($otherOrgId, $otherUser['id']);
 
     // Try to access with our headers (our org context)
+    // Should return 403 (authorization) or 404 (not found in tenant scope)
     $response = $this->withHeaders($this->headers)
         ->getJson("/api/v1/social-accounts/{$accountId}/health");
 
-    $response->assertStatus(422);
+    $response->assertStatus(403);
 });
 
 it('requires authentication for all endpoints', function () {

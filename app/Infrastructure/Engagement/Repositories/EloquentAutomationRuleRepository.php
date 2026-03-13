@@ -13,11 +13,15 @@ use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Engagement\Models\AutomationRuleConditionModel;
 use App\Infrastructure\Engagement\Models\AutomationRuleModel;
 use DateTimeImmutable;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 
 final class EloquentAutomationRuleRepository implements AutomationRuleRepositoryInterface
 {
+    private const CACHE_TTL_SECONDS = 300; // 5 minutes
+
     public function __construct(
         private readonly AutomationRuleModel $model,
+        private readonly CacheRepository $cache,
     ) {}
 
     public function create(AutomationRule $rule): void
@@ -25,6 +29,7 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
         $this->model->newQuery()->create($this->toArray($rule));
 
         $this->syncConditions($rule);
+        $this->invalidateCache($rule->organizationId);
     }
 
     public function update(AutomationRule $rule): void
@@ -34,6 +39,7 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
             ->update($this->toArray($rule));
 
         $this->syncConditions($rule);
+        $this->invalidateCache($rule->organizationId);
     }
 
     public function findById(Uuid $id): ?AutomationRule
@@ -47,8 +53,17 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
     /**
      * @return array<AutomationRule>
      */
-    public function findActiveByOrganizationId(Uuid $organizationId): array
+    public function findActiveByOrganizationId(Uuid $organizationId, int $limit = 100): array
     {
+        $cacheKey = $this->getActiveCacheKey($organizationId);
+
+        /** @var array<AutomationRule>|null $cached */
+        $cached = $this->cache->get($cacheKey);
+
+        if ($cached !== null) {
+            return array_slice($cached, 0, $limit);
+        }
+
         /** @var \Illuminate\Database\Eloquent\Collection<int, AutomationRuleModel> $records */
         $records = $this->model->newQuery()
             ->with('conditions')
@@ -56,15 +71,20 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
             ->where('is_active', true)
             ->whereNull('deleted_at')
             ->orderBy('priority')
+            ->limit($limit)
             ->get();
 
-        return $records->map(fn (AutomationRuleModel $r) => $this->toDomain($r))->all();
+        $rules = $records->map(fn (AutomationRuleModel $r) => $this->toDomain($r))->all();
+
+        $this->cache->put($cacheKey, $rules, self::CACHE_TTL_SECONDS);
+
+        return $rules;
     }
 
     /**
      * @return array<AutomationRule>
      */
-    public function findByOrganizationId(Uuid $organizationId): array
+    public function findByOrganizationId(Uuid $organizationId, int $limit = 100): array
     {
         /** @var \Illuminate\Database\Eloquent\Collection<int, AutomationRuleModel> $records */
         $records = $this->model->newQuery()
@@ -72,6 +92,7 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
             ->where('organization_id', (string) $organizationId)
             ->whereNull('deleted_at')
             ->orderBy('priority')
+            ->limit($limit)
             ->get();
 
         return $records->map(fn (AutomationRuleModel $r) => $this->toDomain($r))->all();
@@ -79,7 +100,15 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
 
     public function delete(Uuid $id): void
     {
+        // Get the rule first to invalidate cache for its organization
+        /** @var AutomationRuleModel|null $record */
+        $record = $this->model->newQuery()->find((string) $id);
+
         $this->model->newQuery()->where('id', (string) $id)->delete();
+
+        if ($record !== null) {
+            $this->invalidateCache(Uuid::fromString($record->getAttribute('organization_id')));
+        }
     }
 
     public function isPriorityTaken(Uuid $organizationId, int $priority, ?Uuid $excludeId = null): bool
@@ -176,5 +205,15 @@ final class EloquentAutomationRuleRepository implements AutomationRuleRepository
             createdAt: new DateTimeImmutable($createdAt->format('Y-m-d H:i:s')),
             updatedAt: new DateTimeImmutable($updatedAt->format('Y-m-d H:i:s')),
         );
+    }
+
+    private function getActiveCacheKey(Uuid $organizationId): string
+    {
+        return "automation_rules:active:org:{$organizationId}";
+    }
+
+    private function invalidateCache(Uuid $organizationId): void
+    {
+        $this->cache->forget($this->getActiveCacheKey($organizationId));
     }
 }

@@ -76,3 +76,45 @@ it('validates status must be completed or failed', function () {
 
     $response->assertStatus(422);
 });
+
+it('accepts callback with failed status', function () {
+    $redisStore = Mockery::mock(\Illuminate\Contracts\Cache\Repository::class);
+    $redisStore->shouldReceive('put')
+        ->with('agent_callback:job-fail-123', Mockery::on(function ($json) {
+            $data = json_decode($json, true);
+            return $data['status'] === 'failed';
+        }), 600)
+        ->once()
+        ->andReturnTrue();
+
+    Cache::shouldReceive('store')->with('redis')->once()->andReturn($redisStore);
+
+    $response = $this->postJson('/api/v1/internal/agent-callback', [
+        'correlation_id' => '550e8400-e29b-41d4-a716-446655440000',
+        'job_id' => 'job-fail-123',
+        'status' => 'failed',
+        'result' => null,
+        'metadata' => null,
+    ], [
+        'X-Internal-Secret' => 'test-secret-123',
+    ]);
+
+    $response->assertStatus(202)->assertJson(['status' => 'accepted']);
+});
+
+it('accepts callback with null result and metadata', function () {
+    $redisStore = Mockery::mock(\Illuminate\Contracts\Cache\Repository::class);
+    $redisStore->shouldReceive('put')->once()->andReturnTrue();
+
+    Cache::shouldReceive('store')->with('redis')->once()->andReturn($redisStore);
+
+    $response = $this->postJson('/api/v1/internal/agent-callback', [
+        'correlation_id' => '550e8400-e29b-41d4-a716-446655440000',
+        'job_id' => 'job-null-123',
+        'status' => 'completed',
+    ], [
+        'X-Internal-Secret' => 'test-secret-123',
+    ]);
+
+    $response->assertStatus(202);
+});

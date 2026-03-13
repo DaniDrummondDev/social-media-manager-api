@@ -16,6 +16,7 @@ interface PaymentGatewayInterface
         string $successUrl,
         string $cancelUrl,
         array $metadata = [],
+        ?int $trialPeriodDays = null,
     ): array;
 
     /**

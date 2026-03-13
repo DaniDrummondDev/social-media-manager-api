@@ -66,9 +66,13 @@ final class EloquentWebhookEndpointRepository implements WebhookEndpointReposito
             ->whereNull('deleted_at');
 
         if ($driver === 'pgsql') {
+            // PostgreSQL: Use JSON containment operator with parameter binding
             $query->whereRaw('events @> ?', [json_encode([$event])]);
         } else {
-            $query->whereRaw("json_extract(events, '$') LIKE ?", ['%"'.$event.'"%']);
+            // SECURITY FIX (SQL-001): Use parameter binding for SQLite LIKE query
+            // Escape special characters in JSON-encoded event string
+            $eventJson = json_encode($event);
+            $query->whereRaw("json_extract(events, '$') LIKE ?", ['%' . $eventJson . '%']);
         }
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, WebhookEndpointModel> $records */

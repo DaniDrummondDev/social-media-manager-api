@@ -22,7 +22,9 @@ final class EloquentUserRepository implements UserRepositoryInterface
 
     public function create(User $user): void
     {
-        $this->model->newQuery()->create($this->toArray($user));
+        $model = $this->model->newInstance();
+        $model->forceFill($this->toArray($user));
+        $model->save();
     }
 
     public function update(User $user): void
@@ -70,6 +72,11 @@ final class EloquentUserRepository implements UserRepositoryInterface
             ? new TwoFactorSecret($model->getAttribute('two_factor_secret'))
             : null;
 
+        $recoveryCodes = $model->getAttribute('recovery_codes');
+        if (is_array($recoveryCodes)) {
+            $recoveryCodes = json_encode($recoveryCodes, JSON_THROW_ON_ERROR);
+        }
+
         return User::reconstitute(
             id: Uuid::fromString($model->getAttribute('id')),
             name: $model->getAttribute('name'),
@@ -82,7 +89,7 @@ final class EloquentUserRepository implements UserRepositoryInterface
                 : null,
             twoFactorEnabled: (bool) $model->getAttribute('two_factor_enabled'),
             twoFactorSecret: $twoFactorSecret,
-            recoveryCodes: $model->getAttribute('recovery_codes'),
+            recoveryCodes: $recoveryCodes,
             status: UserStatus::from($model->getAttribute('status')),
             lastLoginAt: $model->getAttribute('last_login_at')
                 ? new DateTimeImmutable($model->getAttribute('last_login_at')->toDateTimeString())

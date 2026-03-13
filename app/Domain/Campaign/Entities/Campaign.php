@@ -6,6 +6,7 @@ namespace App\Domain\Campaign\Entities;
 
 use App\Domain\Campaign\Events\CampaignCreated;
 use App\Domain\Campaign\Exceptions\InvalidStatusTransitionException;
+use App\Domain\Campaign\ValueObjects\CampaignBrief;
 use App\Domain\Campaign\ValueObjects\CampaignStatus;
 use App\Domain\Shared\Events\DomainEvent;
 use App\Domain\Shared\ValueObjects\Uuid;
@@ -31,6 +32,7 @@ final readonly class Campaign
         public DateTimeImmutable $updatedAt,
         public ?DateTimeImmutable $deletedAt,
         public ?DateTimeImmutable $purgeAt,
+        public ?CampaignBrief $brief = null,
         public array $domainEvents = [],
     ) {}
 
@@ -45,6 +47,7 @@ final readonly class Campaign
         ?DateTimeImmutable $startsAt = null,
         ?DateTimeImmutable $endsAt = null,
         array $tags = [],
+        ?CampaignBrief $brief = null,
     ): self {
         $id = Uuid::generate();
         $now = new DateTimeImmutable;
@@ -63,6 +66,7 @@ final readonly class Campaign
             updatedAt: $now,
             deletedAt: null,
             purgeAt: null,
+            brief: $brief,
             domainEvents: [
                 new CampaignCreated(
                     aggregateId: (string) $id,
@@ -91,6 +95,7 @@ final readonly class Campaign
         DateTimeImmutable $updatedAt,
         ?DateTimeImmutable $deletedAt,
         ?DateTimeImmutable $purgeAt,
+        ?CampaignBrief $brief = null,
     ): self {
         return new self(
             id: $id,
@@ -106,6 +111,7 @@ final readonly class Campaign
             updatedAt: $updatedAt,
             deletedAt: $deletedAt,
             purgeAt: $purgeAt,
+            brief: $brief,
         );
     }
 
@@ -119,6 +125,7 @@ final readonly class Campaign
         ?DateTimeImmutable $endsAt = null,
         ?array $tags = null,
         ?CampaignStatus $status = null,
+        ?CampaignBrief $brief = null,
     ): self {
         if ($status !== null && ! $this->status->canTransitionTo($status)) {
             throw new InvalidStatusTransitionException($this->status->value, $status->value);
@@ -140,6 +147,7 @@ final readonly class Campaign
             updatedAt: $now,
             deletedAt: $this->deletedAt,
             purgeAt: $this->purgeAt,
+            brief: $brief ?? $this->brief,
             domainEvents: $this->domainEvents,
         );
     }
@@ -162,6 +170,7 @@ final readonly class Campaign
             updatedAt: $now,
             deletedAt: $now,
             purgeAt: $now->modify("+{$graceDays} days"),
+            brief: $this->brief,
             domainEvents: $this->domainEvents,
         );
     }
@@ -188,6 +197,7 @@ final readonly class Campaign
             updatedAt: $now,
             deletedAt: null,
             purgeAt: null,
+            brief: $this->brief,
             domainEvents: $this->domainEvents,
         );
     }
@@ -225,6 +235,7 @@ final readonly class Campaign
             updatedAt: $this->updatedAt,
             deletedAt: $this->deletedAt,
             purgeAt: $this->purgeAt,
+            brief: $this->brief,
         );
     }
 }

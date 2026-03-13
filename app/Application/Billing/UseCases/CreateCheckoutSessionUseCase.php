@@ -12,6 +12,7 @@ use App\Application\Billing\Exceptions\PlanNotFoundException;
 use App\Application\Billing\Exceptions\SubscriptionNotFoundException;
 use App\Domain\Billing\Contracts\PaymentGatewayInterface;
 use App\Domain\Billing\Repositories\PlanRepositoryInterface;
+use App\Domain\Billing\Entities\Subscription;
 use App\Domain\Billing\Repositories\SubscriptionRepositoryInterface;
 use App\Domain\Billing\ValueObjects\BillingCycle;
 use App\Domain\Shared\ValueObjects\Uuid;
@@ -22,6 +23,7 @@ final class CreateCheckoutSessionUseCase
         private readonly PlanRepositoryInterface $planRepository,
         private readonly SubscriptionRepositoryInterface $subscriptionRepository,
         private readonly PaymentGatewayInterface $paymentGateway,
+        private readonly ?int $trialPeriodDays = null,
     ) {}
 
     public function execute(CreateCheckoutSessionInput $input): CheckoutSessionOutput
@@ -58,6 +60,10 @@ final class CreateCheckoutSessionUseCase
             throw new \RuntimeException('Organization has no Stripe customer ID.');
         }
 
+        $trialDays = $this->shouldApplyTrial($subscription)
+            ? $this->trialPeriodDays
+            : null;
+
         $session = $this->paymentGateway->createCheckoutSession(
             customerId: $customerId,
             priceId: $priceId,
@@ -67,6 +73,7 @@ final class CreateCheckoutSessionUseCase
                 'organization_id' => $input->organizationId,
                 'plan_id' => (string) $plan->id,
             ],
+            trialPeriodDays: $trialDays,
         );
 
         return new CheckoutSessionOutput(
@@ -74,5 +81,18 @@ final class CreateCheckoutSessionUseCase
             sessionId: $session['session_id'],
             expiresAt: $session['expires_at'],
         );
+    }
+
+    /**
+     * Trial applies only on first paid subscription (upgrade from Free).
+     * If the organization already had a Stripe subscription, no trial.
+     */
+    private function shouldApplyTrial(Subscription $subscription): bool
+    {
+        if ($this->trialPeriodDays === null || $this->trialPeriodDays <= 0) {
+            return false;
+        }
+
+        return $subscription->externalSubscriptionId === null;
     }
 }

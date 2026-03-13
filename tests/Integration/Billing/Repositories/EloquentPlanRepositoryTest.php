@@ -43,8 +43,8 @@ it('findBySlug returns correct plan', function () {
         ->and($plan)->toBeInstanceOf(Plan::class)
         ->and($plan->name)->toBe('Creator')
         ->and($plan->slug)->toBe('creator')
-        ->and($plan->priceMonthly->amountCents)->toBe(4900)
-        ->and($plan->priceYearly->amountCents)->toBe(49000)
+        ->and($plan->priceMonthly->amountCents)->toBe(9700)
+        ->and($plan->priceYearly->amountCents)->toBe(97000)
         ->and($plan->isActive)->toBeTrue()
         ->and($plan->sortOrder)->toBe(2);
 });
@@ -84,10 +84,10 @@ it('findById returns correct plan with all VOs', function () {
 
     // Money VO
     expect($plan->priceMonthly)->toBeInstanceOf(Money::class)
-        ->and($plan->priceMonthly->amountCents)->toBe(14900)
+        ->and($plan->priceMonthly->amountCents)->toBe(29700)
         ->and($plan->priceMonthly->currency)->toBe('BRL')
         ->and($plan->priceYearly)->toBeInstanceOf(Money::class)
-        ->and($plan->priceYearly->amountCents)->toBe(149000)
+        ->and($plan->priceYearly->amountCents)->toBe(297000)
         ->and($plan->priceYearly->currency)->toBe('BRL');
 
     // PlanLimits VO

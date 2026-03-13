@@ -26,6 +26,11 @@ final class UpdateCampaignRequest extends FormRequest
             'tags' => ['sometimes', 'array', 'max:20'],
             'tags.*' => ['string', 'min:1', 'max:50'],
             'status' => ['sometimes', 'string', 'in:draft,active,paused,completed,archived'],
+            'brief_text' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'brief_target_audience' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'brief_restrictions' => ['sometimes', 'nullable', 'string', 'max:2000'],
+            'brief_cta' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'clear_brief' => ['sometimes', 'boolean'],
         ];
     }
 }

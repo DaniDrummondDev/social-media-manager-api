@@ -731,7 +731,71 @@ final class DevelopmentSeeder extends Seeder
             ]);
         }
 
-        // ── 17. Client Finance ──────────────────────────────────────
+        // ── 17. Agency User + Organization (Agency plan) ────────────
+        $agencyUserId = (string) Str::uuid();
+        $agencyEmail = 'agency@demo.com';
+        $agencyPassword = 'Agency@123';
+
+        DB::table('users')->insert([
+            'id' => $agencyUserId,
+            'name' => 'Agency User',
+            'email' => $agencyEmail,
+            'password' => (string) HashedPassword::fromPlainText($agencyPassword),
+            'phone' => null,
+            'timezone' => 'America/Sao_Paulo',
+            'email_verified_at' => now()->toDateTimeString(),
+            'two_factor_enabled' => false,
+            'two_factor_secret' => null,
+            'recovery_codes' => null,
+            'status' => 'active',
+            'last_login_at' => null,
+            'last_login_ip' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        $agencyOrgId = (string) Str::uuid();
+
+        DB::table('organizations')->insert([
+            'id' => $agencyOrgId,
+            'name' => 'Agency Pro',
+            'slug' => 'agency-pro',
+            'timezone' => 'America/Sao_Paulo',
+            'status' => 'active',
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        DB::table('organization_members')->insert([
+            'id' => (string) Str::uuid(),
+            'organization_id' => $agencyOrgId,
+            'user_id' => $agencyUserId,
+            'role' => 'owner',
+            'invited_by' => null,
+            'joined_at' => now()->toDateTimeString(),
+        ]);
+
+        $agencySubscriptionId = (string) Str::uuid();
+        DB::table('subscriptions')->insert([
+            'id' => $agencySubscriptionId,
+            'organization_id' => $agencyOrgId,
+            'plan_id' => PlanSeeder::AGENCY_PLAN_ID,
+            'status' => 'active',
+            'billing_cycle' => 'monthly',
+            'current_period_start' => now()->startOfMonth()->toDateTimeString(),
+            'current_period_end' => now()->endOfMonth()->toDateTimeString(),
+            'trial_ends_at' => null,
+            'canceled_at' => null,
+            'cancel_at_period_end' => false,
+            'cancel_reason' => null,
+            'cancel_feedback' => null,
+            'external_subscription_id' => null,
+            'external_customer_id' => null,
+            'created_at' => now()->toDateTimeString(),
+            'updated_at' => now()->toDateTimeString(),
+        ]);
+
+        // ── 18. Client Finance (Demo Agency org) ─────────────────────
         $clientAcmeId = (string) Str::uuid();
         $clientStarId = (string) Str::uuid();
 
@@ -918,7 +982,7 @@ final class DevelopmentSeeder extends Seeder
             ]);
         }
 
-        // ── 18. Platform Admin + System Configs ────────────────────
+        // ── 19. Platform Admin + System Configs ────────────────────
         $this->call(PlatformAdminSeeder::class);
         $this->call(SystemConfigSeeder::class);
 
@@ -964,6 +1028,14 @@ final class DevelopmentSeeder extends Seeder
         $this->command->line('    Plans:            4 records (via PlanSeeder)');
         $this->command->line("    Subscription:     <fg=yellow>{$subscriptionId}</> (Free plan)");
         $this->command->line('    Usage Records:    3 records');
+        $this->command->newLine();
+        $this->command->line('  Agency User:');
+        $this->command->line("    Email:            <fg=green>{$agencyEmail}</>");
+        $this->command->line("    Password:         <fg=green>{$agencyPassword}</>");
+        $this->command->line("    User ID:          <fg=yellow>{$agencyUserId}</>");
+        $this->command->line("    Organization:     <fg=green>Agency Pro (agency-pro)</>");
+        $this->command->line("    Organization ID:  <fg=yellow>{$agencyOrgId}</>");
+        $this->command->line("    Subscription:     <fg=yellow>{$agencySubscriptionId}</> (Agency plan)");
         $this->command->newLine();
         $this->command->line('  Client Finance:');
         $this->command->line("    Client (Acme):    <fg=yellow>{$clientAcmeId}</>");

@@ -18,6 +18,7 @@ final class StubPaymentGateway implements PaymentGatewayInterface
         string $successUrl,
         string $cancelUrl,
         array $metadata = [],
+        ?int $trialPeriodDays = null,
     ): array {
         throw new \RuntimeException('Stripe integration not yet implemented. Use stub data for testing.');
     }

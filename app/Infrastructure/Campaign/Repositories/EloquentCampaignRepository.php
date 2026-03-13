@@ -6,6 +6,7 @@ namespace App\Infrastructure\Campaign\Repositories;
 
 use App\Domain\Campaign\Contracts\CampaignRepositoryInterface;
 use App\Domain\Campaign\Entities\Campaign;
+use App\Domain\Campaign\ValueObjects\CampaignBrief;
 use App\Domain\Campaign\ValueObjects\CampaignStatus;
 use App\Domain\Shared\ValueObjects\Uuid;
 use App\Infrastructure\Campaign\Models\CampaignModel;
@@ -75,6 +76,20 @@ final class EloquentCampaignRepository implements CampaignRepositoryInterface
 
     private function toDomain(CampaignModel $model): Campaign
     {
+        $brief = null;
+        if ($model->getAttribute('brief_text') !== null
+            || $model->getAttribute('brief_target_audience') !== null
+            || $model->getAttribute('brief_restrictions') !== null
+            || $model->getAttribute('brief_cta') !== null
+        ) {
+            $brief = new CampaignBrief(
+                text: $model->getAttribute('brief_text'),
+                targetAudience: $model->getAttribute('brief_target_audience'),
+                restrictions: $model->getAttribute('brief_restrictions'),
+                cta: $model->getAttribute('brief_cta'),
+            );
+        }
+
         return Campaign::reconstitute(
             id: Uuid::fromString($model->getAttribute('id')),
             organizationId: Uuid::fromString($model->getAttribute('organization_id')),
@@ -97,6 +112,7 @@ final class EloquentCampaignRepository implements CampaignRepositoryInterface
             purgeAt: $model->getAttribute('purge_at')
                 ? new DateTimeImmutable($model->getAttribute('purge_at')->toDateTimeString())
                 : null,
+            brief: $brief,
         );
     }
 
@@ -117,6 +133,10 @@ final class EloquentCampaignRepository implements CampaignRepositoryInterface
             'tags' => $campaign->tags,
             'deleted_at' => $campaign->deletedAt?->format('Y-m-d H:i:s'),
             'purge_at' => $campaign->purgeAt?->format('Y-m-d H:i:s'),
+            'brief_text' => $campaign->brief?->text,
+            'brief_target_audience' => $campaign->brief?->targetAudience,
+            'brief_restrictions' => $campaign->brief?->restrictions,
+            'brief_cta' => $campaign->brief?->cta,
         ];
     }
 }

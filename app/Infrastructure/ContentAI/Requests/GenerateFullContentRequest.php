@@ -18,8 +18,12 @@ final class GenerateFullContentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $mode = $this->input('generation_mode', 'fields_only');
+
         return [
-            'topic' => ['required', 'string', 'min:10', 'max:500'],
+            'generation_mode' => ['sometimes', 'string', 'in:fields_only,brief_only,brief_and_fields'],
+            'campaign_id' => [$mode !== 'fields_only' ? 'required' : 'sometimes', 'string', 'uuid'],
+            'topic' => [$mode === 'brief_only' ? 'sometimes' : 'required', 'string', 'min:10', 'max:500'],
             'social_networks' => ['required', 'array', 'min:1', 'max:5'],
             'social_networks.*' => ['string', 'in:instagram,tiktok,youtube'],
             'tone' => ['sometimes', 'nullable', 'string', 'in:professional,casual,fun,informative,inspirational,custom'],

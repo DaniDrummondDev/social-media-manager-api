@@ -2,7 +2,7 @@
 
 > **Versao:** 1.3.0\
 > **Data:** 2026-02-28\
-> **Status:** Em desenvolvimento — Fase 7 completa, Sprint 21 completo
+> **Status:** Em desenvolvimento — Fase 7 completa, Sprint 22 completo
 
 ---
 
@@ -16,7 +16,7 @@
 | **Fase 4 — CRM (v4.0)** | Sprint 15-16 | ✅ Completa |
 | **Fase 5 — Ads (v5.0)** | Sprint 17-18 | ✅ Completa |
 | **Fase 6 — AI Agents (v6.0)** | Sprint 19 | ✅ Completa (19.1-19.6) |
-| **Fase 7 — Consolidacao (v7.0)** | Sprint 20-21 | ✅ Completa |
+| **Fase 7 — Consolidacao (v7.0)** | Sprint 20-22 | ✅ Completa |
 
 ### Progresso detalhado
 
@@ -44,8 +44,9 @@
 | 19 | Multi-Agent AI (LangGraph) | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 20 | Geracao Enriquecida | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 | 21 | Feature Gates + Integration Tests | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
+| 22 | Campaign Brief + AI Generation Modes | ✅ | ✅ | ✅ | ✅ | ✅ Completo |
 
-> Todos os sprints completados com testes de integracao implementados. Total: 2728 testes passando.
+> Todos os sprints completados com testes de integracao implementados. Total: 2844 testes passando.
 
 ### Seguranca — Row-Level Security (RLS)
 
@@ -59,7 +60,7 @@
 
 ### Proximo passo
 
-**Fase 7 completa.** Todos os 21 sprints implementados. Pipeline de geracao enriquecida ativo (RAG + Style + Audience + Template). Feature gates aplicados em rotas CRM e AI Intelligence. 8 testes de integracao implementados (Instagram, Mention Partitioning, Best Times, Brand Safety LLM, Embedding Diff, HubSpot, RD Station, Pipedrive). **2728 testes passando.**
+**Fase 7 completa.** Todos os 22 sprints implementados. Pipeline de geracao enriquecida ativo (RAG + Style + Audience + Template). Feature gates aplicados em rotas CRM e AI Intelligence. 8 testes de integracao implementados. Campaign Brief integrado ao pipeline de geracao com 3 modos (fields_only, brief_only, brief_and_fields). **2844 testes passando.**
 
 ### Security Audit — Hardening Completo
 
@@ -91,7 +92,7 @@ Auditoria de seguranca abrangendo OWASP API Security Top 10, performance, bugs d
 
 ## Visao Geral
 
-O roadmap esta dividido em **22 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)**, os Sprints 12-14 cobrem a **Fase 3 (v3.0)**, os Sprints 15-16 cobrem a **Fase 4 (v4.0)**, os Sprints 17-18 cobrem a **Fase 5 (v5.0)**, o Sprint 19 cobre a **Fase 6 (v6.0)** e os Sprints 20-21 cobrem a **Fase 7 (v7.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
+O roadmap esta dividido em **23 sprints** organizados por dependencia entre bounded contexts. Os Sprints 0-7 cobrem a **Fase 1 (v1.0)**, os Sprints 8-11 cobrem a **Fase 2 (v2.0)**, os Sprints 12-14 cobrem a **Fase 3 (v3.0)**, os Sprints 15-16 cobrem a **Fase 4 (v4.0)**, os Sprints 17-18 cobrem a **Fase 5 (v5.0)**, o Sprint 19 cobre a **Fase 6 (v6.0)** e os Sprints 20-22 cobrem a **Fase 7 (v7.0)**. Cada sprint entrega valor incremental e pode ser testado isoladamente.
 
 ```
                            Fase 1 (v1.0)
@@ -123,10 +124,10 @@ Sprint 8 ─────────→ Sprint 9            Sprint 10 ──→ 
              Core — ADR-020)              from Ads Data)
 
                            Fase 7 (v7.0)
-            Sprint 20 ─────────────────→ Sprint 21
-            (Geracao Enriquecida:         (Feature Gates +
-             RAG + Style + Audience       Integration Tests
-             + Template)                  Pendentes)
+            Sprint 20 ─────────────────→ Sprint 21 ─────────────────→ Sprint 22
+            (Geracao Enriquecida:         (Feature Gates +             (Campaign Brief +
+             RAG + Style + Audience       Integration Tests             AI Generation
+             + Template)                  Pendentes)                    Modes)
 ```
 
 ---
@@ -2134,6 +2135,61 @@ A Fase 7 consolida pendencias cross-cutting identificadas ao longo das Fases 1-4
 
 ---
 
+## Sprint 22 — Campaign Brief + AI Generation Modes
+
+**Objetivo:** Integrar Campaign Brief como contexto para geracao de conteudo por IA, permitindo 3 modos de geracao (fields_only, brief_only, brief_and_fields) que combinam campos individuais com brief estrategico da campanha.
+
+**Bounded Contexts:** Campaign (extensao), Content AI (extensao)
+
+> **Nota:** Este sprint estende o modelo de Campaign com um brief opcional e modifica os 4 pipelines de geracao (titulo, descricao, hashtag, conteudo completo) para suportar contexto de brief. Backward-compatible: o modo padrao `fields_only` mantem o comportamento anterior.
+
+### 22.1 Domain Layer — Campaign Brief
+
+- [x] Value Object `CampaignBrief` com propriedades: text, targetAudience, restrictions, cta
+- [x] Metodo `isEmpty()` para verificar se o brief esta vazio
+- [x] Metodo `toPromptContext()` para converter brief em contexto textual para prompt de IA
+- [x] Metodo `mergeWith()` para combinar briefs (campo a campo, override prevalece)
+- [x] Entidade `Campaign` atualizada com propriedade opcional `brief`
+- [x] Domain Exception `CampaignBriefRequiredException` para modo brief_only/brief_and_fields sem brief
+
+### 22.2 Application Layer — BriefContextResolver + DTOs
+
+- [x] Service `BriefContextResolver` para montagem de contexto de prompt a partir de brief + campos
+- [x] DTOs atualizados: `CreateCampaignInput` e `UpdateCampaignInput` com campos de brief
+- [x] Flag `clearBrief` em `UpdateCampaignInput` para remocao explicita de brief
+- [x] DTO `CampaignOutput` renderiza brief quando presente
+- [x] 4 DTOs de geracao atualizados com `campaignId` e `generationMode`
+- [x] 4 Use Cases de geracao integrados com `BriefContextResolver`
+- [x] 3 modos de geracao: `fields_only` (padrao), `brief_only`, `brief_and_fields`
+
+### 22.3 Infrastructure Layer — Migration, Repository, Controllers
+
+- [x] Migration: 4 colunas nullable na tabela campaigns (brief_text, brief_target_audience, brief_restrictions, brief_cta)
+- [x] `EloquentCampaignRepository` mapeamento de brief (hidratacao e persistencia)
+- [x] Form Requests com validacao para campos de brief (max 2000/500 chars)
+- [x] `CampaignController` atualizado para criar/atualizar campaigns com brief
+- [x] `AIController` atualizado para aceitar campaignId e generationMode
+- [x] `CampaignResource` renderiza brief na resposta da API
+
+### 22.4 Testes
+
+- [x] Unit: CampaignBrief value object (isEmpty, toPromptContext, mergeWith, criacao) — 4 testes
+- [x] Unit: BriefContextResolver (fields_only, brief_only, brief_and_fields, sem brief, brief vazio, campaign nao encontrada, mode padrao, clearBrief) — 8 testes
+- [x] Feature: Campaign Brief CRUD (criar com brief, atualizar brief, limpar brief, criar sem brief, validacao) — 7 testes
+- [x] Feature: AI Generation com brief (brief_only, brief_and_fields, fields_only, brief_only sem brief retorna erro) — 7 testes
+- [x] Fix: Remocao de camada de caching nao planejada no `EloquentContentRepository`
+
+### Entregaveis Sprint 22
+
+- Campaign Brief como value object no dominio com metodos de composicao de contexto
+- 3 modos de geracao de conteudo (fields_only, brief_only, brief_and_fields)
+- Backward-compatible: modo padrao `fields_only` mantem comportamento anterior
+- BriefContextResolver como servico reutilizavel para montagem de prompt context
+- Migration com 4 colunas nullable (zero breaking changes no banco)
+- ~28 testes novos (unit + feature + fix)
+
+---
+
 ## Matriz de Dependencias
 
 | Sprint | Depende de | Bounded Contexts | Fase |
@@ -2160,6 +2216,7 @@ A Fase 7 consolida pendencias cross-cutting identificadas ao longo das Fases 1-4
 | 19 | 9, 14, 16, 18 | Content AI, AI Intelligence (Multi-Agent Pipelines — ADR-021) | 6 |
 | 20 | 3, 12, 13, 14 | Content AI (extensao), AI Intelligence (Geracao Enriquecida — RAG + Style + Audience + Template) | 7 |
 | 21 | 6, 9, 10, 13, 15, 20 | Billing (extensao), Engagement, Social Listening, AI Intelligence (Feature Gates + Integration Tests) | 7 |
+| 22 | 3 | Campaign (extensao), Content AI (extensao — Campaign Brief + AI Generation Modes) | 7 |
 
 > **Nota:** Sprint 6 (Billing) depende apenas do Sprint 1, podendo ser iniciado em paralelo com Sprints 3-5 se houver capacidade.
 
@@ -2182,6 +2239,8 @@ A Fase 7 consolida pendencias cross-cutting identificadas ao longo das Fases 1-4
 > **Nota:** Sprint 20 (Geracao Enriquecida) depende do Sprint 3 (Content AI base), Sprint 12 (embeddings), Sprint 13 (audience insights) e Sprint 14 (learning loop — stubs criados). Substitui stubs por implementacoes reais e integra ao pipeline de geracao.
 
 > **Nota:** Sprint 21 (Feature Gates + Integration Tests) depende do Sprint 6 (Billing — CheckPlanLimit middleware), Sprints 9/10/13/15 (testes de integracao pendentes) e Sprint 20 (rotas de geracao enriquecida para aplicar gates). Pode rodar em paralelo com Fases 5-6 se houver capacidade.
+
+> **Nota:** Sprint 22 (Campaign Brief + AI Generation Modes) depende do Sprint 3 (Campaign + Content AI base). Estende o modelo de Campaign com brief opcional e modifica os 4 pipelines de geracao para suportar 3 modos de contexto. Backward-compatible com modo padrao `fields_only`.
 
 ---
 
@@ -2260,25 +2319,26 @@ Cada sprint so e considerado concluido quando:
 
 > **Nota:** Sprint 19 nao cria migrations PHP — o microservico Python usa tabelas existentes. Os "endpoints" sao 3 pipelines no FastAPI + rota interna de callback no Laravel. Os "use cases" sao 3 novos adapters na Infrastructure Layer que implementam contratos existentes. Testes incluem PHP (adapters, circuit breaker, callback) e Python (pytest para agentes e graphs).
 
-### Fase 7 (v7.0) — Sprints 20-21
+### Fase 7 (v7.0) — Sprints 20-22
 
 | Sprint | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--------|-----------|-----------|-----------|------|---------------|
 | 20 | 0 | 0 | 0 (modifica existentes) | 4 (listeners) | ~15 |
 | 21 | 0 | 0 | 0 (middleware) | 0 | ~15 |
-| **Subtotal Fase 7** | **0** | **0** | **0** | **4** | **~30** |
+| 22 | 1 | 0 (modifica existentes) | 0 (modifica existentes) | 0 | ~28 |
+| **Subtotal Fase 7** | **1** | **0** | **0** | **4** | **~58** |
 
-> **Nota:** Sprint 20 nao cria novos endpoints ou use cases — substitui 6 stubs por implementacoes reais e modifica `PrismTextGeneratorService` para integrar contexto enriquecido. Sprint 21 aplica middleware existente (`CheckPlanLimit`) a rotas existentes e implementa testes de integracao adiados.
+> **Nota:** Sprint 20 nao cria novos endpoints ou use cases — substitui 6 stubs por implementacoes reais e modifica `PrismTextGeneratorService` para integrar contexto enriquecido. Sprint 21 aplica middleware existente (`CheckPlanLimit`) a rotas existentes e implementa testes de integracao adiados. Sprint 22 adiciona Campaign Brief como value object e integra 3 modos de geracao (fields_only, brief_only, brief_and_fields) aos 4 pipelines de geracao existentes — 1 migration com 4 colunas nullable, sem novos endpoints.
 
 | | Migrations | Endpoints | Use Cases | Jobs | Testes (aprox) |
 |--|-----------|-----------|-----------|------|---------------|
-| **Total Geral** | **67** | **~203** | **~230** | **68** | **~1110** |
+| **Total Geral** | **68** | **~203** | **~230** | **68** | **~1138** |
 
 ---
 
 ## Apos o Roadmap — Features Futuras
 
-Itens para considerar apos a v6.0:
+Itens para considerar apos a v7.0:
 
 - **Notificacoes in-app** (WebSocket ou Pusher)
 - **Threads/Twitter** como nova rede social

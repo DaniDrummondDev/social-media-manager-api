@@ -1,4 +1,9 @@
-"""Tests for the Visual Adaptation Cross-Network pipeline."""
+"""Tests for the Visual Adaptation Cross-Network pipeline.
+
+Security Features:
+- All endpoint tests use X-Internal-Secret authentication
+- Organization IDs are valid UUIDs
+"""
 
 from __future__ import annotations
 
@@ -21,6 +26,10 @@ from app.agents.visual_adaptation.quality_checker import (
 from app.agents.visual_adaptation.state import VisualAdaptationState
 from app.agents.visual_adaptation.vision_analyzer import SemanticMap
 from app.api.routes import router
+from app.config import Settings
+
+TEST_INTERNAL_SECRET = "test-internal-secret-for-unit-tests-only-32chars"
+TEST_ORGANIZATION_ID = "550e8400-e29b-41d4-a716-446655440000"
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +131,7 @@ def _sample_quality_fail() -> QualityCheckOutput:
 def _base_state() -> VisualAdaptationState:
     """Minimal valid state to feed into the graph."""
     return {
-        "organization_id": "org-456",
+        "organization_id": TEST_ORGANIZATION_ID,
         "image_url": "https://example.com/photo.jpg",
         "target_networks": ["instagram", "youtube"],
         "brand_guidelines": {"primary_color": "#FF5733", "logo_position": "top_left"},
@@ -133,7 +142,7 @@ def _base_state() -> VisualAdaptationState:
         "quality_passed": False,
         "quality_feedback": None,
         "retry_count": 0,
-        "callback_url": "http://localhost/callback",
+        "callback_url": "http://nginx/callback",
         "correlation_id": "corr-va-001",
         "total_tokens": 0,
         "total_cost": 0.0,
@@ -187,18 +196,34 @@ def _mock_httpx_for_image(image_bytes: bytes):
 
 
 @pytest.fixture
-def test_app() -> FastAPI:
+def test_settings() -> Settings:
+    """Create test settings with internal_secret configured."""
+    return Settings(
+        internal_secret=TEST_INTERNAL_SECRET,
+        environment="development",
+        openai_api_key="sk-test-key",
+        anthropic_api_key="sk-ant-test-key",
+    )
+
+
+@pytest.fixture
+def test_app(test_settings: Settings) -> FastAPI:
     """Minimal FastAPI app with mocked Redis for pipeline tests."""
     application = FastAPI()
     application.include_router(router)
 
-    mock_redis = AsyncMock()
+    mock_redis = MagicMock()
     mock_redis.ping = AsyncMock(return_value=True)
     mock_redis.set = AsyncMock(return_value=True)
     mock_redis.get = AsyncMock(return_value=json.dumps({
         "status": "running",
         "result": None,
+        "organization_id": TEST_ORGANIZATION_ID,
     }))
+    mock_redis.zremrangebyscore = AsyncMock(return_value=0)
+    mock_redis.zcard = AsyncMock(return_value=0)
+    mock_redis.zadd = AsyncMock(return_value=1)
+    mock_redis.expire = AsyncMock(return_value=True)
     application.state.redis = mock_redis
 
     mock_conn = AsyncMock()
@@ -214,7 +239,17 @@ def test_app() -> FastAPI:
 
 
 @pytest.fixture
+def auth_client(test_app: FastAPI, test_settings: Settings) -> TestClient:
+    """Create authenticated test client."""
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        client = TestClient(test_app)
+        client.headers["X-Internal-Secret"] = TEST_INTERNAL_SECRET
+        return client
+
+
+@pytest.fixture
 def client(test_app: FastAPI) -> TestClient:
+    """Create unauthenticated test client."""
     return TestClient(test_app)
 
 
@@ -477,42 +512,61 @@ async def test_quality_checker_rejects(mock_llm):
 # ---------------------------------------------------------------------------
 
 
-def test_visual_adaptation_endpoint_returns_202(client: TestClient) -> None:
+def test_visual_adaptation_endpoint_requires_auth(client: TestClient, test_settings: Settings) -> None:
+    """POST /api/v1/pipelines/visual-adaptation returns 401 without auth."""
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = client.post(
+            "/api/v1/pipelines/visual-adaptation",
+            json={
+                "organization_id": TEST_ORGANIZATION_ID,
+                "correlation_id": "corr-va-001",
+                "callback_url": "http://nginx/callback",
+                "image_url": "https://example.com/photo.jpg",
+                "target_networks": ["instagram", "youtube"],
+            },
+        )
+
+        assert response.status_code == 401
+
+
+def test_visual_adaptation_endpoint_returns_202(auth_client: TestClient, test_settings: Settings) -> None:
     """POST /api/v1/pipelines/visual-adaptation returns 202 with job_id."""
-    response = client.post(
-        "/api/v1/pipelines/visual-adaptation",
-        json={
-            "organization_id": "org-456",
-            "correlation_id": "corr-va-001",
-            "callback_url": "http://localhost/callback",
-            "image_url": "https://example.com/photo.jpg",
-            "target_networks": ["instagram", "youtube"],
-        },
-    )
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = auth_client.post(
+            "/api/v1/pipelines/visual-adaptation",
+            json={
+                "organization_id": TEST_ORGANIZATION_ID,
+                "correlation_id": "corr-va-001",
+                "callback_url": "http://nginx/callback",
+                "image_url": "https://example.com/photo.jpg",
+                "target_networks": ["instagram", "youtube"],
+            },
+        )
 
-    assert response.status_code == 202
-    data = response.json()
-    assert "job_id" in data
-    assert len(data["job_id"]) == 36  # UUID format
+        assert response.status_code == 202
+        data = response.json()
+        assert "job_id" in data
+        # Job ID now includes org hash prefix
+        assert "_" in data["job_id"]
 
 
-def test_visual_adaptation_validates_input(client: TestClient) -> None:
+def test_visual_adaptation_validates_input(auth_client: TestClient, test_settings: Settings) -> None:
     """POST /api/v1/pipelines/visual-adaptation rejects missing required fields."""
-    response = client.post(
-        "/api/v1/pipelines/visual-adaptation",
-        json={"organization_id": "org-456"},
-    )
+    with patch("app.middleware.auth.get_settings", return_value=test_settings):
+        response = auth_client.post(
+            "/api/v1/pipelines/visual-adaptation",
+            json={"organization_id": TEST_ORGANIZATION_ID},
+        )
 
-    assert response.status_code == 422
+        assert response.status_code == 422
 
 
-def test_health_shows_four_pipelines(client: TestClient) -> None:
-    """GET /health lists all 4 pipelines including visual_adaptation."""
+def test_health_public_endpoint(client: TestClient) -> None:
+    """GET /health is public and hides pipeline list for security."""
     response = client.get("/health")
     data = response.json()
 
-    assert "visual_adaptation" in data["pipelines"]
-    assert "content_creation" in data["pipelines"]
-    assert "content_dna" in data["pipelines"]
-    assert "social_listening" in data["pipelines"]
-    assert len(data["pipelines"]) == 4
+    assert response.status_code == 200
+    assert data["status"] == "healthy"
+    # Public endpoint hides pipelines for security
+    assert data["pipelines"] == []

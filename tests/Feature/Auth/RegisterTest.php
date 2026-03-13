@@ -16,8 +16,8 @@ it('registers a new user', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'João Silva',
         'email' => 'joao@example.com',
-        'password' => 'SecureP@ss1',
-        'password_confirmation' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
+        'password_confirmation' => 'SecureP@ss123!',
     ]);
 
     $response->assertStatus(201)
@@ -35,8 +35,8 @@ it('rejects duplicate email', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'Another User',
         'email' => 'duplicate@example.com',
-        'password' => 'SecureP@ss1',
-        'password_confirmation' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
+        'password_confirmation' => 'SecureP@ss123!',
     ]);
 
     $response->assertStatus(422)
@@ -65,7 +65,7 @@ it('rejects mismatched password confirmation', function () {
     $response = $this->postJson('/api/v1/auth/register', [
         'name' => 'User',
         'email' => 'mismatch@example.com',
-        'password' => 'SecureP@ss1',
+        'password' => 'SecureP@ss123!',
         'password_confirmation' => 'DifferentPass1!',
     ]);
 
